@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Docs
+title: Документация
 nav_order: 2
 has_children: true
 permalink: /docs/

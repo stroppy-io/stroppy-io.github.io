@@ -1,7 +1,7 @@
 ---
 layout: default
-title:  "Stroppy report: FoundationDB"
-parent: Reports
+title:  "Stroppy - отчет о тестировании FoundationDB"
+parent: Отчеты
 nav_order: 1
 ---
 

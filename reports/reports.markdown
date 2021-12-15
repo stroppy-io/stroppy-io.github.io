@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Reports
+title: Отчеты
 nav_order: 3
 has_children: true
 permalink: /reports/

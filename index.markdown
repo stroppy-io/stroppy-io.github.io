@@ -4,7 +4,7 @@
 
 layout: home
 hav_order: 1
-title: Home
+title: Главная
 permalink: /
 ---
 
