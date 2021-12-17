@@ -19,7 +19,7 @@
 # in the templates via {{ site.myvariable }}.
 title: Stroppy
 description: framework for testing various databases. It allows you to deploy a cluster in the cloud, run load tests and simulate various problems, for example,network unavailability of one of the nodes in the cluster.
-baseurl: "/stroppy"
+#baseurl: "/stroppy"
 url: "https://stroppy.io" # the base hostname & protocol for your site, e.g. http://example.com
 
 
