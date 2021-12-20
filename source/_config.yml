@@ -22,7 +22,6 @@ description: framework for testing various databases. It allows you to deploy a 
 #baseurl: "/stroppy"
 url: "https://stroppy.io" # the base hostname & protocol for your site, e.g. http://example.com
 
-
 # Build settings
 theme: just-the-docs
 color_scheme: light
@@ -33,10 +32,13 @@ aux_links:
 
 logo: "/assets/images/stroppy.png"
 
+plugins:
+  - jekyll-lunr-js-search-multilingual
+
 #search options
 # Enable or disable the site search
 # Supports true (default) or false
-search_enabled: false
+search_enabled: true
 
 search:
   # Split pages into sections that can be searched individually
