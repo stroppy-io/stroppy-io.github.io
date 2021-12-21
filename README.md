@@ -25,7 +25,7 @@ source ~/.bashrc
 
 ```gem install jekyll bundler```
 
-3. Change into stroppy-site directory.
+3. Change into stroppy-site/source directory.
 
 4. Build the site and make it available on a local server:  
 
