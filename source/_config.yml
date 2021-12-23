@@ -34,6 +34,13 @@ logo: "/assets/images/stroppy.png"
 
 plugins:
   - jekyll-lunr-js-search-multilingual
+  - jekyll-multiple-languages-plugin
+
+languages: ["en", "ru"]
+
+exclude_from_localizations: ["javascript", "images", "css"]
+
+#default_locale_in_subfolder: true
 
 #search options
 # Enable or disable the site search

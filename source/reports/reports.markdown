@@ -1,9 +1,9 @@
 ---
 layout: default
-title: Отчеты
+title: Reports
 nav_order: 3
 has_children: true
 permalink: /reports/
 ---
 
-# Reports
+{% translate_file reports/reports.markdown %}
