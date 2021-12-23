@@ -7,4 +7,4 @@ COPY source ${SITE_SRC}
 
 RUN cd ${SITE_SRC} && \
     bundle install && \
-    jekyll serve
+    jekyll build
