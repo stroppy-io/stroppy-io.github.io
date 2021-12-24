@@ -5,6 +5,6 @@ ENV SITE_HTML '/srv/jekyll/source/_site'
 
 COPY source ${SITE_SRC}
 
-RUN cd ${SITE_SRC} && \
+CMD cd ${SITE_SRC} && \
     bundle install && \
     jekyll build
