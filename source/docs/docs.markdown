@@ -1,9 +1,9 @@
 ---
 layout: default
-title: Документация
+title: Docs
 nav_order: 2
 has_children: true
 permalink: /docs/
 ---
 
-# Docs
+{% translate_file docs/docs.markdown %}

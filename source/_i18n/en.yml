@@ -1,0 +1,9 @@
+global:
+  tagline: English
+pages:
+  Docs: Docs
+  Reports: Reports
+  Home: Home
+langs:
+  en: English
+  ru: Русский
