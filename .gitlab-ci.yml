@@ -42,7 +42,7 @@ deploy:
   stage: deploy
   when: manual
   only:
-    - master
+    - main
     - /^hotfix-/
   script:
     # triggering gitlab.com/picodata/infra pipeline to rebuild and deploy docker
