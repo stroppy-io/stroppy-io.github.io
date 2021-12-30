@@ -26,11 +26,13 @@
     {% if site.search_enabled != false %}
       {% if lang == site.default_lang and site.default_locale_in_subfolder != true %}
           <script type="text/javascript" src="{{ site.baseurl }}/js/search.min.js"></script>
+          <script type="text/javascript" src="{{ site.baseurl }}/assets/js/just-the-docs.js"></script>
         {% else %}
           <script type="text/javascript" src="{{ site.baseurl }}/{{ lang }}js/search.min.js"></script>
+          <script type="text/javascript" src="{{ site.baseurl }}/{{ lang }}assets/js/just-the-docs.js"></script>
         {% endif %}
     {% endif %}
-    <script type="text/javascript" src="{{ '/assets/js/just-the-docs.js' | relative_url }}"></script>
+   
   
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
