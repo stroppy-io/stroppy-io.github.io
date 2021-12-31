@@ -178,7 +178,7 @@ kubernetes.
 </thead>
 <tbody>
 <tr class="odd">
-<td>1</td>
+<td><a id="first_test_fdb_rps" href="{{ site.baseurl }}/{{ lang }}reports/fdb-report.html#first_test_fdb_rps">1</a></td>
 <td>FDB</td>
 <td>3</td>
 <td>1</td>
@@ -323,7 +323,7 @@ FoundationDB в Oracle Cloud (для сравнения см. тесты №№ 
 </thead>
 <tbody>
 <tr class="odd">
-<td>1</td>
+<td><a id="first_test_fdb_lat" href="{{ site.baseurl }}/{{ lang }}reports/fdb-report.html#first_test_fdb_lat">1</a></td>
 <td>FDB</td>
 <td>7</td>
 <td>241</td>
@@ -337,7 +337,7 @@ FoundationDB в Oracle Cloud (для сравнения см. тесты №№ 
 <td>52</td>
 </tr>
 <tr class="odd">
-<td>3</td>
+<td><a id="third_test_fdb_lat" href="{{ site.baseurl }}/{{ lang }}reports/fdb-report.html#third_test_fdb_lat">3</a></td>
 <td>FDB</td>
 <td>67</td>
 <td>856</td>

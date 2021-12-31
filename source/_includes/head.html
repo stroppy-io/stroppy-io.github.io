@@ -11,7 +11,7 @@
   gtag('config', 'G-KCN2R76F18');
 </script>
     {% unless site.plugins contains "jekyll-seo-tag" %}
-      <title>{% t pages.title %}</title>
+      <title>{{ page.title }}</title>
   
       {% if page.description %}
         <meta name="Description" content="{{ page.description }}">
@@ -21,6 +21,7 @@
     <link rel="shortcut icon" href="{{ 'favicon.ico' | relative_url }}" type="image/x-icon">
   
     <link rel="stylesheet" href="{{ '/assets/css/just-the-docs-default.css' | relative_url }}">
+    <link rel="stylesheet" href="{{ '/assets/css/relative.css' | relative_url }}">
   
   
     {% if site.search_enabled != false %}
