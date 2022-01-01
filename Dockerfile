@@ -5,6 +5,8 @@ ENV SITE_HTML '/home/jekyll/html'
 
 COPY source ${SITE_SRC}
 
+RUN apk add imagemagick
+
 RUN mkdir -p ${SITE_SRC} && \
     cd ${SITE_SRC} && \
     bundle install && \
