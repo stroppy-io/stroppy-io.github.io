@@ -1,0 +1,23 @@
+.blokimg {
+    position: relative;
+    }
+    .overlay{
+    display: none;
+    height: auto;
+    left: -15%;
+    position: absolute;
+    top: -50%;
+    width: auto;
+    z-index: 999;
+    }
+    .overlay .overlay_container{
+    display: table-cell;
+    vertical-align: middle;
+    }
+    .overlay_container img{
+    max-width: 100vw;
+    height: 100vh;
+    }
+    .overlay:target {
+    display: table;
+    }

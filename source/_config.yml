@@ -35,6 +35,8 @@ logo: "/assets/images/stroppy.png"
 plugins:
   - jekyll-lunr-js-search-multilingual
   - jekyll-multiple-languages-plugin
+  - jekyll-responsive-image
+  - rmagick
 
 languages: ["en", "ru"]
 
@@ -42,6 +44,10 @@ exclude_from_localizations: ["javascript", "images", "css"]
 
 #default_locale_in_subfolder: true
 
+responsive_image:
+  # [Required]
+  # Path to the image template.
+  template: _includes/picture.html
 #search options
 # Enable or disable the site search
 # Supports true (default) or false

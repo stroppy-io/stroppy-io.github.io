@@ -1,0 +1,24 @@
+{% comment %}
+Render your responsive images using <picture>, with the original asset used as a fallback. Note: If your original assets are not web-friendly (e.g. they are very large), you can use a resized image as the fallback instead. See the srcset-resized-fallback.html template for how to do this.
+
+Usage:
+
+	{% responsive_image path: assets/image.jpg alt: "A description of the image" %}
+
+(P.S. You can safely delete this comment block)
+{% endcomment %}
+
+
+<div class="blokimg">
+<div class="overlay" id="{{ title }}">
+<div class="overlay_container">
+    <a href="#relative_{{ title }}">
+			<img src="/{{ path }}"/>
+		</a>
+	</div>
+	</div>
+	<a href="#{{ title }}">
+    <img src="/{{ path }}">
+	</a>
+</div>
+

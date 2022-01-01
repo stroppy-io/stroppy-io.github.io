@@ -6,6 +6,7 @@ layout: home
 title: Home
 permalink: /
 node: titles.Home
+description: Stroppy - framework for load database
 ---
 
 {% translate_file index.markdown %}
