@@ -18,4 +18,12 @@
 **Среда тестирования: Oracle.Cloud**  
 
 <a href="{{ site.baseurl }}/{{ lang }}reports/fdb-report.html#third_test_fdb_lat" target="_blank">Задержка, интервал 60 секунд</a>
-{% responsive_image path: assets/images/small_test_16w_5_nodes_latency.png template:_includes/picture.html title: fdb_lat_2%} 
+{% responsive_image path: assets/images/small_test_16w_5_nodes_latency.png template:_includes/picture.html title: fdb_lat_2%}  
+
+**Тест №5**  
+**Конфигурация: 5 узлов по 1 cpu, 16 ГБ RAM.**  
+**Рабочая нагрузка: 512 воркеров, 100 миллионов счетов, тест переводов**  
+**Среда тестирования: Oracle.Cloud**  
+
+<a href="{{ site.baseurl }}/{{ lang }}reports/fdb-report.html#5_test_fdb_lat" target="_blank">Задержка, интервал 60 секунд</a>
+{% responsive_image path: assets/images/medium_test_512w_5_nodes_latency.png template:_includes/picture.html title: fdb_lat_5%}  

@@ -351,7 +351,7 @@ FoundationDB в Oracle Cloud (для сравнения см. тесты №№ 
 <td>227</td>
 </tr>
 <tr class="odd">
-<td>5</td>
+<td><a id="5_test_fdb_lat" href="{{ site.baseurl }}/{{ lang }}reports/fdb-report.html#5_test_fdb_lat">5</a></td>
 <td>FDB</td>
 <td>88</td>
 <td>934</td>
