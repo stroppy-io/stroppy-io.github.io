@@ -65,7 +65,7 @@ Benchmark results lacking in explanation are equally lacking in credibility. In 
   
 For FoundationDB, the Kubernetes operator automatically sets up \[fdbserver\] configuration, so the team played with the number of cores per instance, number of pods, and cloud parameters, such as ensuring cloud drives have enough IOPS to sustain the load put by the benchmarks.  
   
-Despite our fair effort in tuning the database, it must be disclaimed that the testing team is by no means a tuning expert in FoundationDB or PostgreSQL, and the purpose of the test was not to find each database's sweat spot. Our goals were to verify correctness and see if the vendors can scale, and for these a fair amount of tuning is only a means to avoid the common configuration pitfalls.  
+Despite our fair effort in tuning the database, it must be disclaimed that the testing team is by no means a tuning expert in FoundationDB or PostgreSQL, and the purpose of the test was not to find each database's sweet spot. Our goals were to verify correctness and see if the vendors can scale, and for these a fair amount of tuning is only a means to avoid the common configuration pitfalls.  
   
 In our runs, PostgreSQL performance was IO bound, partly due to the fact that it was running in a replicated configuration. PostgreSQL test runs using a large number of concurrent clients were mostly bottlenecked inside the PostgreSQL transaction subsystem, for these runs I/O and CPU played a smaller role.  
   

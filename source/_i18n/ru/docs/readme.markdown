@@ -120,10 +120,10 @@ oracle:
 - После успешной компиляции бинарного файла stroppy и заполнения файлов конфигурации мы готовы запустить команду деплоя нашего кластера. Для нашего случая в корневой директории запускаем следующую команду:
 
 для Oracle Cloud:  
-`./bin/stroppy deploy --cloud oracle --flavor small --nodes 4 --dir docs/examples/deploy-oracle-3node-2cpu-8gbRAM-100gbStorage --log-level debug`
+```./bin/stroppy deploy --cloud oracle --flavor small --nodes 4 --dir docs/examples/deploy-oracle-3node-2cpu-8gbRAM-100gbStorage --log-level debug```
 
 для Yandex.Cloud:  
-`./bin/stroppy deploy --cloud yandex --flavor small --nodes 3 --dir docs/examples/deploy-oracle-3node-2cpu-8gbRAM-100gbStorage --log-level debug`
+```./bin/stroppy deploy --cloud yandex --flavor small --nodes 3 --dir docs/examples/deploy-oracle-3node-2cpu-8gbRAM-100gbStorage --log-level debug```
 
 Описание ключей команд можно найти в разделе - [Команды](#команды) текущего руководства.
 
@@ -155,7 +155,7 @@ execute command for set environment variables KUBECONFIG before using:
 ```monitoring/grafana-on-premise/fdb_pop_5000_1.1_zipfian_false_2021-10-15T16_10_46.tar.gz``` - архив с метриками теста загрузки счетов  
 ```monitoring/grafana-on-premise/fdb_pay_5000_1.1_zipfian_false_2021-10-15T16_10_46.tar.gz``` - архив с метриками теста переводов  
 
-Если вместо сообщения в консоли возникает ошибка, которая не устраняется перезапуском (не более 3 повторов), то заводим issue с описанием ошибки в <https://github.com/picodata/stroppy/issues>.
+Если вместо сообщения в консоли возникает ошибка, которая не устраняется перезапуском (не более 3 повторов), то заводим [issue](https://github.com/picodata/stroppy/issues) с описанием ошибки.
 
 Переповтор идемпотентен для кластера VM и кластера K8S, поэтому при переповторе не будут созданы новые виртуальные машины и кластер Kubernetes.
 

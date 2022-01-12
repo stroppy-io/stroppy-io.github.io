@@ -37,7 +37,7 @@ This instruction is relevant for use on Ubuntu OS >=18.04 and has not yet been t
 
 ## Example of usage
 
-For example, we want to check how much load a FoundationDB cluster consisting of 3 nodes with 1 core and 8 GB of RAM per node will withstand, while the cluster will be deployed by the corresponding [k8s operator] (https://github.com/FoundationDB/fdb-kubernetes-operator).
+For example, we want to check how much load a FoundationDB cluster consisting of 3 nodes with 1 core and 8 GB of RAM per node will withstand, while the cluster will be deployed by the corresponding [k8s operator](https://github.com/FoundationDB/fdb-kubernetes-operator).
 
 Preliminary actions:
 
