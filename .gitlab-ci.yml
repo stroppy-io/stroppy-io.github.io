@@ -29,7 +29,7 @@ stroppy-build:
     - apk add imagemagick
     - jekyll build -d ../$SITE_HTML
     #workaroaund
-    - 'sed -i "s/\/assets\/js\/search-data.json/\/ru\/assets\/js\/search-data.json/g" $SITE_HTML/ru/assets/js/just-the-docs.js'
+    - 'sed -i "s/\/assets\/js\/search-data.json/\/ru\/assets\/js\/search-data.json/g" ../$SITE_HTML/ru/assets/js/just-the-docs.js'
   only:
     - web
     - main
