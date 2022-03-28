@@ -10,40 +10,107 @@
 # This template uses one generic job with conditional builds
 # for the default branch and all other (MR) branches.
 
-docker-build:
-  # Use the official docker image.
-  image: docker:latest
+variables:
+  JEKYLL_VERSION: "latest"
+  SITE_SRC: "source"
+  SITE_HTML: "html"
+
+stages:
+  - build
+  - pack
+  - deploy
+
+stroppy-build:
+  image: jekyll/jekyll:$JEKYLL_VERSION
   stage: build
-  services:
-    - docker:dind
+
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    - mkdir -p -m 777 $SITE_HTML
   # Default branch leaves tag empty (= latest tag)
   # All other branches are tagged with the escaped branch name (commit ref slug)
   script:
-    - |
-      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
-        tag=""
-        echo "Running on default branch '$CI_DEFAULT_BRANCH': tag = 'latest'"
-      else
-        tag=":$CI_COMMIT_REF_SLUG"
-        echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
-      fi
-    - docker build -t "$CI_REGISTRY_IMAGE${tag}" .
-    - docker push "$CI_REGISTRY_IMAGE${tag}"
-  # Run this job in a branch where a Dockerfile exists
-  rules:
-    - if: $CI_COMMIT_BRANCH
-      exists:
-        - Dockerfile
-
-deploy:
-  image: curlimages/curl
-  stage: deploy
-  when: manual
+    - cd $SITE_SRC
+    - apk add imagemagick
+    - jekyll build -d $SITE_HTML
+    #workaroaund
+    - 'sed -i "s/\/assets\/js\/search-data.json/\/ru\/assets\/js\/search-data.json/g" $SITE_HTML/ru/assets/js/just-the-docs.js'
   only:
+    - web
     - main
     - /^hotfix-/
+  except:
+    changes:
+      - ".gitlab-ci.yml"
+      - "*.md"
+
+  artifacts:
+    expire_in: 5m
+    paths:
+      - $SITE_HTML
+
+stroppy-pack:
+  stage: pack
+  only:
+    - web
+    - main
+    - /^hotfix-/
+  except:
+    changes:
+      - ".gitlab-ci.yml"
+      - "*.md"
+  needs:
+    - stroppy-build
+  tags:
+    - shell
+  before_script:
+    - FNAME="stroppy-$(date +%Y%m%d%H%M).tgz"
+
   script:
+    #pack
+    - echo "FNAME=$FNAME" > .vars
+    - cd $SITE_HTML
+    - echo "$FNAME" > .VERSION
+    - tar -cvzf ../$FNAME ./
+    #upload to binary
+    - 'curl -v -H "Authorization: Basic ${WWW_RAW_RW}" --upload-file ../$FNAME https://binary.picodata.io/repository/www-raw/$FNAME'
+  artifacts:
+    expire_in: 5m
+    paths:
+      - .vars
+
+stroppy-deploy-to-test:
+  image: curlimages/curl
+  stage: deploy
+  only:
+    - web
+    - main
+    - /^hotfix-/
+  except:
+    changes:
+      - ".gitlab-ci.yml"
+      - "*.md"
+  needs:
+    - stroppy-pack
+  script:
+    - source .vars
     # triggering gitlab.com/picodata/infra pipeline to rebuild and deploy docker
-    - curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=master https://gitlab.com/api/v4/projects/18035483/trigger/pipeline
+    - 'curl -X POST --fail -F token=$PIPELINE_TOKEN -F ref=main -F "variables[STROPPY]=$FNAME" -F "variables[STAGE]=TEST" https://git.picodata.io/api/v4/projects/46/trigger/pipeline'
+
+stroppy-deploy-to-prod:
+  image: curlimages/curl
+  stage: deploy
+  only:
+    - web
+    - main
+    - /^hotfix-/
+  except:
+    changes:
+      - ".gitlab-ci.yml"
+      - "*.md"
+  needs:
+    - stroppy-pack
+  when: manual
+  script:
+    - source .vars
+    # triggering gitlab.com/picodata/infra pipeline to rebuild and deploy docker
+    - 'curl -X POST --fail -F token=$PIPELINE_TOKEN -F ref=main -F "variables[STROPPY]=$FNAME" -F "variables[STAGE]=PROD" https://git.picodata.io/api/v4/projects/46/trigger/pipeline'
