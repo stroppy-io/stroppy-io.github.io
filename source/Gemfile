@@ -11,6 +11,7 @@ gem "jekyll", "~> 4.2.1"
 # This is the default theme for new Jekyll sites. You may change this to anything you like.
 gem "just-the-docs"
 gem 'execjs'
+gem 'webrick'
 gem 'jekyll-lunr-js-search-multilingual'
 gem 'jekyll-multiple-languages-plugin'
 gem 'jekyll-responsive-image'
