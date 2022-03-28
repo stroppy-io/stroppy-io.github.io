@@ -32,11 +32,11 @@ stroppy-build:
     - 'sed -i "s/\/assets\/js\/search-data.json/\/ru\/assets\/js\/search-data.json/g" $SITE_HTML/ru/assets/js/just-the-docs.js'
   only:
     - web
-    # - main
-    # - /^hotfix-/
+    - main
+    - /^hotfix-/
   except:
     changes:
-      - ".gitlab-ci.yml"
+      # - ".gitlab-ci.yml"
       - "*.md"
 
   artifacts:
@@ -48,11 +48,11 @@ stroppy-pack:
   stage: pack
   only:
     - web
-    # - main
-    # - /^hotfix-/
+    - main
+    - /^hotfix-/
   except:
     changes:
-      - ".gitlab-ci.yml"
+      # - ".gitlab-ci.yml"
       - "*.md"
   needs:
     - stroppy-build
