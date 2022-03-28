@@ -33,7 +33,7 @@ stroppy-build:
   only:
     - web
     - main
-    - /^hotfix-/
+    # - /^hotfix-/
   except:
     changes:
       # - ".gitlab-ci.yml"
@@ -49,7 +49,7 @@ stroppy-pack:
   only:
     - web
     - main
-    - /^hotfix-/
+    # - /^hotfix-/
   except:
     changes:
       # - ".gitlab-ci.yml"
