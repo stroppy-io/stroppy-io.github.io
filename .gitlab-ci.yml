@@ -66,7 +66,7 @@ stroppy-pack:
     - echo "$FNAME" > .VERSION
     - tar -cvzf ../$FNAME ./
     #upload to binary
-    - 'curl -v -H "Authorization: Basic ${WWW_RAW_RW}" --upload-file ../$FNAME https://binary.picodata.io/repository/www-raw/$FNAME'
+    - 'curl --fail -H "Authorization: Basic ${WWW_RAW_RW}" --upload-file ../$FNAME https://binary.picodata.io/repository/www-raw/$FNAME'
   artifacts:
     expire_in: 5m
     paths:
