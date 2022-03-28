@@ -14,6 +14,6 @@ At the moment, we have implemented support for FoundationDB, MongoDB, CockroachD
 - Running tests on demand from CLI.
 - Logging of the test progress - current and final latency, and RPS.
 - Deleting a cluster of virtual machines.
-- Deployment of multiple clusters from a single local machine with isolated. monitoring and a startup console.
+- Deployment of multiple clusters from a single local machine with isolated monitoring and a startup console.
 
 [Stroppy GitHub](https://github.com/picodata/stroppy)
