@@ -1,6 +1,6 @@
 ---
 layout: default
-title:  "Stroppy report: FoundationDB"
+title:  "Stroppy report: MongoDB"
 parent: Reports
 nav_order: 1
 ---
