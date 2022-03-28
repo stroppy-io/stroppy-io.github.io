@@ -31,12 +31,11 @@ stroppy-build:
     #workaroaund
     - 'sed -i "s/\/assets\/js\/search-data.json/\/ru\/assets\/js\/search-data.json/g" ../$SITE_HTML/ru/assets/js/just-the-docs.js'
   only:
-    - web
     - main
-    # - /^hotfix-/
+    - /^hotfix-/
   except:
     changes:
-      # - ".gitlab-ci.yml"
+      - ".gitlab-ci.yml"
       - "*.md"
 
   artifacts:
@@ -47,12 +46,11 @@ stroppy-build:
 stroppy-pack:
   stage: pack
   only:
-    - web
     - main
-    # - /^hotfix-/
+    - /^hotfix-/
   except:
     changes:
-      # - ".gitlab-ci.yml"
+      - ".gitlab-ci.yml"
       - "*.md"
   needs:
     - stroppy-build
@@ -78,7 +76,6 @@ stroppy-deploy-to-test:
   image: curlimages/curl
   stage: deploy
   only:
-    - web
     - main
     - /^hotfix-/
   except:
@@ -96,7 +93,6 @@ stroppy-deploy-to-prod:
   image: curlimages/curl
   stage: deploy
   only:
-    - web
     - main
     - /^hotfix-/
   except:
