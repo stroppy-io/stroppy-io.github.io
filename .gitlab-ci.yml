@@ -68,7 +68,7 @@ stroppy-pack:
     #upload to binary
     - 'curl --fail -H "Authorization: Basic ${WWW_RAW_RW}" --upload-file ../$FNAME https://binary.picodata.io/repository/www-raw/$FNAME'
   artifacts:
-    expire_in: 5m
+    expire_in: 24h
     paths:
       - .vars
 
