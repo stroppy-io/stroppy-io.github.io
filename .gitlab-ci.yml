@@ -24,20 +24,16 @@ stroppy-build:
   image: jekyll/jekyll:$JEKYLL_VERSION
   stage: build
 
-  before_script:
-    - mkdir -p -m 777 $SITE_HTML
-  # Default branch leaves tag empty (= latest tag)
-  # All other branches are tagged with the escaped branch name (commit ref slug)
   script:
     - cd $SITE_SRC
     - apk add imagemagick
-    - jekyll build -d $SITE_HTML
+    - jekyll build -d ../$SITE_HTML
     #workaroaund
     - 'sed -i "s/\/assets\/js\/search-data.json/\/ru\/assets\/js\/search-data.json/g" $SITE_HTML/ru/assets/js/just-the-docs.js'
   only:
     - web
-    - main
-    - /^hotfix-/
+    # - main
+    # - /^hotfix-/
   except:
     changes:
       - ".gitlab-ci.yml"
@@ -52,8 +48,8 @@ stroppy-pack:
   stage: pack
   only:
     - web
-    - main
-    - /^hotfix-/
+    # - main
+    # - /^hotfix-/
   except:
     changes:
       - ".gitlab-ci.yml"
