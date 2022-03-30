@@ -1,4 +1,9 @@
-﻿
+﻿- [Introduction](#introduction)  
+- [General results](#general-results)  
+- [Failover tests](#failover-tests)  
+- [Final remarks](#final-remarks)  
+- [Conclusions](#conclusions)  
+
 ## Introduction
 
 MongoDB is a schema-less document-oriented database. A pioneer of the document data model, MongoDB in many ways defined what we understand under “NoSQL” databases today. Starting from version 3.0, it added optional schema validation and enforcement features, bringing itself closer to traditional DBMS.
