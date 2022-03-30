@@ -5,4 +5,4 @@ parent: Reports
 nav_order: 1
 ---
 
-{% translate_file reports/fdb-report.markdown %}
+{% translate_file reports/mongodb-report.markdown %}
