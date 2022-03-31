@@ -40,9 +40,9 @@ The first two MongoDB tests did not use sharding and were conducted using the Mo
 
 #### Table 1. Key MongoDB tests results
 
-|Test #|VCPUper node|RAM per node,GB|<p>HDD</p><p>per node, GB</p>|Shards|Replicas|Clients|Nodes|Counts, mln|Transactions, mln|Transactions per second|
+|Test #|VCPUper node|RAM per node,GB|HDD per node, GB|Shards|Replicas|Clients|Nodes|Counts, mln|Transactions, mln|Transactions per second|
 | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-|1|1|8|100|`      `1|3|16|3|10|10|**340**|
+|1|1|8|100|1|3|16|3|10|10|**340**|
 |2|2|8|100|1|3|16|3|10|10|**720**|
 |3|4|8|100|1|3|64|3|10|10|**1843**|
 |4|4|8|100|1|3|128|3|10|10|**2661**|
@@ -163,7 +163,7 @@ The ‘big’ test #17 (the best overall result for MongoDB) was 3% slower than 
 
 We did a number of experiments trying to improve performance. Among these are improvements to Stroppy, tweaking the WiredTiger storage subsystem settings, and trying different filesystems. None of these resulted in any significant performance gain.
 
-MongoDB’s sweet spot in the number of concurrent clients is 128, which is also lower than FoundationDB – 512, or PostgreSQL - 256. Adding more clients, with or without tweaks of *wiredTigerConcurrentReadTransactions* and *wiredTigerConcurrentWriteTransactions*, led to a lower throughput.
+MongoDB’s sweet spot in the number of concurrent clients is 128, which is also lower than FoundationDB – 512, or PostgreSQL – 256. Adding more clients, with or without tweaks of *wiredTigerConcurrentReadTransactions* and *wiredTigerConcurrentWriteTransactions*, led to a lower throughput.
 
 We concluded that if multi-document transactions are a requirement, it’s best to scale MongoDB up, not out. Even in a relatively large cluster, CPU and disk utilization were close to 100%. With an increase in the number of shards, we certainly observed an increase in performance, but not enough to justify the scaling strategy.
 
