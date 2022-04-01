@@ -38,7 +38,7 @@ The first two MongoDB tests did not use sharding and were conducted using the Mo
 1) Table 1 only includes the successfully completed tests with Nemesis injections; there were unsuccessful attempts as well, and their description follows.
 1) We used hash-based, as opposed to range-based sharding. We observed more even data distribution and stable tail latency when using it. Stroppy does not use range queries (if it had then the range-based mapping would have improved results by a large margin).
 
-#### Table 1. Key MongoDB tests results
+#### Table 1. Key MongoDB tests results (scroll to the right to see more)
 
 |Test #|VCPUper node|RAM per node,GB|HDD per node, GB|Shards|Replicas|Clients|Nodes|Counts, mln|Transactions, mln|Transactions per second|
 | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -61,6 +61,9 @@ The first two MongoDB tests did not use sharding and were conducted using the Mo
 |17|12|40|100|1|3|128|3|1000|10|**3272**|
 |18|3|8|100|2|3|128|6|10|10|**653**|
 |19|3|8|100|2|3|128|6|10|10|**534**|
+
+The last column as a bar chart:
+![Transactions per second chart](img/mongodb-chart1-en.svg)
 
 #### Table 2. Latencies
 
@@ -85,6 +88,9 @@ The first two MongoDB tests did not use sharding and were conducted using the Mo
 |17|39|1824|111|
 |18|195|4990|662|
 |19|239|2972|657|
+
+Again, those latencies presented in a chart:
+![Latencies chart](img/mongodb-chart2-en.svg)
 
 #### Table 3. Data set sizes (\*)
 
