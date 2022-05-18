@@ -11,7 +11,7 @@
 # for the default branch and all other (MR) branches.
 default:
   tags:
-    - devops-shell
+    - shell
 
 variables:
   JEKYLL_VERSION: "latest"
