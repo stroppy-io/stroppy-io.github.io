@@ -9,6 +9,9 @@
 #
 # This template uses one generic job with conditional builds
 # for the default branch and all other (MR) branches.
+default:
+  tags:
+    - devops-shell
 
 variables:
   JEKYLL_VERSION: "latest"
@@ -23,7 +26,8 @@ stages:
 stroppy-build:
   image: jekyll/jekyll:$JEKYLL_VERSION
   stage: build
-
+  tags:
+    - docker
   script:
     - cd $SITE_SRC
     - apk add imagemagick
@@ -54,8 +58,6 @@ stroppy-pack:
       - "*.md"
   needs:
     - stroppy-build
-  tags:
-    - shell
   before_script:
     - FNAME="stroppy-$(date +%Y%m%d%H%M).tgz"
 
