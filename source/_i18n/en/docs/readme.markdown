@@ -18,7 +18,7 @@ How does all this allow you to test reliability? The fact is that there is a ver
 To complicate the task for the DBMS, Stroppy may try to break the DB cluster, because in the real world failures happen much more often than we want. And for horizontally scalable databases, this happens even more often, since a larger number of physical nodes gives more points of failure.
 
 At the moment, we have implemented support for FoundationDB, MongoDB, CockroachDB and PostgreSQL (for comparison with other DBMS from the list). 
-In addition, in order to make it easier to analyze test results, stroppy is integrated with Grafana and after each run automatically collects an archive with monitoring data scaled by run time. Also, for FoundationDB and MongoDB, we have implemented support  internal statistic collecting with a specified frequency - for FoundationDB, data from the status json console command is collected, for MongoDB, data from the db.serverStatus() command is collected.
+In addition, in order to make it easier to analyze test results, Stroppy is integrated with Grafana and after each run automatically collects an archive with monitoring data scaled by run time. Also, for FoundationDB and MongoDB, we have implemented support for internal statistics collecting with a specified frequency – for FoundationDB, data from the status json console command is collected, for MongoDB, data from the db.serverStatus() command is collected.
 
 
 ***Important clarification***:
@@ -30,9 +30,9 @@ This instruction is relevant for use on Ubuntu OS >=18.04 and has not yet been t
 - Deploying kubernetes cluster in a deployed cluster of virtual machines
 - Deployment of the selected DBMS in this cluster
 - Collecting statistics from Grafana k8s cluster metrics and system metrics of virtual machines (CPU, RAM, storage, etc.)
-- Managing the parameters of tests and the deployment itself - from the number of VMs to the load supplied and managed problems
+- Managing the parameters of tests and the deployment itself – from the number of VMs to the load supplied and managed problems
 - Running tests on command from the console
-- Logging of the test progress - current and final latency and RPS
+- Logging of the test progress – current and final latency and RPS
 - Deleting a cluster of virtual machines
 - Deployment of multiple clusters from a single local machine with isolated monitoring and a startup console
 
@@ -61,33 +61,33 @@ Select the directory with the most convenient configuration for us from the `doc
 
  1. private key with name ```private_key.pem```. This key must be obtained using the provider's web interface.
  
-To test the selected configuration using stroppy, you can go two different ways:
+To test the selected configuration using Stroppy, you can go two different ways:
  
- 1) Manual test run - Deploy virtual machines, k8s cluster and DBMS manually, raise the stroppy pod from the manifest next to it, put the fdb.cluster file in the stroppy pod root directory and start loading accounts and then the money transfers test using the commands from [Command] (#command).
+ 1) Manual test run – Deploy virtual machines, k8s cluster and DBMS manually, raise the Stroppy pod from the manifest next to it, put the fdb.cluster file in the Stroppy pod root directory and start loading accounts and then the money transfers test using the commands from [Command] (#command).
 
  2) Automatic deployment and launch of tests
  
- - Set the necessary parameters through the appropriate configuration files:
+ – Set the necessary parameters through the appropriate configuration files:
  
- templates.yaml - here you can set templates for virtual machine parameters of a future cluster of virtual machines in the cloud. Each provider has its own file and for the convenience of configuration, several basic configuration various are specified in the files, from ```small``` to ```maximum```.
+ templates.yaml – here you can set templates for virtual machine parameters of a future cluster of virtual machines in the cloud. Each provider has its own file and for the convenience of configuration, several basic configuration various are specified in the files, from ```small``` to ```maximum```.
  
  For example :
 
 ```yaml
 oracle:
   small:
-  - description: "Minimal configuration: 2 CPU VM.Standard.E3.Flex, 10 Gb RAM, 50 Gb disk"
-  - platform: "standard-v2" #Virtual machine type. Relevant for Yandex.Cloud
-  - cpu: 2 #number of cpu allocated to a virtual machine, in cores
-  - ram: 10 #the amount of RAM allocated to the virtual machine, in GB
-  -  disk: 50 #объем диска, выделенного виртуальной машине, в ГБ
+  – description: "Minimal configuration: 2 CPU VM.Standard.E3.Flex, 10 Gb RAM, 50 Gb disk"
+  – platform: "standard-v2" #Virtual machine type. Relevant for Yandex.Cloud
+  – cpu: 2 #number of cpu allocated to a virtual machine, in cores
+  – ram: 10 #the amount of RAM allocated to the virtual machine, in GB
+  –  disk: 50 #объем диска, выделенного виртуальной машине, в ГБ
 ```
 
 For our task, we will choose the ```small``` configuration as the most suitable.
 
 ***Important clarification***: we left the CPU count the same, because this type of VM is in Oracle.Cloud, like similar ones, uses processors with multi-threading, and k8s, in this case, when evaluating the specified limits and requests, focuses on the number of virtual cores (threads), and not on physical ones. Therefore, by specifying cpu:2, we actually got 4 virtual cores, 2 of which we will give to FoundationDB.
 
-- Then we configure the parameters for future tests, for this we will need the test_config file.json - here the parameters for running the tests themselves are set
+- Then we configure the parameters for future tests, for this we will need the test_config file.json – here the parameters for running the tests themselves are set
 
 Example of the test_config file.json below the text. The name and purpose of the parameters are the same as the parameters for running tests from the section [Commands](#commands).
 ```json
@@ -115,7 +115,7 @@ Example of the test_config file.json below the text. The name and purpose of the
 }
 ```
 
-- After we have prepared the configuration files, it is necessary to compile the stroppy binary file. To do this, go to the stroppy root directory inside the repository and perform steps 1 and 3 of the "Compile Strappy and build container" from the [Compilation and Build] section (#compilation-and-build). The build result should be a binary file named stroppy in the stroppy/bin directory.
+- After we have prepared the configuration files, it is necessary to compile the Stroppy binary file. To do this, go to the Stroppy root directory inside the repository and perform steps 1 and 3 of the "Compile Strappy and build container" from the [Compilation and Build] section (#compilation-and-build). The build result should be a binary file named Stroppy in the Stroppy/bin directory.
 
 - After successfully compiling the stroppy binary file and filling in the configuration files, we are ready to run the deployment command of our cluster. For our case, run the following command in the root directory:
 
@@ -125,7 +125,7 @@ Oracle Cloud:
 Yandex.Cloud:  
 `./bin/stroppy deploy --cloud yandex --flavor small --nodes 3 --dir docs/examples/deploy-oracle-3node-2cpu-8gbRAM-100gbStorage --log-level debug`
 
-A description of the command keys can be found in the section - [Commands](#commands) of the current manual.
+A description of the command keys can be found in the section – [Commands](#commands) of the current manual.
 
 The result of executing the command after output to the console of a certain amount of debugging information and about half an hour of time should be a message like:
 
@@ -142,7 +142,7 @@ execute command for set environment variables KUBECONFIG before using:
 >                               
 ```
 
-***Important clarification***: the specified ports are the default ports for monitoring access (port 3000) and access to the k8s cluster API (6443). Since stroppy supports deploying multiple clusters on one local machine, the ports for clusters launched after the first one will be incremented.
+***Important clarification***: the specified ports are the default ports for monitoring access (port 3000) and access to the k8s cluster API (6443). Since Stroppy supports deploying multiple clusters on one local machine, the ports for clusters launched after the first one will be incremented.
 
 ***Important clarification***: for the FoundationDB testing, which we planned after the successful deployment and output of the message, it is necessary to perform some manual manipulations from paragraph 2 of the section "Features of use".
 
@@ -150,16 +150,16 @@ A console opens under the message to select commands. To run the account downloa
 
 The result of the commands will be several files in the root directory with the configuration. For example:
 
-```pop_test_run_2021-10-15T16:09:51+04:00.log``` - accounts loading test logs  
-```pay_test_run_2021-10-15T16:10:46+04:00.log``` - tranfers test logs
-```monitoring/grafana-on-premise/fdb_pop_5000_1.1_zipfian_false_2021-10-15T16_10_46.tar.gz``` - archive with accounts loading test's grafana metrics (export to png files)  
-```monitoring/grafana-on-premise/fdb_pay_5000_1.1_zipfian_false_2021-10-15T16_10_46.tar.gz``` - archive with transfers test's grafana metrics (export to png files)
+```pop_test_run_2021-10-15T16:09:51+04:00.log``` – accounts loading test logs  
+```pay_test_run_2021-10-15T16:10:46+04:00.log``` – tranfers test logs
+```monitoring/grafana-on-premise/fdb_pop_5000_1.1_zipfian_false_2021-10-15T16_10_46.tar.gz``` – archive with accounts loading test's grafana metrics (export to png files)  
+```monitoring/grafana-on-premise/fdb_pay_5000_1.1_zipfian_false_2021-10-15T16_10_46.tar.gz``` – archive with transfers test's grafana metrics (export to png files)
 
 If, instead of a message in the console, an error occurs that cannot be fixed by restarting (no more than 3 repetitions), then we run the problem with the error description in <https://github.com/picodata/stroppy/issues >.
 
 The retry is idempotent for the VM cluster and the K8S cluster, so the replay will not create new virtual machines and the Kubernetes cluster.
 
-***Important clarification***: stroppy does not yet guarantee idempotency with respect to the deployment of the selected DBMS. This behavior has been left unchanged, among other things, in order to make it possible to correct the database configuration error without redeploying the entire cluster.
+***Important clarification***: Stroppy does not yet guarantee idempotency with respect to the deployment of the selected DBMS. This behavior has been left unchanged, among other things, in order to make it possible to correct the database configuration error without redeploying the entire cluster.
 
 ### Compilation and build
 
@@ -306,7 +306,7 @@ make all
 ```
 4. Then you can continue from step 3 "Build container" in [Build container without compilation](#build-container-without-compilation)
 
-# Deploy stroppy in minikube
+# Deploy Stroppy in Minikube
 **1. Preparing the environment**
 
 Install minikube
@@ -336,9 +336,9 @@ Run minikube
 minikube start
 ```
 
-**2. download the stroppy repository and build it**
+**2. download the Stroppy repository and build it**
 
-Clone the stroppy repository and prepare for deployment
+Clone the Stroppy repository and prepare for deployment
 ```sh
 git clone https://github.com/picodata/stroppy.git && cd stroppy
 make all
@@ -377,7 +377,7 @@ CoreDNS is running at https://192.168.49.2:8443/api/v1/namespaces/kube-system/se
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 ```
 
-Connect to stroppy container
+Connect to the Stroppy container
 ```sh
 kubectl exec --stdin --tty stroppy-client -- /bin/bash
 ```
@@ -392,16 +392,16 @@ stroppy pay --url postgres://stroppy:stroppy@acid-postgres-cluster/stroppy?sslmo
 
 ### Common base keys for all commands
 
-```log-level``` - logging level. Trace, debug, info, warn, error, fatal, panic are supported;  
-```dbtype``` - the name of the DBMS under test. Supported by postgres (PostgreSQL), fdb(FoundationDB), mongodb(MongoDB), cockroach(cockroach);  
+```log-level``` – logging level. Trace, debug, info, warn, error, fatal, panic are supported;  
+```dbtype``` – the name of the DBMS under test. Supported by postgres (PostgreSQL), fdb(FoundationDB), mongodb(MongoDB), cockroach(cockroach);  
 ``url```- the connection string to the database under test.
 
 ### Cluster deployment command keys (`'deploy``)
 
 "'cloud`' is the name of the selected cloud provider. Supported by yandex and oracle;
-`'flavor`` - configuration from the templates.yaml file. Supports small, standard, large, xlarge, xxlarge, maximum;
-`'nodes`' - the number of nodes of the cluster of virtual machines. Only numeric value input is supported. When specifying, pay attention to paragraph 1 from the section "Features of use";
-`'dir`` - directory with configuration files.
+`'flavor`` – configuration from the templates.yaml file. Supports small, standard, large, xlarge, xxlarge, maximum;
+`'nodes`' – the number of nodes of the cluster of virtual machines. Only numeric value input is supported. When specifying, pay attention to paragraph 1 from the section "Features of use";
+`'dir`` – directory with configuration files.
 
 **Example of command for cluster deployment in the cloud**:
 
@@ -411,10 +411,10 @@ stroppy pay --url postgres://stroppy:stroppy@acid-postgres-cluster/stroppy?sslmo
 
 ### Basic keys for test run commands
 
-```count, n``` - number of uploaded accounts, by default 100000;
-```workers, w``` - number of load workers (threads-goroutin), by default 4 * runtime.NumCPU();
-```banRangeMultiplier, r``` -  the coefficient that determines the BIC/BAN ratio in the generation process, details below;
-```stat-interval, s``` - statistics collection interval, by default 10 seconds;
+```count, n``` – number of uploaded accounts, by default 100000;
+```workers, w``` – number of load workers (threads-goroutin), by default 4 * runtime.NumCPU();
+```banRangeMultiplier, r``` –  the coefficient that determines the BIC/BAN ratio in the generation process, details below;
+```stat-interval, s``` – statistics collection interval, by default 10 seconds;
 
 ***Important clarification***: ```ban range multiplier``` (next ```brm```) is a number that defines the ratio of BAN (Bank Identifier Number) per BIC (Bank Identifier Code). 
 The number of generated BICs is approximately equal to the square root of 'count'. 
@@ -431,8 +431,8 @@ The default value of banRangeMultipluer is 1.1.
 ``` 
 
 Additional keys for the ```pop``` command:
-```sharded``` - flag for using sharding strategy when creating a data schema. Relevant only for MongoDB, false by default; 
-```add-pool, a``` - the size of the additional pool of connections, expands the main pool of connections to the database, equal to the number of workers. Relevant for all supported databases except FoundationDB. By default, 0.
+```sharded``` – flag for using sharding strategy when creating a data schema. Relevant only for MongoDB, false by default; 
+```add-pool, a``` – the size of the additional pool of connections, expands the main pool of connections to the database, equal to the number of workers. Relevant for all supported databases except FoundationDB. By default, 0.
 
 **Example of command for tranfers test**:  
 
@@ -441,13 +441,13 @@ Additional keys for the ```pop``` command:
 ```
 
 Additional keys for the ``pay`' command:
-```zipfian``` - flag for using data distribution according to Zipf's law, false by default; 
-```check``` - flag for checking the test results. The essence of the check is to calculate the total balance of accounts after the test and compare this value with the saved total balance after the test of loading accounts. By default, true.
+```zipfian``` – flag for using data distribution according to Zipf's law, false by default; 
+```check``` – flag for checking the test results. The essence of the check is to calculate the total balance of accounts after the test and compare this value with the saved total balance after the test of loading accounts. By default, true.
 
 ### Basic keys for commands to run chaos tests
 
-```kube-master-addr``` - the internal ip address of the master node of the deployed kybernetes cluster.
-```chaos-parameter``` - the names of the chaos-mesh script files located in the deploy/databases/ folder```name of the DBMS under test``/chaos. Specified without extension .yaml
+```kube-master-addr``` – the internal ip address of the master node of the deployed kybernetes cluster.
+```chaos-parameter``` – the names of the chaos-mesh script files located in the deploy/databases/ folder```name of the DBMS under test``/chaos. Specified without extension .yaml
 
 ## Testing scenario
 
@@ -498,13 +498,13 @@ before: 748385757108.0000000000
 after:  4999928088923.9300000000
 ```
 
-During the execution of tests, stroppy workers may receive various errors due to infrastructure problems or the state of the DBMS.To ensure the stability of the test, a worker who receives an error from a certain pool of errors identified at the debugging and testing stage stops for a certain period (up to 10 milliseconds), increases the counter ```Retries``` - the number of repetitions, and performs an operation with a newly generated account. To study the list of retryable errors, it is recommended to watch [payload package](https://github.com/pics data/strappy/tree/main/internal/payload).
+During the execution of tests, Stroppy workers may receive various errors due to infrastructure problems or the state of the DBMS.To ensure the stability of the test, a worker who receives an error from a certain pool of errors identified at the debugging and testing stage stops for a certain period (up to 10 milliseconds), increases the counter ```Retries``` – the number of repetitions, and performs an operation with a newly generated account. To study the list of retryable errors, it is recommended to watch [payload package](https://github.com/pics data/strappy/tree/main/internal/payload).
 If the worker receives an error that is not in the pool, he stops his work with the output of a fatal error to the log and an increase in the counter `'Errors``.
 
-Also, several counters are defined inside stroppy for "logical" errors, which are standard behavior in the general sense, but are register separately from the total number of operations:
-```dublicates``` - the number of operations that received a data duplication error. Relevant for the accounts loading test.
-```Not found``` -  the number of operations that ended with an error due to the fact that the record with the this accounts was not found in the database. Relevant for the money transfers test.
-```Overdraft``` - the number of transactions that ended with an error due to the fact that the source account balance is insufficient for the transfer with the this amount. I.e. stroppy does not perform a transfer that can take the source account balance into the negative.
+Also, several counters are defined inside Stroppy for "logical" errors, which are standard behavior in the general sense, but are register separately from the total number of operations:
+```dublicates``` – the number of operations that received a data duplication error. Relevant for the accounts loading test.
+```Not found``` –  the number of operations that ended with an error due to the fact that the record with the this accounts was not found in the database. Relevant for the money transfers test.
+```Overdraft``` – the number of transactions that ended with an error due to the fact that the source account balance is insufficient for the transfer with the this amount. I.e. Stroppy does not perform a transfer that can take the source account balance into the negative.
 
 ## The data model
 
@@ -590,7 +590,7 @@ The primary key of the accounts table is a pair of BIC and BAN values, primary k
 
 ## Chaos testing
 
-The use of controlled faults in stroppy is implemented using [chaos-mesh](http://chaos-mist.org /) is a chaos test management solution that introduces errors at every level of the Kubernetes system.
+The use of controlled faults in Stroppy is implemented using [chaos-mesh](http://chaos-mist.org /) is a chaos test management solution that introduces errors at every level of the Kubernetes system.
 
 **Example of running a test using the chaos-mesh script**:
 
@@ -600,18 +600,18 @@ The use of controlled faults in stroppy is implemented using [chaos-mesh](http:/
 
 ## Usage Features
 
-1. Launch in Oracle.Cloud and Yandex.Cloud have differences:
+1. The startup procedures in Oracle.Cloud and Yandex.Cloud are different:
 
 - for the deployment of three worker machines and one master in yandex.cloud, specify nodes=3,
 in Oracle.Cloud is 4, i.e. for deployment in Oracle Cloud, the master is taken into account in the number of nodes created, in the case of Yandex.Cloud, it is created by default.
-- in the Oracle deployment.Cloud there is an additional step - mounting individual network stores over the ISCSI protocol. Yandex.Cloud uses local disks of virtual machines.
+- in the Oracle deployment.Cloud there is an additional step – mounting individual network stores over the ISCSI protocol. Yandex.Cloud uses local disks of virtual machines.
 
 **Oracle.Cloud has a feature, the reasons for which have not yet been established: when manually deleting a cluster via the GUI, you need to explicitly delete block volumes in the corresponding section. Together with the cluster, they may NOT BE DELETED!!!**
 
-2. To run the FoundationDB tests, you first need to copy the contents of the file or the fdb.cluster file itself, located in the /var/dynamic-conf directory inside the sample-cluster-client pod (the pod name may have an additional alphanumeric postfix), and paste it into the /root/ directory inside the stroppy-client pod. This is necessary to access the cluster and, at the moment, is not automated yet.
+2. To run the FoundationDB tests, you first need to copy the contents of the file or the fdb.cluster file itself, located in the /var/dynamic-conf directory, inside the sample-cluster-client pod (the pod name may have an additional alphanumeric postfix), and paste it into the /root/ directory inside the Stroppy-client pod. This is necessary to access the cluster and, at the moment, is not automated yet.
 
 3. An archive with monitoring metrics is created on the local machine, in the monitoring/grafana-on-premise directory of the directory with configuration files. The average archive creation time is 30 minutes (more for Yandex, less for Oracle). The archive is created after the end of any of the tests.
 
-4. The ```status json``` statistics for FoundationDB are collected in a file that lies inside the stroppy pod in the k8s cluster, in the /root/ directory, the file name is generated by the ```status_json_mask_start_core_statistics.json```. Statistics collection starts before the test and ends with its completion. While statistics collection is implemented only for FoundationDB, support for collecting specific statistics for other DBMS may be implemented in the future. Statistics files are stored inside the stroppy pod, their copying to the working machine is not automated yet.
+4. The ```status json``` statistics for FoundationDB are collected in a file that lies inside the Stroppy pod in the k8s cluster, in the /root/ directory, the file name is generated by the ```status_json_mask_start_core_statistics.json```. Statistics collection starts before the test and ends with its completion. While statistics collection is implemented only for FoundationDB, support for collecting specific statistics for other DBMS may be implemented in the future. Statistics files are stored inside the Stroppy pod, their copying to the working machine is not automated yet.
 
-5. To deploy multiple clusters in the cloud from one local machine, it is recommended to make several copies of the stroppy repository with its own configuration file directories. This will avoid overlaps and flexibly manage each of the clusters.
+5. To deploy multiple clusters in the cloud from one local machine, it is recommended to make several copies of the Stroppy repository with its own configuration file directories. This will help to avoid overlaps and flexibly manage each of the clusters.

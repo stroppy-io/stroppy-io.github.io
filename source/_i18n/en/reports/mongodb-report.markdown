@@ -40,7 +40,7 @@ The first two MongoDB tests did not use sharding and were conducted using the Mo
 
 #### Table 1. Key MongoDB tests results (scroll to the right to see more)
 
-|Test #|VCPUper node|RAM per node,GB|HDD per node, GB|Shards|Replicas|Clients|Nodes|Counts, mln|Transactions, mln|Transactions per second|
+|Test #|VCPUper node|RAM per node,GB|HDD per node, GB|Shards|Replicas|Clients|Nodes|Accounts, mln|Transactions, mln|Transactions per second|
 | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
 |1|1|8|100|1|3|16|3|10|10|**340**|
 |2|2|8|100|1|3|16|3|10|10|**720**|
