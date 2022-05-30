@@ -1,4 +1,4 @@
-﻿- [Introduction](#introduction)  
+- [Introduction](#introduction)  
 - [General results](#general-results)  
 - [Failover tests](#failover-tests)  
 - [Final remarks](#final-remarks)  
@@ -94,7 +94,7 @@ Again, those latencies presented in a chart:
 
 #### Table 3. Data set sizes (\*)
 
-|Counts, mln|Transfers, mln|Data size on disk, GB|Data size on disk, FoundationDB|
+|Accounts, mln|Transfers, mln|Data size on disk, GB|Data size on disk, FoundationDB|
 | :- | :- | :- | :- |
 |10|10|3 GB|3 GB|
 |100|100|24 GB|32 GB|
@@ -161,7 +161,7 @@ One of our runs with write concern “majority” and 0 wtimeout produced an inc
 
 This report includes only the most significant test results, as presented in Table 1. To get to these we undertook a 3-month quest in search for the optimal configuration and carried out more than 100 test runs. In the end, we think that comparing MongoDB with FoundationDB and PostgreSQL head to head on the same configuration has little value.
 
-For example, performance of test #1 (one replicaset, 3 nodes with 1 CPU, 8 GB RAM per replica, same as the minimum FDB configuration) was almost 7 times lower (340 vs 2263) than with FoundationDB. ‘Small’ test #5 in scale-out mode (2 replica sets, 2 CPUs and 8 GB of RAM per replica) was 5 times slower than the respective FoundationDB test. MongoDB looks better than FoundationDB only in ‘small’ test #4 (single replica set, 4 CPUs, 8 GB of RAM per replica) - 2661 vs 2263 (17%). No “small” tests were run for PostgreSQL.
+For example, performance of test #1 (one replicaset, 3 nodes with 1 CPU, 8 GB RAM per replica, same as the minimum FDB configuration) was almost 7 times lower (340 vs 2263) than with FoundationDB. ‘Small’ test #5 in scale-out mode (2 replica sets, 2 CPUs and 8 GB of RAM per replica) was 5 times slower than the respective FoundationDB test. MongoDB looks better than FoundationDB only in ‘small’ test #4 (single replica set, 4 CPUs, 8 GB of RAM per replica) – 2661 vs 2263 (17%). No “small” tests were run for PostgreSQL.
 
 Among ‘medium’ tests, the best result is in test #7 (one replica set, 6 CPUs, 16 GB of RAM per replica), is still 2 times slower than a similar ‘medium’ test with FoundationDB  (5 nodes, 1 CPU and 16 GB of RAM per node): 2761 vs 5782 TPS, and 40% slower than a  medium test of PostgreSQL (2 nodes, 4 CPUs and 30 GB of RAM per node), 2761 vs 4663. The best ‘medium’ test in a scale-out cluster is test #12, which is still ~5 times slower than FoundationDB (1171 vs 5782) and 3 times slower than PostgreSQL.
 
