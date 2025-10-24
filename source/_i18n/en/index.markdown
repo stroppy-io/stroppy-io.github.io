@@ -16,4 +16,4 @@ At the moment, we have implemented support for FoundationDB, MongoDB, CockroachD
 - Deleting a cluster of virtual machines.
 - Deployment of multiple clusters from a single local machine with isolated monitoring and a startup console.
 
-[Stroppy GitHub](https://github.com/picodata/stroppy)
+[Stroppy GitHub](https://github.com/stroppy-io/stroppy)

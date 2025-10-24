@@ -17,4 +17,4 @@ Stroppy - это фреймворк для тестирования различ
 - Удаление кластера виртуальных машин
 - Развертывание нескольких кластеров с одной локальной машины с изолированным мониторингом и консолью запуска  
   
-[Stroppy GitHub](https://github.com/picodata/stroppy)  
+[Stroppy GitHub](https://github.com/stroppy-io/stroppy)  
