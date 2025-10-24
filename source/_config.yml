@@ -28,7 +28,7 @@ color_scheme: light
 
 aux_links:
   "GitHub":
-    - "//github.com/picodata/stroppy"
+    - "//github.com/stroppy-io/stroppy"
 
 logo: "/assets/images/stroppy.png"
 
