@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" width="400" height="320">
+  <defs>
+    <linearGradient id="dbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e1e1e"/>
+      <stop offset="40%" style="stop-color:#272727"/>
+      <stop offset="100%" style="stop-color:#2d2d2d"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="0%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" style="stop-color:#fde68a"/>
+      <stop offset="50%" style="stop-color:#fbbf24"/>
+      <stop offset="100%" style="stop-color:#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#5fa0ff;stop-opacity:0"/>
+      <stop offset="30%" style="stop-color:#4284fb;stop-opacity:0.35"/>
+      <stop offset="50%" style="stop-color:#5fa0ff;stop-opacity:0.5"/>
+      <stop offset="70%" style="stop-color:#4284fb;stop-opacity:0.35"/>
+      <stop offset="100%" style="stop-color:#5fa0ff;stop-opacity:0"/>
+    </linearGradient>
+    <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4284fb"/>
+      <stop offset="50%" style="stop-color:#5fa0ff"/>
+      <stop offset="100%" style="stop-color:#4284fb"/>
+    </linearGradient>
+    <radialGradient id="boltAura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#fbbf24;stop-opacity:0"/>
+    </radialGradient>
+    <filter id="boltGlow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="rimGlow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="barGlow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background wave pattern -->
+  <path d="M0,200 Q50,165 100,200 Q150,235 200,200 Q250,165 300,200 Q350,235 400,200" fill="none" stroke="url(#waveGrad)" stroke-width="40" opacity="0.25"/>
+  <path d="M0,225 Q50,195 100,225 Q150,255 200,225 Q250,195 300,225 Q350,255 400,225" fill="none" stroke="url(#waveGrad)" stroke-width="25" opacity="0.15"/>
+  <path d="M0,180 Q50,155 100,180 Q150,205 200,180 Q250,155 300,180 Q350,205 400,180" fill="none" stroke="url(#waveGrad)" stroke-width="15" opacity="0.1"/>
+
+  <!-- Central database icon -->
+  <g transform="translate(200,140)">
+    <!-- Bolt aura glow -->
+    <ellipse cx="0" cy="5" rx="55" ry="70" fill="url(#boltAura)"/>
+
+    <!-- Cylinder -->
+    <ellipse cx="0" cy="-55" rx="75" ry="25" fill="url(#dbGrad)" opacity="0.95"/>
+    <rect x="-75" y="-55" width="150" height="110" fill="url(#dbGrad)" opacity="0.9"/>
+    <ellipse cx="0" cy="55" rx="75" ry="25" fill="url(#dbGrad)" opacity="0.95"/>
+
+    <!-- Rings with glow -->
+    <ellipse cx="0" cy="-15" rx="75" ry="25" fill="none" stroke="url(#rimGrad)" stroke-width="1.5" opacity="0.45" filter="url(#rimGlow)"/>
+    <ellipse cx="0" cy="20" rx="75" ry="25" fill="none" stroke="url(#rimGrad)" stroke-width="1.5" opacity="0.3" filter="url(#rimGlow)"/>
+
+    <!-- Bottom ring -->
+    <ellipse cx="0" cy="55" rx="75" ry="25" fill="none" stroke="#5fa0ff" stroke-width="1" opacity="0.3"/>
+
+    <!-- Top face -->
+    <ellipse cx="0" cy="-55" rx="75" ry="25" fill="none" stroke="#7cb4ff" stroke-width="2.5" filter="url(#rimGlow)"/>
+    <ellipse cx="0" cy="-55" rx="62" ry="18" fill="#353535" opacity="0.6"/>
+
+    <!-- Lightning bolt with glow -->
+    <polygon points="12,-50 -15,15 5,15 -12,70 35,-5 14,-5 30,-50" fill="url(#bolt)" stroke="#fde68a" stroke-width="0.8" stroke-linejoin="round" filter="url(#boltGlow)"/>
+  </g>
+
+  <!-- Metrics bars (left) -->
+  <g transform="translate(55,110)" opacity="0.65" filter="url(#barGlow)">
+    <rect x="0" y="40" width="8" height="30" rx="3" fill="#5fa0ff"/>
+    <rect x="14" y="22" width="8" height="48" rx="3" fill="#4284fb"/>
+    <rect x="28" y="33" width="8" height="37" rx="3" fill="#5fa0ff"/>
+    <rect x="42" y="10" width="8" height="60" rx="3" fill="#2d6fe8"/>
+    <rect x="56" y="28" width="8" height="42" rx="3" fill="#5fa0ff"/>
+  </g>
+
+  <!-- Metrics bars (right) -->
+  <g transform="translate(280,110)" opacity="0.65" filter="url(#barGlow)">
+    <rect x="0" y="28" width="8" height="42" rx="3" fill="#5fa0ff"/>
+    <rect x="14" y="15" width="8" height="55" rx="3" fill="#2d6fe8"/>
+    <rect x="28" y="38" width="8" height="32" rx="3" fill="#5fa0ff"/>
+    <rect x="42" y="8" width="8" height="62" rx="3" fill="#4284fb"/>
+    <rect x="56" y="22" width="8" height="48" rx="3" fill="#5fa0ff"/>
+  </g>
+
+  <!-- Spark particles -->
+  <g transform="translate(200,140)" opacity="0.6">
+    <circle cx="40" cy="-40" r="2" fill="#fbbf24"/>
+    <circle cx="-35" cy="30" r="1.5" fill="#fde68a"/>
+    <circle cx="30" cy="50" r="1.8" fill="#fbbf24"/>
+    <circle cx="-25" cy="-30" r="1.2" fill="#fde68a"/>
+    <circle cx="45" cy="15" r="1.5" fill="#f59e0b"/>
+  </g>
+</svg>

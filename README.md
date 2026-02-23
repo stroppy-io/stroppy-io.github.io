@@ -1,34 +1,41 @@
-# stroppy-site
+# Website
 
-## Getting started
+This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
 
-For local deploy this site needed next actions:
+## Installation
 
-Attention: this instruction is actually for Ubuntu OS, for deploy in another OS, please, refer to
-
-1. Install dependencies:
-
-Install Ruby and other prerequisites:  
-
-```sudo apt-get install ruby-full build-essential zlib1g-dev```
-
-Add environment variables to your ~/.bashrc file to configure the gem installation path:
-
-```sh
-echo '# Install Ruby Gems to ~/gems' >> ~/.bashrc
-echo 'export GEM_HOME="$HOME/gems"' >> ~/.bashrc
-echo 'export PATH="$HOME/gems/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
+```bash
+yarn
 ```
 
-2. Install Jekyll and Bundler
+## Local Development
 
-```gem install jekyll bundler```
+```bash
+yarn start
+```
 
-3. Change into stroppy-site/source directory.
+This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
 
-4. Build the site and make it available on a local server:  
+## Build
 
-```bundle exec jekyll serve```
+```bash
+yarn build
+```
 
-5. Browse to ```http://localhost:4000```
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
+
+## Deployment
+
+Using SSH:
+
+```bash
+USE_SSH=true yarn deploy
+```
+
+Not using SSH:
+
+```bash
+GIT_USER=<Your GitHub username> yarn deploy
+```
+
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.

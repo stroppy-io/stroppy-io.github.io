@@ -1,0 +1,185 @@
+:root {
+  --ifm-color-primary: #5fa0ff;
+  --ifm-color-primary-dark: #4284fb;
+  --ifm-color-primary-darker: #2d6fe8;
+  --ifm-color-primary-darkest: #1a5cd4;
+  --ifm-color-primary-light: #7cb4ff;
+  --ifm-color-primary-lighter: #a0cbff;
+  --ifm-color-primary-lightest: #c8e0ff;
+  --ifm-code-font-size: 90%;
+  --ifm-font-size-base: 95%;
+  --ifm-font-family-base: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ifm-heading-color: var(--ifm-color-emphasis-900);
+  --ifm-leading-desktop: 1.75;
+  --ifm-code-border-radius: 0.25rem;
+  --ifm-code-padding-vertical: 2px;
+  --ifm-code-padding-horizontal: 5px;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #5fa0ff;
+  --ifm-color-primary-dark: #4284fb;
+  --ifm-color-primary-darker: #2d6fe8;
+  --ifm-color-primary-darkest: #1a5cd4;
+  --ifm-color-primary-light: #7cb4ff;
+  --ifm-color-primary-lighter: #a0cbff;
+  --ifm-color-primary-lightest: #c8e0ff;
+  --ifm-font-color-base: #bdbdbd;
+  --ifm-background-color: #1e1e1e;
+  --ifm-background-surface-color: #272727;
+  --ifm-footer-background-color: var(--ifm-navbar-background-color);
+  --ifm-card-background-color: #272727;
+  --ifm-color-emphasis-200: #353535;
+  --ifm-hr-background-color: #424242;
+  --docusaurus-highlighted-code-line-bg: rgba(66, 66, 66, 0.35);
+}
+
+/* Code blocks — nanos-world style */
+[data-theme='dark'] .prism-code,
+[data-theme='dark'] div[class^='codeBlockTitle'],
+[data-theme='dark'] span[class^='codeLineNumber'] {
+  background-color: #222 !important;
+}
+
+.prism-code,
+div[class^='codeBlockTitle'],
+span[class^='codeLineNumber'] {
+  background-color: #f6f8fa !important;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.prism-code {
+  border-radius: 8px !important;
+}
+
+/* Navbar */
+[data-theme='dark'] .navbar {
+  background: rgba(30, 30, 30, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #353535;
+}
+
+/* Hero section */
+.hero--stroppy {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 120%, rgba(95, 160, 255, 0.2) 0%, transparent 70%),
+    linear-gradient(135deg, #1a5cd4 0%, #2d6fe8 40%, #5fa0ff 100%);
+  color: white;
+  padding: 5rem 0 4rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero--stroppy::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 70%, rgba(251, 191, 36, 0.06) 0%, transparent 50%),
+              radial-gradient(circle at 70% 30%, rgba(95, 160, 255, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+[data-theme='dark'] .hero--stroppy {
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 120%, rgba(95, 160, 255, 0.1) 0%, transparent 70%),
+    linear-gradient(135deg, #121212 0%, #1e1e1e 40%, #272727 100%);
+}
+
+.hero--stroppy .hero__title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.hero--stroppy .hero__subtitle {
+  font-size: 1.4rem;
+  opacity: 0.9;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Feature cards */
+.feature-card {
+  background: var(--ifm-card-background-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 12px;
+  padding: 2rem;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: var(--ifm-color-primary-lighter);
+}
+
+[data-theme='dark'] .feature-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  border-color: rgba(95, 160, 255, 0.3);
+}
+
+.feature-card h3 {
+  margin-top: 1rem;
+}
+
+.feature-card svg {
+  width: 48px;
+  height: 48px;
+}
+
+/* Workflow steps */
+.workflow-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.workflow-step-number {
+  background: var(--ifm-color-primary);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Logo */
+.hero-logo {
+  width: 300px;
+  height: 300px;
+  margin-bottom: -2rem;
+  margin-top: -3rem;
+}
+
+/* Markdown heading separators — nanos-world style */
+.markdown h2:not(:first-of-type)::before {
+  height: 1px;
+  content: "";
+  display: block;
+  background-color: var(--ifm-color-emphasis-200);
+  margin-bottom: 2rem;
+}
+
+@media screen and (max-width: 996px) {
+  .hero--stroppy .hero__title {
+    font-size: 2.5rem;
+  }
+
+  .hero-logo {
+    width: 200px;
+    height: 200px;
+    margin-top: -2rem;
+    margin-bottom: -1rem;
+  }
+}
