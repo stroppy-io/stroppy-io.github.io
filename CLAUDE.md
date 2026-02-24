@@ -19,9 +19,9 @@ Push to `next` branch triggers GitHub Actions (`.github/workflows/deploy.yml`) w
 
 ## Versioning
 
-`versions.json` lists released versions (currently `["1.0.0"]`). The `docs/` directory is the "Next" (unreleased) version. Snapshots live in `versioned_docs/version-X.X.X/` with corresponding `versioned_sidebars/`.
+`versions.json` lists released versions (currently `["2.2.3"]`). The `docs/` directory is the "Next" (unreleased) version. Snapshots live in `versioned_docs/version-X.X.X/` with corresponding `versioned_sidebars/`.
 
-- `/docs/` routes to latest stable (1.0.0)
+- `/docs/` routes to latest stable (2.2.3)
 - `/docs/next/` routes to current development
 - To cut a new version: `npx docusaurus docs:version X.X.X`
 - Config in `docusaurus.config.ts` → `presets[0].docs.versions`

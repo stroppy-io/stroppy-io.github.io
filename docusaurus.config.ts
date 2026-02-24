@@ -43,14 +43,11 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           editUrl: 'https://github.com/stroppy-io/stroppy-docs/tree/main/',
-          lastVersion: '1.0.0',
+          lastVersion: '2.2.3',
           versions: {
             current: {
               label: 'Next',
               path: 'next',
-            },
-            '1.0.0': {
-              label: '1.0.0',
             },
           },
         },
