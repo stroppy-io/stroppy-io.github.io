@@ -124,7 +124,7 @@ function QuickStart() {
     <section style={{padding: '4rem 0', background: 'var(--ifm-background-surface-color)'}}>
       <div className="container">
         <div className="row">
-          <div className="col col--6">
+          <div className="col col--4">
             <Heading as="h2">Up and running in 30 seconds</Heading>
             <div className="workflow-step">
               <div className="workflow-step-number">1</div>
@@ -148,22 +148,40 @@ function QuickStart() {
               </div>
             </div>
           </div>
-          <div className="col col--6">
+          <div className="col col--4">
             <Heading as="h2">Or use Docker</Heading>
             <pre style={{padding: '1.5rem', borderRadius: '8px'}}>
               <code>{`# Pull and run directly
 docker pull ghcr.io/stroppy-io/stroppy:latest
 
-# Run built-in TPC-B benchmark
+# Run built-in TPC-C benchmark
 docker run --network host \\
-  stroppy run /workloads/tpcb/tpcb.ts \\
-  /workloads/tpcb/tpcb.sql
+  stroppy run /workloads/tpcc/tpcc.ts \\
+  /workloads/tpcc/tpcc.sql
 
 # With custom database URL
 docker run --network host \\
   -e DRIVER_URL="postgres://u:p@host/db" \\
   stroppy run /workloads/simple/simple.ts`}</code>
             </pre>
+          </div>
+          <div className="col col--4">
+            <Heading as="h2">Or ask Claude Code</Heading>
+            <pre style={{padding: '1.5rem', borderRadius: '8px'}}>
+              <code>{`# With the Stroppy MCP server configured,
+# just ask in natural language:
+
+> run a TPC-C benchmark with
+  50 virtual users for 5 minutes
+  and save an HTML report
+
+# Claude Code calls stroppy_run()
+# with the right parameters — no env
+# vars, no flags, no permission prompts.`}</code>
+            </pre>
+            <p style={{fontSize: '0.9rem', opacity: 0.8}}>
+              <Link to="/docs/mcp">Set up the MCP server &rarr;</Link>
+            </p>
           </div>
         </div>
       </div>

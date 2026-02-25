@@ -75,6 +75,20 @@ make build
 # Binary at ./build/stroppy
 ```
 
+### Verify installation
+
+```bash
+stroppy version
+```
+
+```
+stroppy  v2.2.3
+k6       v1.6.0
+pgx      v5.8.0
+```
+
+This shows the versions of Stroppy itself and its key dependencies (k6 engine, PostgreSQL driver). For programmatic use, `stroppy version --json` outputs the same information as JSON.
+
 ## Quick Start
 
 ### 1. Generate a workspace
@@ -208,3 +222,4 @@ make build
 - [SQL & Generators](./sql-and-generators) &mdash; Deep dive into parameterized SQL and the data generation system
 - [Extensibility](./extensibility) &mdash; How to add your own database driver
 - [Reports & Workflow](./reports-workflow) &mdash; HTML reports and the iterative testing workflow
+- [MCP Server](./mcp) &mdash; Use Stroppy through Claude Code and other AI assistants

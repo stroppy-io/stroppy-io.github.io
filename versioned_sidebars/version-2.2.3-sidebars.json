@@ -3,7 +3,8 @@
     "introduction",
     "sql-and-generators",
     "extensibility",
-    "reports-workflow"
+    "reports-workflow",
+    "mcp"
   ],
   "legacySidebar": [
     {

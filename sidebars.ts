@@ -6,6 +6,7 @@ const sidebars: SidebarsConfig = {
     'sql-and-generators',
     'extensibility',
     'reports-workflow',
+    'mcp',
   ],
   legacySidebar: [
     {

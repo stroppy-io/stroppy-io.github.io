@@ -17,7 +17,7 @@ Since k6 v0.49.0, there are two built-in reporting features that work out of the
 Watch your test metrics live in the browser:
 
 ```bash
-K6_WEB_DASHBOARD=true stroppy run workloads/tpcb/tpcb.ts workloads/tpcb/tpcb.sql
+K6_WEB_DASHBOARD=true stroppy run workloads/tpcc/tpcc.ts workloads/tpcc/tpcc.sql
 ```
 
 This opens a web dashboard (default: `http://localhost:5665`) showing real-time graphs of:
@@ -33,7 +33,7 @@ Generate a self-contained HTML report at the end of a test run:
 ```bash
 K6_WEB_DASHBOARD=true \
 K6_WEB_DASHBOARD_EXPORT=reports/my-report.html \
-  stroppy run workloads/tpcb/tpcb.ts workloads/tpcb/tpcb.sql
+  stroppy run workloads/tpcc/tpcc.ts workloads/tpcc/tpcc.sql
 ```
 
 The HTML report includes the same detailed graphs from the dashboard, frozen at the end of the test. It's a single file &mdash; no server needed. Open it directly in any browser.
@@ -45,7 +45,7 @@ You can watch live and save the report simultaneously:
 ```bash
 K6_WEB_DASHBOARD=true \
 K6_WEB_DASHBOARD_EXPORT=reports/baseline.html \
-  stroppy run workloads/tpcb/tpcb.ts workloads/tpcb/tpcb.sql
+  stroppy run workloads/tpcc/tpcc.ts workloads/tpcc/tpcc.sql
 ```
 
 ## The Iterative Benchmarking Workflow
@@ -63,7 +63,7 @@ mkdir -p reports
 
 K6_WEB_DASHBOARD=true \
 K6_WEB_DASHBOARD_EXPORT=reports/00-baseline.html \
-  stroppy run workloads/tpcb/tpcb.ts workloads/tpcb/tpcb.sql \
+  stroppy run workloads/tpcc/tpcc.ts workloads/tpcc/tpcc.sql \
   -- --duration 10m
 ```
 
@@ -76,7 +76,7 @@ Apply your first optimization (e.g., add an index, tune `work_mem`), then run th
 ```bash
 K6_WEB_DASHBOARD=true \
 K6_WEB_DASHBOARD_EXPORT=reports/01-add-covering-index.html \
-  stroppy run workloads/tpcb/tpcb.ts workloads/tpcb/tpcb.sql \
+  stroppy run workloads/tpcc/tpcc.ts workloads/tpcc/tpcc.sql \
   -- --duration 10m
 ```
 
@@ -104,13 +104,13 @@ Keep going. Name reports after your changes:
 # After tuning shared_buffers
 K6_WEB_DASHBOARD=true \
 K6_WEB_DASHBOARD_EXPORT=reports/02-shared-buffers-2gb.html \
-  stroppy run workloads/tpcb/tpcb.ts workloads/tpcb/tpcb.sql \
+  stroppy run workloads/tpcc/tpcc.ts workloads/tpcc/tpcc.sql \
   -- --duration 10m
 
-# After rewriting a stored procedure
+# After rewriting a query
 K6_WEB_DASHBOARD=true \
-K6_WEB_DASHBOARD_EXPORT=reports/03-optimized-tpcb-proc.html \
-  stroppy run workloads/tpcb/tpcb.ts workloads/tpcb/tpcb.sql \
+K6_WEB_DASHBOARD_EXPORT=reports/03-optimized-proc.html \
+  stroppy run workloads/tpcc/tpcc.ts workloads/tpcc/tpcc.sql \
   -- --duration 10m
 ```
 
@@ -124,7 +124,7 @@ MSG=$(git log -1 --pretty=%s | tr ' ' '-' | tr -cd '[:alnum:]-' | head -c 50)
 
 K6_WEB_DASHBOARD=true \
 K6_WEB_DASHBOARD_EXPORT="reports/${COMMIT}-${MSG}.html" \
-  stroppy run workloads/tpcb/tpcb.ts workloads/tpcb/tpcb.sql \
+  stroppy run workloads/tpcc/tpcc.ts workloads/tpcc/tpcc.sql \
   -- --duration 10m
 ```
 
@@ -133,7 +133,7 @@ This produces files like:
 reports/
   a1b2c3d-add-covering-index.html
   e4f5g6h-tune-shared-buffers.html
-  i7j8k9l-optimize-tpcb-proc.html
+  i7j8k9l-optimize-payment-query.html
   m0n1o2p-enable-parallel-query.html
 ```
 
@@ -156,7 +156,7 @@ set -euo pipefail
 
 REPORTS_DIR="${REPORTS_DIR:-reports}"
 DURATION="${DURATION:-10m}"
-WORKLOAD="${1:-workloads/tpcb/tpcb.ts}"
+WORKLOAD="${1:-workloads/tpcc/tpcc.ts}"
 SQL_FILE="${2:-workloads/tpcb/tpcb.sql}"
 
 mkdir -p "$REPORTS_DIR"
@@ -193,7 +193,7 @@ Usage:
 ```bash
 chmod +x bench.sh
 
-# Run with defaults (TPC-B, 10 minutes)
+# Run with defaults (TPC-C, 10 minutes)
 ./bench.sh
 
 # Custom workload and duration
@@ -208,10 +208,10 @@ For automated comparison or CI pipelines, export raw metrics as JSON:
 # Using the k6 binary directly
 ./build/k6 run \
   --out json=reports/results.json \
-  workloads/tpcb/tpcb.ts
+  workloads/tpcc/tpcc.ts
 
 # Or pass through stroppy
-stroppy run workloads/tpcb/tpcb.ts workloads/tpcb/tpcb.sql \
+stroppy run workloads/tpcc/tpcc.ts workloads/tpcc/tpcc.sql \
   -- --out json=reports/results.json
 ```
 
@@ -256,7 +256,7 @@ This sends metrics to any OTLP-compatible backend (Jaeger, Grafana Tempo, etc.) 
 
 ## Tips
 
-- **Keep test duration consistent** across runs for fair comparison. 10 minutes is a good default for TPC-B.
+- **Keep test duration consistent** across runs for fair comparison. 10 minutes is a good default.
 - **Use the same scale factor** when comparing. Set `SCALE_FACTOR` explicitly.
 - **Warm up the database** before the measured run, or include a ramp-up scenario.
 - **Name reports descriptively.** Future-you will thank present-you.
