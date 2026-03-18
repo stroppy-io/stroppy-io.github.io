@@ -92,13 +92,15 @@ const config: Config = {
         },
         {
           href: 'https://github.com/stroppy-io/stroppy',
-          label: 'GitHub',
           position: 'right',
+          className: 'header-github-link',
+          'aria-label': 'GitHub repository',
         },
         {
           href: 'https://discord.gg/2mSSrkBkHm',
-          label: 'Discord',
           position: 'right',
+          className: 'header-discord-link',
+          'aria-label': 'Discord server',
         },
       ],
     },
