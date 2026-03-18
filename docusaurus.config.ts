@@ -95,6 +95,11 @@ const config: Config = {
           label: 'GitHub',
           position: 'right',
         },
+        {
+          href: 'https://discord.gg/2mSSrkBkHm',
+          label: 'Discord',
+          position: 'right',
+        },
       ],
     },
     footer: {
@@ -110,8 +115,12 @@ const config: Config = {
           ],
         },
         {
-          title: 'Project',
+          title: 'Community',
           items: [
+            {
+              label: 'Discord',
+              href: 'https://discord.gg/2mSSrkBkHm',
+            },
             {
               label: 'GitHub',
               href: 'https://github.com/stroppy-io/stroppy',
