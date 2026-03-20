@@ -1,15 +1,15 @@
 ---
 slug: pg-vs-mysql-first-look
-title: "PostgreSQL vs MySQL: A First Multi-Database Benchmark with Stroppy"
+title: "PostgreSQL vs MySQL: A Test Drive with Stroppy"
 authors: [nikita]
 tags: [benchmark, postgresql, mysql, tpc-c, drivers]
 ---
 
-There are hundreds of databases. PostgreSQL, MySQL, ClickHouse, CockroachDB, DuckDB, Picodata, Tarantool, OrioleDB, Cloudberry — and that's barely scratching the surface. Every technical architect faces the same question: *which one fits my workload?* The answer is never simple, and it's rarely the same twice.
+Comparing databases is hard. There are plenty of well-established benchmarking suites out there, and plenty of people with more experience doing it. But at some point, if you need to understand how a database behaves under *your* workload on *your* hardware, you end up running the tests yourself. Vendor benchmarks, Stack Overflow threads, and even LLM-generated answers all have their limits — they can point you in a direction, but they can't replace your own measurements.
 
-Vendor benchmarks are marketing. Stack Overflow threads are anecdotes. LLM-powered searches aren't much better — they're trained on that same mix of outdated docs, vendor marketing, and forum opinions, and they'll confidently present it as fact. The only way to trust a number is to produce it yourself, on your own hardware, with your own workload, under your own conditions. That's the gap Stroppy fills — a free, open tool for hands-on database stress testing, built on top of [k6](https://k6.io), the load testing framework many of you already know.
+Stroppy is a tool we've been building to make that hands-on testing more practical. It's built on top of [k6](https://k6.io), the load testing framework, and focuses on database stress testing with parameterized SQL, data generation, and a pluggable driver model.
 
-This post walks through our first real multi-database comparison: **PostgreSQL vs MySQL**, both on completely stock configurations, running a TPC-C-derived workload for 30 minutes per test. Along the way, we'll cover how we added MySQL support to Stroppy in essentially one file, why running 16 sequential tests by hand is a terrible idea, and what happens when your test VM runs out of disk space mid-benchmark.
+This post is a walkthrough of our first attempt at running Stroppy against two databases at once: **PostgreSQL and MySQL**, both with completely stock configurations, running a TPC-C-derived workload for 30 minutes per test. It's not a proper benchmark — more of a practice run to shake out the tooling. Along the way, we'll cover how we added MySQL support, why running 16 sequential tests by hand quickly becomes impractical, and what happens when your test VM runs out of disk space mid-run.
 
 <!-- truncate -->
 
@@ -46,7 +46,7 @@ If your database has a `database/sql` driver (and most do), adding it to Stroppy
 
 We ran TPC-C `pick` workloads — random order selection queries hitting the `warehouse`, `district`, `customer`, `stock`, `order_line`, and `new_order` tables. Both databases were completely stock: default configs, no tuning, just a role and `pg_hba.conf` / bind address to allow connections.
 
-**Machine:** 8 cores, 8 GB RAM, 279 GB SSD. Stroppy and the database ran on the same VM — not a production-like setup, but good enough for a methodology test.
+**Machine:** 8 cores, 8 GB RAM, 279 GB SSD. Stroppy and the database ran on the same VM — far from a production-like setup, but sufficient for testing the workflow.
 
 **Parameters** varied across three dimensions:
 
@@ -100,7 +100,7 @@ These numbers compare **stock, untuned** PostgreSQL and MySQL on a **shared VM**
 
 ![Throughput: PostgreSQL vs MySQL](/img/blog/throughput_comparison.png)
 
-The throughput gap is striking: PostgreSQL delivered **7–14× higher QPS** than MySQL across all matched configurations. At scale=20 with 10 VUs, PostgreSQL sustained 6,400 queries/sec vs MySQL's 460.
+On stock configs, PostgreSQL showed **7–14× higher QPS** than MySQL across all configurations we tested. At scale=20 with 10 VUs, PostgreSQL sustained 6,400 queries/sec vs MySQL's 460. These numbers obviously say more about default configurations than about the engines themselves — a tuned MySQL would close much of this gap.
 
 | Scenario | PG QPS | MySQL QPS | Ratio |
 |----------|--------|-----------|-------|
@@ -124,9 +124,9 @@ At 50 VUs with 50 connections, PostgreSQL median latency stayed between **3–6 
 | 200 | 5 ms | 16 ms | 80 ms | 326 ms |
 | 1000 | 6 ms | 18 ms | 93 ms | 347 ms |
 
-Again — this is stock-vs-stock on a small VM. MySQL with InnoDB tuning, buffer pool sizing, and proper `innodb_flush_log_at_trx_commit` settings would tell a different story. The point is that Stroppy gives you the framework to run that experiment yourself.
+Again — this is stock-vs-stock on a small VM. MySQL with InnoDB tuning, buffer pool sizing, and proper `innodb_flush_log_at_trx_commit` settings would likely tell a very different story. The takeaway here is less about the specific numbers and more about how straightforward it is to collect them with Stroppy and compare across configurations.
 
-## The Connection Pool Surprise
+## Connection Pool Size vs Performance
 
 We tested three pool-to-VU ratios at scale=20 with 100 VUs: half as many connections as VUs (`vus/2 = 50`), equal (`vus = 100`), and double (`2×vus = 200`).
 
@@ -144,7 +144,7 @@ This generated millions of error log lines per test. In a 30-minute run with 100
 
 However, MySQL's P95 latency *doubled* when moving from 50 to 100+ connections — from 493 ms to ~1,000 ms. More connections didn't help throughput but added latency variance. This is a classic sign that the extra connections sit idle most of the time, adding overhead from context switching and lock contention without contributing useful work.
 
-**Takeaway:** More connections is not always better. For PostgreSQL, exceeding `max_connections` is catastrophic. For MySQL, it's merely wasteful. In both cases, `vus/2` produced the best or equivalent results. This is exactly the kind of finding you can only get from running the tests yourself — no documentation will tell you the optimal pool size for your specific workload and hardware.
+None of this is particularly novel — the `max_connections` limit is well-documented, and connection pooling is a solved problem in production. But it's a good example of why running your own tests matters: the interaction between pool size, VU count, and database defaults is specific to each setup, and it's easy to get it wrong if you only rely on general advice.
 
 ## When the Disk Fills Up
 
@@ -188,7 +188,7 @@ PostgreSQL numbers are very stable. MySQL shows more variance — the s20/v10/c1
 
 ## What's Next
 
-This was a methodology test, not a database shootout. Both engines were completely untuned, running on a small shared VM. The real value is in proving the workflow: write a test script, define a matrix, let the tooling run overnight, compare the results in the morning.
+This was a practice run, not a database shootout. Both engines were completely untuned, running on a small shared VM. The goal was to test the workflow end-to-end: write a test script, define a matrix, let the tooling run overnight, look at the results in the morning.
 
 For **Stroppy**, we need a proper one-shot SQL execution mode — a way to run a single statement (like `CREATE DATABASE` or `ALTER SYSTEM`) without k6's VU/iteration machinery. Right now naggy shells out to `psql` and `mysql` CLI tools for DDL, which defeats the purpose of having a unified testing tool.
 
