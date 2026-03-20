@@ -56,9 +56,23 @@ span[class^='codeLineNumber'] {
 
 /* Navbar */
 [data-theme='dark'] .navbar {
-  background: rgba(30, 30, 30, 0.92);
+  background: rgba(30, 30, 30, 0.97);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid #353535;
+}
+
+/* Fix iOS Safari: backdrop-filter creates a stacking context that can hide
+   the mobile sidebar. Ensure sidebar renders above the navbar layer. */
+[data-theme='dark'] .navbar-sidebar {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--ifm-background-surface-color);
+}
+
+[data-theme='dark'] .navbar-sidebar__backdrop {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* Hero section */
