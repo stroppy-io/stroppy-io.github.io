@@ -46,7 +46,7 @@ If your database has a `database/sql` driver (and most do), adding it to Stroppy
 
 We ran TPC-C `pick` workloads — random order selection queries hitting the `warehouse`, `district`, `customer`, `stock`, `order_line`, and `new_order` tables. Both databases were completely stock: default configs, no tuning, just a role and `pg_hba.conf` / bind address to allow connections.
 
-**Machine:** 8 cores, 8 GB RAM, 279 GB SSD. Stroppy and the database ran on the same VM — far from a production-like setup, but sufficient for testing the workflow.
+**Machine:** 8 cores, 8 GB RAM, 279 GB SSD. Stroppy and the database ran on the same VM — not how you'd set things up in production, but it kept the setup simple and let us focus on the tooling.
 
 **Parameters** varied across three dimensions:
 
@@ -60,9 +60,9 @@ Each combination ran for **30 minutes** against both PostgreSQL and MySQL. That'
 
 We ran the full suite twice.
 
-## Automating Tests: Why You'll Write Your Own Naggy
+## Why We Built a Test Matrix Tool
 
-Running 16 sequential 30-minute tests sounds simple until you try it. You need to:
+Running 16 sequential 30-minute tests sounds simple. It isn't. You need to:
 
 - **Babysit the terminal** for hours, starting each test when the previous one finishes.
 - **Log everything.** With 16 tests and two databases, losing track of which parameters produced which results is inevitable without automation.
@@ -100,7 +100,7 @@ These numbers compare **stock, untuned** PostgreSQL and MySQL on a **shared VM**
 
 ![Throughput: PostgreSQL vs MySQL](/img/blog/throughput_comparison.png)
 
-On stock configs, PostgreSQL showed **7–14× higher QPS** than MySQL across all configurations we tested. At scale=20 with 10 VUs, PostgreSQL sustained 6,400 queries/sec vs MySQL's 460. These numbers obviously say more about default configurations than about the engines themselves — a tuned MySQL would close much of this gap.
+On stock configs, PostgreSQL showed **7–14× higher QPS** than MySQL across all configurations we tested. At scale=20 with 10 VUs, PostgreSQL sustained 6,400 queries/sec vs MySQL's 460. These numbers say more about default configurations than about the engines themselves — a tuned MySQL would likely close much of this gap.
 
 | Scenario | PG QPS | MySQL QPS | Ratio |
 |----------|--------|-----------|-------|
@@ -142,7 +142,7 @@ This generated millions of error log lines per test. In a 30-minute run with 100
 
 **MySQL showed the opposite pattern** — connection pool size barely mattered. Throughput stayed flat at ~515–523 QPS regardless of whether the pool had 50, 100, or 200 connections. The bottleneck was elsewhere (likely InnoDB internals, or the query patterns themselves).
 
-However, MySQL's P95 latency *doubled* when moving from 50 to 100+ connections — from 493 ms to ~1,000 ms. More connections didn't help throughput but added latency variance. This is a classic sign that the extra connections sit idle most of the time, adding overhead from context switching and lock contention without contributing useful work.
+However, MySQL's P95 latency *doubled* when moving from 50 to 100+ connections — from 493 ms to ~1,000 ms. More connections didn't help throughput but added latency variance — likely the extra connections sitting idle most of the time, adding overhead without contributing useful work.
 
 None of this is particularly novel — the `max_connections` limit is well-documented, and connection pooling is a solved problem in production. But it's a good example of why running your own tests matters: the interaction between pool size, VU count, and database defaults is specific to each setup, and it's easy to get it wrong if you only rely on general advice.
 
@@ -163,7 +163,7 @@ Later, when naggy tried to prepare MySQL at scale=200 and scale=1000, `mydumper`
 
 **Final score:** Run 1: 16/16 tests. Run 2: 12/16 tests (1 crashed, 3 skipped).
 
-This is one area where naggy needs significant improvement. An orchestrator running multi-hour test sessions on a shared disk should:
+This is where naggy needs to get smarter. A tool running multi-hour test sessions on a shared disk should:
 
 - Monitor available disk space before each test and skip or warn if headroom is insufficient.
 - Clean up between tests — purge MySQL binary logs, rotate PostgreSQL WAL, remove stale dump files.
