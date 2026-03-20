@@ -27,7 +27,7 @@ const config: Config = {
   themes: [
     ['@easyops-cn/docusaurus-search-local', {
       indexDocs: true,
-      indexBlog: false,
+      indexBlog: true,
       indexPages: false,
       hashed: true,
       language: ['en'],
@@ -51,7 +51,10 @@ const config: Config = {
             },
           },
         },
-        blog: false,
+        blog: {
+          showReadingTime: true,
+          editUrl: 'https://github.com/stroppy-io/stroppy-docs/tree/main/',
+        },
         theme: {
           customCss: './src/css/custom.css',
         },
@@ -84,6 +87,11 @@ const config: Config = {
           sidebarId: 'legacySidebar',
           position: 'left',
           label: 'Legacy',
+        },
+        {
+          to: '/blog',
+          label: 'Blog',
+          position: 'left',
         },
         {
           type: 'docsVersionDropdown',
