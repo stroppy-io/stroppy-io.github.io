@@ -1,7 +1,7 @@
 ---
 slug: pg-vs-mysql-first-look
 title: "PostgreSQL vs MySQL: A Test Drive with Stroppy"
-authors: [nikita]
+authors: [stroppy-authors]
 tags: [benchmark, postgresql, mysql, tpc-c, drivers]
 ---
 
