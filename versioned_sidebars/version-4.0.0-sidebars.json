@@ -1,0 +1,28 @@
+{
+  "docsSidebar": [
+    "introduction",
+    "sql-and-generators",
+    "drivers",
+    "transactions",
+    "extensibility",
+    "probe",
+    "presets",
+    "cli-reference",
+    "reports-workflow",
+    "mcp"
+  ],
+  "legacySidebar": [
+    {
+      "type": "category",
+      "label": "Legacy Releases",
+      "collapsible": true,
+      "collapsed": false,
+      "items": [
+        "legacy/overview",
+        "legacy/user-guide",
+        "legacy/fdb-report",
+        "legacy/mongodb-report"
+      ]
+    }
+  ]
+}
