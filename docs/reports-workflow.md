@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 title: Reports & Workflow
 description: Using k6's built-in HTML reports for iterative database development and benchmarking
 ---

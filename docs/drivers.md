@@ -105,7 +105,7 @@ Three presets are built in:
 | Preset | `driverType` | Default URL | Default Insert Method |
 |--------|-------------|-------------|----------------------|
 | `pg` | `postgres` | `postgres://postgres:postgres@localhost:5432` | `copy_from` |
-| `mysql` | `mysql` | `myuser:mypassword@tcp(localhost:3306)/mydb` | `plain_bulk` |
+| `mysql` | `mysql` | `myuser:mypassword@tcp(localhost:3306)/mydb?charset=utf8mb4&parseTime=True&loc=Local` | `plain_bulk` |
 | `pico` | `picodata` | `postgres://admin:T0psecret@localhost:1331` | `plain_bulk` |
 
 Presets are case-insensitive. A preset sets defaults; you can override any field with `-D`:
@@ -403,7 +403,7 @@ CLI flags                    Environment              TypeScript
 
 ### Why `declareDriverSetup` exists
 
-It serves a dual purpose. At runtime, it merges CLI config over script defaults. During the **probe phase** (when Stroppy inspects a script without executing it), the `DeclareDriverSetup` spy function captures the declared defaults so the CLI can report what a script expects. This is how `stroppy help` can show a script's driver requirements without running it.
+It serves a dual purpose. At runtime, it merges CLI config over script defaults. During the **probe phase** (when Stroppy inspects a script without executing it), the `DeclareDriverSetup` spy function captures the declared defaults so the CLI can report what a script expects. This is how `stroppy probe` can show a script's driver requirements without running it.
 
 ### Pass-through fields
 

@@ -45,9 +45,9 @@ The optional second positional argument specifies an explicit SQL file, overridi
 
 | Preset | driverType | url | defaultInsertMethod |
 |--------|-----------|-----|---------------------|
-| `pg` | `postgres` | `postgres://postgres@localhost:5432` | `copy_from` |
-| `mysql` | `mysql` | `myuser@tcp(localhost:3306)/mydb` | `plain_bulk` |
-| `pico` | `picodata` | `postgres://admin@localhost:1331` | `plain_bulk` |
+| `pg` | `postgres` | `postgres://postgres:postgres@localhost:5432` | `copy_from` |
+| `mysql` | `mysql` | `myuser:mypassword@tcp(localhost:3306)/mydb` | `plain_bulk` |
+| `pico` | `picodata` | `postgres://admin:T0psecret@localhost:1331` | `plain_bulk` |
 
 ### Driver option keys
 
@@ -183,12 +183,11 @@ stroppy gen --workdir <path> [--preset <name>]
 
 The generated directory contains:
 
-- Proto files (`stroppy.pb.js`, `stroppy.pb.ts`)
-- Helper files (`helpers.ts`, `parse_sql.ts`)
-- `package.json` for TypeScript types
-- k6 binary (`stroppy-k6`)
-- Stroppy binary
-- k6 symlink
+- Proto files (`stroppy.pb.js`, `stroppy.pb.ts`, `stroppy.d.ts`)
+- Helper files (`helpers.ts`, `parse_sql.ts`, `parse_sql.js`)
+- `package.json` and `tsconfig.json` for TypeScript types
+- Stroppy binary (`stroppy`)
+- k6 symlink (`k6` &rarr; `stroppy`)
 - Preset files (if `--preset` specified)
 
 ### Examples

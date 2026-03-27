@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 10
 title: MCP Server
 description: Using Stroppy through Claude Code and other AI assistants via the Model Context Protocol
 ---

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 9
 title: Extensibility
 description: How to add a new database driver to Stroppy
 ---
@@ -20,7 +20,7 @@ The MySQL and Picodata drivers were added in v3.1.0 using the shared `sqldriver`
 
 ## Driver Interface
 
-Every driver implements the `Driver` interface, and may return a `Tx` from `BeginTx`:
+Every driver implements the `Driver` interface, and may return a `Tx` from `Begin`:
 
 ```go
 // pkg/driver/dispatcher.go
@@ -33,7 +33,7 @@ type Driver interface {
     RunQuery(ctx context.Context, sql string, args map[string]any) (*QueryResult, error)
 
     // Begin a transaction with the given isolation level
-    BeginTx(ctx context.Context, isolation stroppy.TxIsolationLevel) (Tx, error)
+    Begin(ctx context.Context, isolation stroppy.TxIsolationLevel) (Tx, error)
 
     // Clean up resources (close connections, pools, etc.)
     Teardown(ctx context.Context) error
@@ -54,7 +54,7 @@ type Tx interface {
 }
 ```
 
-`BeginTx` opens a database transaction at the requested isolation level. The returned `Tx` supports the same `RunQuery` interface as the driver itself, plus `Commit` and `Rollback`. TypeScript scripts access this through `driver.begin()` and `driver.beginTx()`.
+`Begin` opens a database transaction at the requested isolation level. The returned `Tx` supports the same `RunQuery` interface as the driver itself, plus `Commit` and `Rollback`. TypeScript scripts access this through `driver.begin()` and `driver.beginTx()`.
 
 `InsertValues` receives an `InsertDescriptor` containing the table name, insertion method, column definitions with generation rules, and row count. The driver is responsible for generating values according to the rules and inserting them. Returns `*stats.Query` which tracks execution time for metrics.
 
@@ -208,7 +208,7 @@ make proto
 
 ### 6. Register via import
 
-In `cmd/xk6air/module.go`, add a blank import so `init()` runs:
+In `cmd/xk6air/instance.go`, add a blank import so `init()` runs:
 
 ```go
 import (
