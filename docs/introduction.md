@@ -19,7 +19,7 @@ Database benchmarking tools tend to fall into two camps: simplistic single-threa
 - **HTML report export** &mdash; Get a self-contained report at the end of every run.
 - **Ecosystem** &mdash; JSON output, InfluxDB, Prometheus, Datadog, and more output formats work out of the box.
 
-Stroppy adds what k6 lacks for database testing: a driver abstraction, parameterized SQL execution, data generation with statistical distributions, and bulk insertion (including PostgreSQL COPY protocol).
+Stroppy adds what k6 lacks for database testing: a multi-driver abstraction (PostgreSQL, MySQL, Picodata), transaction support, parameterized SQL execution, data generation with statistical distributions, and bulk insertion (including PostgreSQL COPY protocol).
 
 ## Architecture
 
@@ -41,14 +41,15 @@ Stroppy adds what k6 lacks for database testing: a driver abstraction, parameter
    ┌──────▼──────┐  ┌──────▼──────┐
    │   Driver    │  │  Generator  │
    │  Registry   │  │   Engine    │
-   │  (postgres) │  │ (uniform,   │
-   │             │  │  normal,    │
+   │  (pg/mysql/ │  │ (uniform,   │
+   │   picodata) │  │  normal,    │
    │             │  │  zipfian)   │
    └──────┬──────┘  └─────────────┘
           │
    ┌──────▼──────┐
-   │  PostgreSQL │
-   │   (pgx)     │
+   │  Database   │
+   │ (pg/mysql/  │
+   │  picodata)  │
    └─────────────┘
 ```
 
@@ -82,8 +83,8 @@ stroppy version
 ```
 
 ```
-stroppy  v3.1.0
-k6       v1.6.0
+stroppy  v4.0.0
+k6       v1.7.0
 pgx      v5.8.0
 ```
 
@@ -120,8 +121,8 @@ Stroppy resolves short preset names automatically &mdash; no need to type full p
 # Against local PostgreSQL (default: postgres://postgres:postgres@localhost:5432)
 stroppy run simple
 
-# With a custom database URL
-DRIVER_URL="postgres://user:pass@host:5432/mydb" stroppy run simple
+# With a specific driver and custom URL
+stroppy run simple -d pg -D url=postgres://user:pass@host:5432/mydb
 ```
 
 ### 4. Run with an SQL file
@@ -155,19 +156,16 @@ stroppy run tpcc --no-steps load_data               # skip data loading
 ```typescript
 import { Options } from "k6/options";
 import { Teardown } from "k6/x/stroppy";
-import { DriverConfig_DriverType } from "./stroppy.pb.js";
-import { DriverX, ENV } from "./helpers.ts";
+import { DriverX, declareDriverSetup } from "./helpers.ts";
 
 export const options: Options = {};
 
-const driver = DriverX.create().setup({
-  url: ENV("DRIVER_URL", "postgres://postgres:postgres@localhost:5432", "Database connection URL"),
-  driverType: DriverConfig_DriverType.DRIVER_TYPE_POSTGRES,
-  driverSpecific: {
-    oneofKind: "postgres",
-    postgres: {},
-  },
+const driverConfig = declareDriverSetup(0, {
+  url: "postgres://postgres:postgres@localhost:5432",
+  driverType: "postgres",
 });
+
+const driver = DriverX.create().setup(driverConfig);
 
 export default function () {
   // Run a simple query
@@ -189,9 +187,8 @@ export function teardown() {
 docker run --network host ghcr.io/stroppy-io/stroppy run simple
 
 # TPC-B benchmark with custom DB
-docker run --network host \
-  -e DRIVER_URL="postgres://user:pass@host:5432/db" \
-  ghcr.io/stroppy-io/stroppy run tpcb
+docker run --network host ghcr.io/stroppy-io/stroppy run tpcb \
+  -d pg -D url=postgres://user:pass@host:5432/db
 
 # Generate a workspace to your host
 docker run -v $(pwd):/workspace ghcr.io/stroppy-io/stroppy \

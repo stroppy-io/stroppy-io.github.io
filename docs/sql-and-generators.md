@@ -359,8 +359,7 @@ Here's a condensed version of the built-in TPC-B workload showing SQL files, gen
 ```typescript
 import { Options } from "k6/options";
 import { Teardown } from "k6/x/stroppy";
-import { DriverConfig_DriverType } from "./stroppy.pb.js";
-import { DriverX, AB, C, R, Step, S, ENV } from "./helpers.ts";
+import { DriverX, AB, C, R, Step, S, ENV, declareDriverSetup } from "./helpers.ts";
 import { parse_sql_with_sections } from "./parse_sql.js";
 
 const SCALE = ENV("SCALE_FACTOR", 1, "TPC-B scale factor");
@@ -373,14 +372,12 @@ export const options: Options = {
 };
 
 // Initialize driver
-const driver = DriverX.create().setup({
-  url: ENV("DRIVER_URL", "postgres://postgres:postgres@localhost:5432", "Database connection URL"),
-  driverType: DriverConfig_DriverType.DRIVER_TYPE_POSTGRES,
-  driverSpecific: {
-    oneofKind: "postgres",
-    postgres: {},
-  },
+const driverConfig = declareDriverSetup(0, {
+  url: "postgres://postgres:postgres@localhost:5432",
+  driverType: "postgres",
 });
+
+const driver = DriverX.create().setup(driverConfig);
 
 // Parse SQL file into named sections
 const sql = parse_sql_with_sections(

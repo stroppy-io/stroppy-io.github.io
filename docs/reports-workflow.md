@@ -235,13 +235,9 @@ These appear in both the web dashboard and HTML reports alongside standard k6 me
 For integration with your existing observability stack, Stroppy supports OTLP metrics export:
 
 ```typescript
-const driver = DriverX.create().setup({
-  url: ENV("DRIVER_URL", "postgres://postgres:postgres@localhost:5432", "Database connection URL"),
-  driverType: DriverConfig_DriverType.DRIVER_TYPE_POSTGRES,
-  driverSpecific: {
-    oneofKind: "postgres",
-    postgres: {},
-  },
+const driverConfig = declareDriverSetup(0, {
+  url: "postgres://postgres:postgres@localhost:5432",
+  driverType: "postgres",
   exporter: {
     name: "stroppy-bench",
     otlpExport: {
@@ -250,6 +246,8 @@ const driver = DriverX.create().setup({
     },
   },
 });
+
+const driver = DriverX.create().setup(driverConfig);
 ```
 
 This sends metrics to any OTLP-compatible backend (Jaeger, Grafana Tempo, etc.) for correlation with your application traces.

@@ -20,7 +20,7 @@ The MySQL and Picodata drivers were added in v3.1.0 using the shared `sqldriver`
 
 ## Driver Interface
 
-Every driver implements three methods:
+Every driver implements the `Driver` interface, and may return a `Tx` from `BeginTx`:
 
 ```go
 // pkg/driver/dispatcher.go
@@ -32,10 +32,29 @@ type Driver interface {
     // Execute a single SQL query with named parameters
     RunQuery(ctx context.Context, sql string, args map[string]any) (*QueryResult, error)
 
+    // Begin a transaction with the given isolation level
+    BeginTx(ctx context.Context, isolation stroppy.TxIsolationLevel) (Tx, error)
+
     // Clean up resources (close connections, pools, etc.)
     Teardown(ctx context.Context) error
 }
+
+type Tx interface {
+    // Execute a query within the transaction
+    RunQuery(ctx context.Context, sql string, args map[string]any) (*QueryResult, error)
+
+    // Commit the transaction
+    Commit(ctx context.Context) error
+
+    // Rollback the transaction
+    Rollback(ctx context.Context) error
+
+    // Return the isolation level of this transaction
+    Isolation() stroppy.TxIsolationLevel
+}
 ```
+
+`BeginTx` opens a database transaction at the requested isolation level. The returned `Tx` supports the same `RunQuery` interface as the driver itself, plus `Commit` and `Rollback`. TypeScript scripts access this through `driver.begin()` and `driver.beginTx()`.
 
 `InsertValues` receives an `InsertDescriptor` containing the table name, insertion method, column definitions with generation rules, and row count. The driver is responsible for generating values according to the rules and inserting them. Returns `*stats.Query` which tracks execution time for metrics.
 
