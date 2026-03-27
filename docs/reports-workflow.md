@@ -232,25 +232,27 @@ These appear in both the web dashboard and HTML reports alongside standard k6 me
 
 ## OpenTelemetry Export
 
-For integration with your existing observability stack, Stroppy supports OTLP metrics export:
+For integration with your existing observability stack, Stroppy supports OTLP metrics export. The exporter is part of Stroppy's global configuration (`GlobalConfig`), not the driver config &mdash; it applies to the entire test run, not a specific driver.
 
-```typescript
-const driverConfig = declareDriverSetup(0, {
-  url: "postgres://postgres:postgres@localhost:5432",
-  driverType: "postgres",
-  exporter: {
-    name: "stroppy-bench",
-    otlpExport: {
-      otlpGrpcEndpoint: "localhost:4317",
-      otlpEndpointInsecure: true,
-    },
-  },
-});
+The configuration is defined in the proto schema (`GlobalConfig.exporter`):
 
-const driver = DriverX.create().setup(driverConfig);
+```protobuf
+message GlobalConfig {
+  string version = 1;
+  string run_id = 2;
+  uint64 seed = 3;
+  map<string, string> metadata = 4;
+  LoggerConfig logger = 5;
+  ExporterConfig exporter = 6;  // ← OTLP export lives here
+}
+
+message ExporterConfig {
+  string name = 1;
+  OtlpExport otlp_export = 2;
+}
 ```
 
-This sends metrics to any OTLP-compatible backend (Jaeger, Grafana Tempo, etc.) for correlation with your application traces.
+The Go runner reads this config and passes OTLP endpoint arguments to k6 automatically. This sends metrics to any OTLP-compatible backend (Jaeger, Grafana Tempo, etc.) for correlation with your application traces.
 
 ## Tips
 

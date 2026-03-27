@@ -12,10 +12,10 @@ Stroppy provides two core primitives for database testing: **parameterized SQL e
 
 ### The `:param` syntax
 
-Stroppy uses `:paramName` syntax for query parameters. The driver converts these to PostgreSQL-style `$1, $2, ...` placeholders at execution time.
+Stroppy uses `:paramName` syntax for query parameters. The driver converts these to the native placeholder format (`$1, $2, ...` for PostgreSQL, `?` for MySQL) at execution time.
 
 ```typescript
-driver.runQuery("SELECT :value + :second", {
+driver.exec("SELECT :value + :second", {
   value: 100,
   second: 50,
 });
@@ -25,7 +25,7 @@ driver.runQuery("SELECT :value + :second", {
 Parameters are deduplicated &mdash; the same name used multiple times maps to the same positional argument:
 
 ```typescript
-driver.runQuery("SELECT :x + :x", { x: 42 });
+driver.exec("SELECT :x + :x", { x: 42 });
 // Executes: SELECT $1 + $1   with args [42]
 ```
 
@@ -34,8 +34,35 @@ driver.runQuery("SELECT :x + :x", { x: 42 });
 PostgreSQL `::` casts work naturally since the parser distinguishes `:param` from `::`:
 
 ```typescript
-driver.runQuery("SELECT :a::int + :b::int", { a: 34, b: 35 });
+driver.exec("SELECT :a::int + :b::int", { a: 34, b: 35 });
 // Executes: SELECT $1::int + $2::int   with args [34, 35]
+```
+
+### Query API
+
+Both `DriverX` and `TxX` (transactions) implement the same `QueryAPI` interface with five methods:
+
+```typescript
+interface QueryAPI {
+  exec(sql, args?): QueryStats;              // execute, discard rows
+  queryRows(sql, args?, limit?): any[][];    // all rows as arrays
+  queryRow(sql, args?): any[] | undefined;   // first row
+  queryValue<T>(sql, args?): T | undefined;  // first column of first row
+  queryCursor(sql, args?): QueryResult;      // raw cursor for streaming
+}
+```
+
+`exec` is the most common &mdash; it runs the query, closes the result set, and returns timing stats. Use `queryRows`/`queryRow`/`queryValue` when you need to read data back:
+
+```typescript
+// Read a single value
+const count = driver.queryValue<number>("SELECT count(*) FROM users");
+
+// Read a single row
+const row = driver.queryRow("SELECT id, name FROM users WHERE id = :id", { id: 1 });
+
+// Read multiple rows
+const rows = driver.queryRows("SELECT id, name FROM users LIMIT :n", { n: 10 });
 ```
 
 ### Argument validation

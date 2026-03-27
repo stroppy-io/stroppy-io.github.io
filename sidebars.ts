@@ -4,7 +4,12 @@ const sidebars: SidebarsConfig = {
   docsSidebar: [
     'introduction',
     'sql-and-generators',
+    'drivers',
+    'transactions',
     'extensibility',
+    'probe',
+    'presets',
+    'cli-reference',
     'reports-workflow',
     'mcp',
   ],

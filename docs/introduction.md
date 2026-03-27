@@ -234,6 +234,11 @@ make build
 ## Next Steps
 
 - [SQL & Generators](./sql-and-generators) &mdash; Deep dive into parameterized SQL and the data generation system
+- [Drivers & Configuration](./drivers) &mdash; Driver presets, connection pools, multi-driver setups, and CLI flags
+- [Transactions](./transactions) &mdash; Database transactions with configurable isolation levels
+- [Built-in Workloads](./presets) &mdash; TPC-B, TPC-C, TPC-DS presets with parameters and variants
+- [Probe & Script Parameters](./probe) &mdash; Inspect workloads, discover parameters, filter steps
+- [CLI Reference](./cli-reference) &mdash; Complete reference for all commands, flags, and environment variables
 - [Extensibility](./extensibility) &mdash; How to add your own database driver
 - [Reports & Workflow](./reports-workflow) &mdash; HTML reports and the iterative testing workflow
 - [MCP Server](./mcp) &mdash; Use Stroppy through Claude Code and other AI assistants
