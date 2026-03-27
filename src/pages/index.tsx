@@ -99,7 +99,7 @@ const features: FeatureItem[] = [
     icon: '\uD83D\uDD0C',
     description: (
       <>
-        PostgreSQL driver built-in with connection pooling and COPY support.
+        PostgreSQL, MySQL, and Picodata drivers built-in with connection pooling.
         Add your own database driver by implementing a simple Go interface
         and registering it.
       </>
@@ -156,13 +156,12 @@ docker pull ghcr.io/stroppy-io/stroppy:latest
 
 # Run built-in TPC-C benchmark
 docker run --network host \\
-  stroppy run /workloads/tpcc/tpcc.ts \\
-  /workloads/tpcc/tpcc.sql
+  stroppy run tpcc
 
-# With custom database URL
+# With custom driver and URL
 docker run --network host \\
-  -e DRIVER_URL="postgres://u:p@host/db" \\
-  stroppy run /workloads/simple/simple.ts`}</code>
+  stroppy run tpcb \\
+  -d pg -D url=postgres://u:p@host/db`}</code>
             </pre>
           </div>
           <div className="col col--4">

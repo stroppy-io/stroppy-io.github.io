@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 10
 title: MCP Server
 description: Using Stroppy through Claude Code and other AI assistants via the Model Context Protocol
 ---
@@ -107,7 +107,7 @@ This is the primary tool. Its parameters map to environment variables that the t
 | `sql_file` | &mdash; | &mdash; | Path to .sql file (required for some workloads) |
 | `env` | *(varies)* | &mdash; | Script-specific env vars as `KEY=VALUE` pairs, e.g. `VUS_SCALE=5 WAREHOUSES=10` |
 | `duration` | `DURATION` | Script default | Test duration (e.g. `30s`, `5m`) |
-| `driver_url` | `DRIVER_URL` | Script default | PostgreSQL connection URL |
+| `driver_url` | `STROPPY_DRIVER_0` | Script default | Database connection URL (passed as driver config) |
 | `report_path` | `K6_WEB_DASHBOARD_EXPORT` | &mdash; | Path to save an HTML report |
 
 When `report_path` is set, the server automatically enables `K6_WEB_DASHBOARD=true`.
