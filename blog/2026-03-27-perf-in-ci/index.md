@@ -188,7 +188,7 @@ graph LR
 
 Visualization is handled by Grafana at `grafana.stroppy.io`. A single dashboard shows all three layers simultaneously: machine load, PostgreSQL state, and benchmark results. Time-based correlation makes it instantly visible that a throughput dip at the 12th minute coincided with a long checkpoint and a spike in disk I/O.
 
-![Stroppy benchmark dashboard in Grafana](/img/blog/stroppy-dashboard.jpg)
+![Stroppy benchmark dashboard in Grafana](/img/blog/stroppy-dashboard.png)
 
 ![Node exporter dashboard: CPU, memory, disk, and network during the benchmark](/img/blog/node-exporter-dashboard.jpg)
 
