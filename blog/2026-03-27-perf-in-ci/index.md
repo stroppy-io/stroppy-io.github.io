@@ -17,8 +17,6 @@ OrioleDB is a PostgreSQL extension that combines the advantages of both on-disk 
 
 <!-- truncate -->
 
----
-
 ## How It Works
 
 ### Stroppy Action
