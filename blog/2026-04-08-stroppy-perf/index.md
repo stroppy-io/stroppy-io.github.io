@@ -5,9 +5,9 @@ authors: [stroppy-authors]
 tags: [performance, internals, generators, profiling, tpc-c]
 ---
 
-The [previous post](/blog/measuring-stroppy-before-measuring-databases) ended with a ceiling: 100 000 iterations per second through the noop driver. That raised an obvious question — was that any good? We built the noop driver to measure stroppy, not a database. So what is stroppy doing with its time when there is no database? We pulled a pprof profile to find out. This post covers what the profiles showed and what we changed.
+The [previous post](/blog/measuring-stroppy-before-measuring-databases) set up the measurement methodology: the noop driver and pg-noop let us measure stroppy's own overhead with no database involved. Using that setup, we ran pprof against stroppy to understand where its time goes. The generator pipeline was the main target, and this post covers what the profiles showed and what we changed.
 
-The short answer: stroppy's Go generator pipeline had a handful of avoidable allocations and one surprisingly expensive hot path. Fixing them took a full PR. The end-to-end throughput improvement is moderate — about 11–16% on a steady-state workload. The data generation speedup is more dramatic: 3.7× across the board. Neither number is astonishing, but the work was worth doing and some of the details were interesting.
+Stroppy's Go generator pipeline had a handful of avoidable allocations and one hot path doing redundant work on every query. Fixing them is the subject of a single PR. The end-to-end throughput improvement is about 11–16% on a steady-state workload; the data loading phase improves by 3.7× because it runs entirely in Go with no JS boundary per row.
 
 <!-- truncate -->
 
@@ -119,7 +119,7 @@ The most visible improvement is in `load_data` — the phase that generates and 
 | 20 | 2.7M | 20.2s | 5.5s | 3.7× |
 | 100 | 13.1M | 103s | 27.7s | 3.7× |
 
-The 3.7× figure is consistent across all scale factors, which is what you'd expect — it's a per-row cost reduction, so the benefit scales linearly with data volume.
+The 3.7× figure is consistent across all scale factors — it's a per-row cost reduction, so the benefit scales linearly with data volume.
 
 The `district` table (7.6×) benefits more than the others because it generates many short strings relative to its row count. `customer` and `stock` have more varied fields but the string-heavy columns (`c_data` at 300–500 characters, the ten `s_dist_*` fields) still drive most of the work.
 

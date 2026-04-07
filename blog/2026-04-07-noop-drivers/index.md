@@ -5,9 +5,9 @@ authors: [stroppy-authors]
 tags: [development, drivers, noop, pg-noop, internals]
 ---
 
-When running a database benchmark, the tool itself is in the picture. If stroppy can only push 12 000 transactions per second, no database will ever look faster than that in your results — not because the database is slow, but because stroppy ran out of steam first. Knowing that ceiling matters.
+Stroppy's own throughput caps benchmark results — if stroppy tops out at 12 000 iterations per second, no database under test will appear faster than that, regardless of its actual performance.
 
-We added two noop layers to make that ceiling easy to find: one in-process (a dummy driver) and one over the wire (a standalone pg-noop server). Together they bracket stroppy's throughput with and without the PostgreSQL protocol stack in the way.
+Stroppy already has two points where it communicates with the outside world: the driver layer, which handles query construction and dispatch, and the wire protocol layer beneath it. We added a noop sink to each — an in-process driver that discards all operations and a standalone pg-noop server that speaks the full PostgreSQL wire protocol but returns empty results. Together they give us throughput ceilings with and without the protocol stack involved.
 
 <!-- truncate -->
 
@@ -62,8 +62,8 @@ These baselines are also useful for cross-machine comparisons: the noop and pg-n
 
 ---
 
-Writing your own driver for a different database follows the same pattern as the noop driver — see [Extensibility](/docs/extensibility) for a walkthrough.
+Writing a driver for a different database follows the same pattern as the noop driver — see [Extensibility](/docs/extensibility) for a walkthrough.
 
 ---
 
-That 100 000 iter/s ceiling didn't start there. The [next post](/blog/stroppy-generator-performance) covers the pprof sessions on stroppy itself and the generator-pipeline changes behind the numbers you just saw.
+The numbers in the tables above are after the generator-pipeline optimizations — the [next post](/blog/stroppy-generator-performance) covers the profiling sessions and changes that produced them.
