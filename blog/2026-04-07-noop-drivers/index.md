@@ -5,7 +5,7 @@ authors: [stroppy-authors]
 tags: [development, drivers, noop, pg-noop, internals]
 ---
 
-When you run a database benchmark, the tool itself is in the picture. If stroppy can only push 12 000 transactions per second, no database will ever look faster than that in your results — not because the database is slow, but because stroppy ran out of steam first. Knowing that ceiling matters.
+When running a database benchmark, the tool itself is in the picture. If stroppy can only push 12 000 transactions per second, no database will ever look faster than that in your results — not because the database is slow, but because stroppy ran out of steam first. Knowing that ceiling matters.
 
 We added two noop layers to make that ceiling easy to find: one in-process (a dummy driver) and one over the wire (a standalone pg-noop server). Together they bracket stroppy's throughput with and without the PostgreSQL protocol stack in the way.
 
@@ -49,14 +49,14 @@ The same workload against pg-noop yields about **41 000 iterations/s** at VUS=8 
 | noop (in-process) | 29 421/s | 100 419/s |
 | pg-noop (TCP localhost) | 11 814/s | 41 352/s |
 
-## What These Numbers Tell You
+## What These Numbers Tell Us
 
-Before comparing databases, you have two useful data points:
+Before comparing databases, we have two useful data points:
 
 - **Noop ceiling**: the hard upper bound on stroppy's throughput on this hardware. Any result near this number means stroppy might be the bottleneck.
 - **pg-noop ceiling**: the upper bound when the full protocol stack is involved. Any result near this number means the database is doing very little work and the cost is mostly in the client.
 
-If your production PostgreSQL throughput sits well below the pg-noop ceiling, you're in good shape — the database is being measured, not the tool. If it's close, it's worth investigating whether stroppy is the limiting factor.
+If production PostgreSQL throughput sits well below the pg-noop ceiling, we're in good shape — the database is being measured, not the tool. If it's close, it's worth investigating whether stroppy is the limiting factor.
 
 These baselines are also useful for cross-machine comparisons: the noop and pg-noop numbers characterize the test machine itself, which helps when moving between hardware or comparing results across environments.
 
