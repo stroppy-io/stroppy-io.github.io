@@ -17,7 +17,7 @@ The first layer is a driver inside stroppy that accepts all operations and disca
 
 It serves two purposes. During development, it gives us a full E2E path without requiring a database — useful for testing workload scripts and driver logic before spinning anything up. And during benchmarking, it measures stroppy's absolute throughput ceiling: the full stroppy cost with no network and no database in the picture.
 
-Running the TPC-C `pick` workload against the noop driver on our test machine:
+Running the TPC-C `pick` workload against the noop driver on our test machine (Intel Core Ultra 7 155H, 22 cores, 32 GB RAM):
 
 ```bash
 stroppy run tpcc/pick -d noop -- --vus 8 --duration 30s
@@ -40,7 +40,7 @@ stroppy run tpcc/pick -- --vus 8 --duration 30s
 
 No configuration needed on stroppy's side — it connects to localhost:5432 and sees a normal PostgreSQL server.
 
-The implementation is small. It's built on the Rust [pgwire](https://github.com/sunng87/pgwire) library: a `NoopHandler` that implements the four required traits (`StartupHandler`, `SimpleQueryHandler`, `ExtendedQueryHandler`, `CopyHandler`), a Tokio acceptor loop, and jemalloc for the musl build. That's the whole thing.
+The implementation is built on [pgwire](https://github.com/sunng87/pgwire), a Rust library that several newer databases use as their PostgreSQL wire protocol layer. On top of it: a `NoopHandler` implementing four traits (`StartupHandler`, `SimpleQueryHandler`, `ExtendedQueryHandler`, `CopyHandler`), a Tokio acceptor loop, and jemalloc for the musl build. Structurally, pg-noop is a PostgreSQL server — it just has no storage behind it.
 
 The same workload against pg-noop yields about **41 000 iterations/s** at VUS=8 — versus 100 000 against the in-process noop. The gap is the PostgreSQL wire protocol overhead on localhost: connection management, query serialization, network round-trips, response parsing. At VUS=1 the uncontended per-transaction cost difference is about 51 µs — the protocol cost with no database work.
 
@@ -51,14 +51,11 @@ The same workload against pg-noop yields about **41 000 iterations/s** at VUS=8 
 
 ## What These Numbers Tell Us
 
-Before comparing databases, we have two useful data points:
+The noop ceiling is the hard upper bound on stroppy's throughput on this hardware — any benchmark result near it means stroppy is the bottleneck, not the database. The pg-noop ceiling adds the protocol layer: if a real database sits close to that number, the cost is mostly in the client, not the server.
 
-- **Noop ceiling**: the hard upper bound on stroppy's throughput on this hardware. Any result near this number means stroppy might be the bottleneck.
-- **pg-noop ceiling**: the upper bound when the full protocol stack is involved. Any result near this number means the database is doing very little work and the cost is mostly in the client.
+These numbers also characterize the test machine itself, which matters when comparing results across environments or hardware generations.
 
-If production PostgreSQL throughput sits well below the pg-noop ceiling, we're in good shape — the database is being measured, not the tool. If it's close, it's worth investigating whether stroppy is the limiting factor.
-
-These baselines are also useful for cross-machine comparisons: the noop and pg-noop numbers characterize the test machine itself, which helps when moving between hardware or comparing results across environments.
+One more use: pg-noop can run on a remote node. Pointing stroppy at it over real network infrastructure gives a clean measurement of what latency and bandwidth alone cost, without any database noise. That's useful when evaluating multi-node or cross-datacenter setups before involving an actual database cluster.
 
 ---
 

@@ -7,7 +7,7 @@ tags: [performance, internals, generators, profiling, tpc-c]
 
 The [previous post](/blog/measuring-stroppy-before-measuring-databases) set up the measurement methodology: the noop driver and pg-noop let us measure stroppy's own overhead with no database involved. Using that setup, we ran pprof against stroppy to understand where its time goes. The generator pipeline was the main target, and this post covers what the profiles showed and what we changed.
 
-Stroppy's Go generator pipeline had a handful of avoidable allocations and one hot path doing redundant work on every query. Fixing them is the subject of a single PR. The end-to-end throughput improvement is about 11–16% on a steady-state workload; the data loading phase improves by 3.7× because it runs entirely in Go with no JS boundary per row.
+Stroppy's Go generator pipeline had a handful of avoidable allocations and one hot path doing redundant work on every query. Fixing them is the subject of a single PR. The end-to-end throughput improvement is about 11–16% on a steady-state workload; the data loading phase improves by 3.7× — that phase runs entirely in Go, without the per-iteration overhead of sobek, the JavaScript runtime stroppy uses to execute workload scripts.
 
 <!-- truncate -->
 
@@ -91,7 +91,7 @@ The log scale on the chart is needed because `ProcessArgs` (4 636 ns → 186 ns)
 
 ### End-to-end throughput
 
-The `tpcc/pick` workload against the noop driver, varying VU count. Each data point is the median of three 30-second runs.
+The `tpcc/pick` workload against the noop driver, varying VU count. Each data point is the median of three 30-second runs (Intel Core Ultra 7 155H, 22 cores, 32 GB RAM).
 
 ![E2E throughput before/after, noop driver](./e2e_throughput.png)
 
