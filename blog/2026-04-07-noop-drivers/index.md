@@ -5,7 +5,7 @@ authors: [stroppy-authors]
 tags: [development, drivers, noop, pg-noop, internals]
 ---
 
-Stroppy's own throughput caps benchmark results — if stroppy tops out at 12 000 iterations per second, no database under test will appear faster than that, regardless of its actual performance.
+If stroppy tops out at 12 000 iterations per second, no database under test will appear faster than that, regardless of its actual performance, in other words, stroppy's own throughput caps benchmark results.
 
 Stroppy already has two points where it communicates with the outside world: the driver layer, which handles query construction and dispatch, and the wire protocol layer beneath it. We added a noop sink to each — an in-process driver that discards all operations and a standalone pg-noop server that speaks the full PostgreSQL wire protocol but returns empty results. Together they give us throughput ceilings with and without the protocol stack involved.
 
