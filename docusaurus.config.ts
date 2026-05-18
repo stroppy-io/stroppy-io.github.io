@@ -77,6 +77,12 @@ const config: Config = {
       },
       items: [
         {
+          to: '/docs/next/tests/tpcc',
+          label: 'Tests',
+          position: 'left',
+          activeBaseRegex: '/docs/next/tests/.*',
+        },
+        {
           type: 'docSidebar',
           sidebarId: 'docsSidebar',
           position: 'left',

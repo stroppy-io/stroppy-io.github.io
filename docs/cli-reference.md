@@ -116,6 +116,9 @@ stroppy run tpcc/procs -d pg -d1 mysql
 # Set POOL_SIZE env for the script
 stroppy run tpcc/tx -e pool_size=200
 
+# Multiple env overrides
+stroppy run tpcc/tx -e FOO=bar -e BAZ=qux
+
 # Use a JSON config file
 stroppy run -f prod.json
 ```
