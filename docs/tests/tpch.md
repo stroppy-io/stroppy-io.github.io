@@ -8,6 +8,18 @@ description: TPC-H workload structure, load model, query suite, and parameters
 
 TPC-H is Stroppy's analytical workload. It bulk-loads the eight TPC-H tables and runs the 22 decision-support queries once.
 
+It simulates a decision-support system that scans orders, line items, customers, suppliers, parts, and geography data to answer business questions. The workload is read-heavy after loading and stresses query planning, joins, aggregation, sorting, filtering, and date/range predicates.
+
+Use TPC-H to evaluate:
+
+- Bulk load throughput for large relational datasets.
+- Scan bandwidth and predicate filtering efficiency.
+- Join planning and join execution across fact and dimension tables.
+- Aggregation, grouping, sorting, and top-N performance.
+- Index usefulness for analytical SQL.
+- Memory pressure, temporary files, and spill behavior on large queries.
+- Planner stability across a varied 22-query suite.
+
 ## Script
 
 TPC-H has one script: `tpch/tx`. It supports PostgreSQL, MySQL, Picodata, and YDB through dialect-specific SQL files.
@@ -31,6 +43,8 @@ TPC-H is a bulk-load plus query-suite workload, not a sustained per-iteration tr
 5. Validates answers only for PostgreSQL at `SCALE_FACTOR=1`.
 
 The exported `default()` function is intentionally empty; the work happens in setup steps.
+
+This makes TPC-H a single-pass analytical benchmark rather than a concurrency benchmark. Increase `SCALE_FACTOR` to increase data volume, and use database-side monitoring to inspect CPU, I/O, memory, temp-space, and parallel worker behavior during the query phase.
 
 ## Data Model
 
@@ -102,6 +116,36 @@ Workload parameters are passed as environment variables with `-e KEY=VALUE`. Key
 | `TPCH_QUERY_WARN_MS` | `60000` | During answer validation, logs a warning when a query takes longer than this many milliseconds. |
 
 Common runner controls also apply: `--steps`, `--no-steps`, and `-d`/`-D` driver options.
+
+## Metrics
+
+TPC-H does not define custom k6 Trend or Counter metrics per query. Query timings are printed to stdout as each query finishes:
+
+```text
+[tpch] q1: ok in 1234ms
+```
+
+For PostgreSQL at `SCALE_FACTOR=1`, `validate_answers` prints a validation summary against `answers_sf1.json`, including `OK`, `DIFF`, `SKIP`, and `ERROR` rows per query.
+
+Stroppy still emits common driver metrics during load and query execution:
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `insert_duration` | Trend | InsertSpec/bulk-load duration samples. Useful for load throughput analysis. |
+| `insert_error_rate` | Rate | Insert failures during data loading. |
+| `run_query_count` | Counter | SQL statements executed by the driver. |
+| `run_query_duration` | Trend | SQL execution latency samples. Query samples are tagged by the active step. |
+| `run_query_error_rate` | Rate | Query execution failure rate. |
+
+Use the per-query stdout timings for Q1..Q22 latency comparisons. Use the common driver metrics for aggregate load/query behavior and error rates.
+
+## Thresholds
+
+TPC-H does not define k6 thresholds by default. The run is not auto-failed by a slow query threshold.
+
+`TPCH_QUERY_WARN_MS` is a warning limit used during answer validation. If a validation query takes longer than the configured number of milliseconds, Stroppy logs a slow-query warning; it does not by itself fail the run.
+
+Answer validation is only enabled for PostgreSQL at `SCALE_FACTOR=1`. Mismatches and query errors are reported in the validation summary so you can compare correctness across runs and dialect changes.
 
 ## Query Parameters
 

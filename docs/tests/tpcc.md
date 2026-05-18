@@ -8,6 +8,17 @@ description: TPC-C workload structure, load model, variants, and parameters
 
 TPC-C is Stroppy's OLTP workload. It loads the standard warehouse schema and runs a mixed read/write transaction stream against it.
 
+It simulates a wholesale supplier with warehouses, districts, customers, orders, stock, and payments. The workload is designed to show how a database behaves under short concurrent transactions that update shared rows, maintain secondary records, and mix reads with writes.
+
+Use TPC-C to evaluate:
+
+- Transaction throughput under contention.
+- Commit latency and tail latency for short OLTP transactions.
+- Locking, deadlock, and serialization retry behavior.
+- Primary-key and secondary-index lookup performance.
+- Write amplification from updates plus history/order-line inserts.
+- Connection-pool and concurrency scaling as VUs increase.
+
 ## Scripts
 
 | Script | Drivers | Execution model |
@@ -36,6 +47,8 @@ TPC-C is a sustained transactional workload. Setup creates and loads data once, 
 | Stock-Level | 4% | Counts recently ordered items whose stock is below a threshold. |
 
 By default Stroppy runs for raw throughput. Set `PACING=true` on `tpcc/tx` to add TPC-C keying and think-time delays.
+
+The workload is write-heavy and contention-sensitive. New-Order and Payment drive most of the write load; Order-Status and Stock-Level add read paths that depend on recent order and stock indexes; Delivery performs batch-like updates across districts.
 
 ## Data Model
 
@@ -110,3 +123,45 @@ Workload parameters are passed as environment variables with `-e KEY=VALUE`. Key
 | `STROPPY_NO_DEFAULT` | `false` | `tpcc/tx` | Skips the transaction body in `default()`. Useful for load-only validation runs. |
 
 Common runner controls also apply: `--steps`, `--no-steps`, `-d`/`-D` driver options, and k6 arguments after `--`.
+
+## Metrics
+
+TPC-C emits workload-specific counters and trends in addition to standard k6 and Stroppy driver metrics.
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `tpcc_new_order_total` | Counter | New-Order transactions attempted. |
+| `tpcc_payment_total` | Counter | Payment transactions attempted. |
+| `tpcc_order_status_total` | Counter | Order-Status transactions attempted. |
+| `tpcc_delivery_total` | Counter | Delivery transactions attempted. |
+| `tpcc_stock_level_total` | Counter | Stock-Level transactions attempted. |
+| `tpcc_rollback_decided` | Counter | New-Order transactions selected for the required invalid-item rollback path. |
+| `tpcc_rollback_done` | Counter | New-Order rollbacks actually observed. Expected around 1% of New-Order. |
+| `tpcc_remote_line_total` | Counter | New-Order order-line decisions observed by `tpcc/tx`. |
+| `tpcc_remote_line_remote` | Counter | New-Order lines supplied by a remote warehouse. Expected around 1% of lines. |
+| `tpcc_payment_remote` | Counter | Payments against a remote warehouse. Expected around 15% of Payment. |
+| `tpcc_payment_byname` | Counter | Payments that look up customers by last name. Expected around 60% of Payment. |
+| `tpcc_payment_bc` | Counter | Payments for bad-credit customers. Expected around 10% of Payment; client-observed in `tpcc/tx`. |
+| `tpcc_order_status_byname` | Counter | Order-Status lookups by customer last name. Expected around 60% of Order-Status. |
+| `tpcc_retry_attempts` | Counter | Serialization/deadlock retries performed by the retry helper. |
+| `tpcc_new_order_duration` | Trend | End-to-end New-Order latency in milliseconds. |
+| `tpcc_payment_duration` | Trend | End-to-end Payment latency in milliseconds. |
+| `tpcc_order_status_duration` | Trend | End-to-end Order-Status latency in milliseconds. |
+| `tpcc_delivery_duration` | Trend | End-to-end Delivery latency in milliseconds. |
+| `tpcc_stock_level_duration` | Trend | End-to-end Stock-Level latency in milliseconds. |
+
+The summary also reports observed transaction mix, compliance ratios, retry count, and driver-layer metrics such as `run_query_count`, `run_query_duration`, `run_query_error_rate`, `tx_total_duration`, `tx_clean_duration`, `tx_queries_per_tx`, `tx_commit_rate`, and `tx_error_rate`.
+
+## Thresholds
+
+TPC-C defines k6 thresholds on transaction latency trends. A threshold failure makes the k6 run fail.
+
+| Metric | Threshold | Meaning |
+|--------|-----------|---------|
+| `tpcc_new_order_duration` | `p(90)<5000` | 90% of New-Order transactions must complete under 5s. |
+| `tpcc_payment_duration` | `p(90)<5000` | 90% of Payment transactions must complete under 5s. |
+| `tpcc_order_status_duration` | `p(90)<5000` | 90% of Order-Status transactions must complete under 5s. |
+| `tpcc_stock_level_duration` | `p(90)<20000` | 90% of Stock-Level transactions must complete under 20s. |
+| `tpcc_delivery_duration` | `p(90)<80000` | 90% of Delivery transactions must complete under 80s. |
+
+The summary also prints a statistical check for the 45/43/4/4/4 transaction mix. That check is informational; the process exit code is controlled by k6 thresholds and runtime errors.
