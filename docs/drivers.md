@@ -1,16 +1,12 @@
 ---
 sidebar_position: 3
 title: Drivers & Configuration
-description: Configuring database drivers, connection pools, presets, and multi-driver setups
+description: Database driver presets, DB driver details, URLs, pools, and CLI overrides
 ---
 
 # Drivers & Configuration
 
-Every Stroppy test needs a database driver. This page covers how to configure one &mdash; from a single flag on the command line to fine-grained pool tuning and multi-driver setups.
-
-## Quick Start
-
-The fastest way to get a driver running is two lines of TypeScript:
+Every Stroppy test uses a driver configuration. The script declares defaults with `declareDriverSetup()`, and the CLI can override them with `-d` and `-D`.
 
 ```typescript
 import { DriverX, declareDriverSetup } from "./helpers.ts";
@@ -18,407 +14,290 @@ import { DriverX, declareDriverSetup } from "./helpers.ts";
 const config = declareDriverSetup(0, {
   url: "postgres://postgres:postgres@localhost:5432",
   driverType: "postgres",
+  defaultInsertMethod: "native",
 });
 
 const driver = DriverX.create().setup(config);
 ```
 
-`declareDriverSetup(0, {...})` declares driver slot 0 with defaults that the CLI can override. `DriverX.create().setup(config)` creates the driver and configures it. After this, `driver.exec(...)`, `driver.insert(...)`, and `driver.begin(...)` are all available.
+The index (`0` above) is the driver slot. CLI values for that slot are passed through `STROPPY_DRIVER_0` and merged over the script defaults.
 
-Or skip TypeScript entirely &mdash; use a built-in preset from the command line:
+## CLI Configuration
 
-```bash
-stroppy run simple -d pg
-```
-
-## CLI Flags
-
-Three flag families control drivers from the command line.
-
-### `-d` / `--driver` &mdash; Driver Presets
-
-Select a pre-configured driver by short name:
+Use `-d` to select a preset and `-D` to override fields.
 
 ```bash
-stroppy run tpcc -d pg
-stroppy run tpcc -d mysql
-stroppy run tpcc -d pico
+stroppy run tpcc/tx -d pg
+stroppy run tpcc/tx -d pg -D url=postgres://user:pass@host:5432/bench
+stroppy run tpcc/procs -d pg -d1 mysql
+stroppy run tpcb/tx -D driverType=csv -D url='/tmp/tpcb-csv?merge=true&workload=tpcb'
 ```
 
-The flag supports several syntax forms:
+| Flag | Description |
+|------|-------------|
+| `-d pg` | Configure driver slot 0 from the `pg` preset. |
+| `-d1 mysql` | Configure driver slot 1 from the `mysql` preset. |
+| `-d '{...}'` | Configure driver slot 0 from raw JSON. |
+| `-D key=value` | Override a field on driver slot 0. |
+| `-D1 key=value` | Override a field on driver slot 1. |
 
-| Form | Example | Meaning |
-|------|---------|---------|
-| Space | `-d pg` | Driver 0, preset `pg` |
-| Equals | `--driver=pg` | Driver 0, preset `pg` |
-| Indexed (short) | `-d1 mysql` | Driver 1, preset `mysql` |
-| Indexed (long) | `--driver1=mysql` | Driver 1, preset `mysql` |
-| Raw JSON | `-d '{"driverType":"postgres","url":"..."}'` | Driver 0, inline config |
+CLI-composed values do not overwrite an already-set `STROPPY_DRIVER_N` environment variable. This lets CI inject a full JSON driver config directly.
 
-Without a number suffix, the index defaults to 0.
+## Presets
 
-### `-D` / `--driver-opt` &mdash; Field Overrides
+Presets are shorthand for `driverType`, `url`, and `defaultInsertMethod`.
 
-Override individual fields of a driver configuration:
-
-```bash
-stroppy run tpcc -d pg -D url=postgres://prod:5432/mydb
-stroppy run tpcc -d mysql -D url=root:secret@tcp(db.local:3306)/bench
-```
-
-Like `-d`, this flag supports indexed and equals forms:
-
-| Form | Example |
-|------|---------|
-| Space | `-D url=postgres://...` |
-| Equals | `-D=url=postgres://...` |
-| Indexed | `-D1 url=...` |
-| Long form | `--driver-opt url=...` |
-| Long indexed | `--driver1-opt url=...` |
-| Long indexed equals | `--driver1-opt=url=...` |
-
-Known override keys are `url`, `driverType`, and `defaultInsertMethod`. Any other key is passed through as-is to the TypeScript layer.
-
-### `-e` / `--env` &mdash; Environment Overrides
-
-Set environment variables for the test script:
-
-```bash
-stroppy run tpcc -e pool_size=200 -e scale_factor=10
-```
-
-Keys are **auto-uppercased** &mdash; `pool_size` becomes `POOL_SIZE` in the script. The flag accepts both space and equals forms:
-
-```bash
--e SCALE_FACTOR=10
--e=SCALE_FACTOR=10
---env SCALE_FACTOR=10
---env=SCALE_FACTOR=10
-```
-
-See the [Environment Overrides](#-e-environment-overrides) section below for precedence rules.
-
-## Driver Presets
-
-Three presets are built in:
-
-| Preset | `driverType` | Default URL | Default Insert Method |
-|--------|-------------|-------------|----------------------|
-| `pg` | `postgres` | `postgres://postgres:postgres@localhost:5432` | `copy_from` |
+| Preset | `driverType` | Default URL | Default insert method |
+|--------|--------------|-------------|-----------------------|
+| `pg` | `postgres` | `postgres://postgres:postgres@localhost:5432` | `native` |
 | `mysql` | `mysql` | `myuser:mypassword@tcp(localhost:3306)/mydb?charset=utf8mb4&parseTime=True&loc=Local` | `plain_bulk` |
 | `pico` | `picodata` | `postgres://admin:T0psecret@localhost:1331` | `plain_bulk` |
+| `ydb` | `ydb` | `grpc://localhost:2136/local` | `native` |
+| `noop` | `noop` | `noop://localhost` | `plain_bulk` |
 
-Presets are case-insensitive. A preset sets defaults; you can override any field with `-D`:
+CSV is a driver type but has no short preset. Configure it with `-D driverType=csv` and a filesystem URL.
 
-```bash
-# Use pg preset but connect to a different host
-stroppy run tpcc -d pg -D url=postgres://user:pass@db.prod:5432/bench
+## Common Options
 
-# Use mysql preset but switch insert method
-stroppy run tpcc -d mysql -D defaultInsertMethod=plain_query
-```
+These fields can be set in TypeScript defaults, raw JSON, a config file, or with `-D key=value`.
 
-## `declareDriverSetup` in Detail
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `url` | string | none | Driver-specific connection URL or DSN. |
+| `driverType` | string | none | `postgres`, `mysql`, `picodata`, `ydb`, `noop`, or `csv`. |
+| `defaultInsertMethod` | string | script or preset | `native`, `plain_bulk`, or `plain_query`. Overrides each InsertSpec method when set. |
+| `bulkSize` | int | `2500` | Rows per multi-row INSERT or native batch, where the driver uses batching. |
+| `defaultTxIsolation` | string | `db_default` | `read_uncommitted`, `read_committed`, `repeatable_read`, `serializable`, `db_default`, `conn`, or `none`. |
+| `errorMode` | string | `log` | `silent`, `log`, `throw`, `fail`, or `abort`. `STROPPY_ERROR_MODE` has highest precedence. |
+| `caCertFile` | string | none | Path to a CA certificate PEM file for TLS connections. |
+| `authToken` | string | none | Token credentials, mainly for YDB. |
+| `authUser` | string | from URL/DSN | Static auth username when the URL/DSN does not provide one. |
+| `authPassword` | string | from URL/DSN | Static auth password when the URL/DSN does not provide one. |
+| `tlsInsecureSkipVerify` | bool | `false` | Disable TLS certificate verification for testing. |
 
-```typescript
-function declareDriverSetup(index: number, defaults: DriverSetup): DriverSetup;
-```
-
-This is the bridge between your TypeScript defaults and CLI overrides. It reads the `STROPPY_DRIVER_<index>` env var (set by `-d`/`-D` flags), parses it as JSON, and merges CLI values over your defaults. Fields not set by the CLI keep their script-defined values.
-
-### `DriverSetup` fields
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `url` | `string` | &mdash; | Database connection URL |
-| `driverType` | `"postgres"` \| `"mysql"` \| `"picodata"` | &mdash; | Which driver to use |
-| `errorMode` | `"silent"` \| `"log"` \| `"throw"` \| `"fail"` \| `"abort"` | `"log"` | How query errors are handled |
-| `defaultInsertMethod` | `"plain_query"` \| `"plain_bulk"` \| `"copy_from"` | `"plain_bulk"` | Insert strategy for `driver.insert()` |
-| `defaultTxIsolation` | `"db_default"` \| `"read_uncommitted"` \| `"read_committed"` \| `"repeatable_read"` \| `"serializable"` \| `"conn"` \| `"none"` | `"db_default"` | Transaction isolation level for `driver.begin()` |
-| `bulkSize` | `number` | `500` | Rows per bulk INSERT statement |
-| `pool` | `PoolConfig` | &mdash; | Unified pool configuration sugar (see below) |
-| `postgres` | `PostgresConfig` | &mdash; | PostgreSQL-specific pool settings |
-| `sql` | `SqlConfig` | &mdash; | Generic SQL pool settings (MySQL) |
-
-### Error modes
-
-- **`silent`** &mdash; Record error metric only, no console output.
-- **`log`** &mdash; Record metric + print to console. This is the default.
-- **`throw`** &mdash; Rethrow the error. Your script must catch it.
-- **`fail`** &mdash; Mark the k6 test as failed, continue execution (exit code 110).
-- **`abort`** &mdash; Immediately stop the test via `test.abort()` (exit code 108).
-
-Error mode precedence: `STROPPY_ERROR_MODE` env var > `config.errorMode` > default (`"log"`).
-
-### Merge behavior
-
-CLI fields override TypeScript defaults field-by-field. Only fields explicitly set in the CLI JSON are merged &mdash; everything else keeps the script's default value:
-
-```typescript
-// Script declares:
-const config = declareDriverSetup(0, {
-  url: "postgres://localhost:5432",
-  driverType: "postgres",
-  pool: { maxConns: 10, minConns: 2 },
-});
-
-// CLI: stroppy run test.ts -d pg -D url=postgres://prod:5432
-// Result: url is overridden, driverType stays "postgres", pool stays {maxConns: 10, minConns: 2}
-```
-
-## Pool Configuration
-
-The `pool` field provides a unified interface that maps to the correct driver-specific pool config based on `driverType`.
-
-```typescript
-const config = declareDriverSetup(0, {
-  url: "postgres://localhost:5432",
-  driverType: "postgres",
-  pool: {
-    maxConns: 20,
-    minConns: 5,
-    maxConnLifetime: "1h",
-    maxConnIdleTime: "10m",
-  },
-});
-```
-
-### How `pool` maps to driver-specific config
-
-For **postgres** and **picodata** (`driverType: "postgres"` or `"picodata"`), `pool` maps to `PostgresConfig`:
-
-| `pool` field | `PostgresConfig` field |
-|-------------|----------------------|
-| `maxConns` | `maxConns` |
-| `minConns` | `minConns` |
-| `maxConnLifetime` | `maxConnLifetime` |
-| `maxConnIdleTime` | `maxConnIdleTime` |
-
-For **mysql** (`driverType: "mysql"`), `pool` maps to `SqlConfig`:
-
-| `pool` field | `SqlConfig` field |
-|-------------|------------------|
-| `maxConns` | `maxOpenConns` |
-| `minConns` | `maxIdleConns` |
-| `maxConnLifetime` | `connMaxLifetime` |
-| `maxConnIdleTime` | `connMaxIdleTime` |
-
-### Explicit vs. sugar
-
-If you set `postgres` or `sql` directly, they take priority over `pool`:
-
-```typescript
-// pool is ignored here — postgres takes priority
-const config = declareDriverSetup(0, {
-  url: "postgres://localhost:5432",
-  driverType: "postgres",
-  pool: { maxConns: 10 },       // ignored
-  postgres: { maxConns: 20 },   // this wins
-});
-```
-
-### Full `PostgresConfig` fields
-
-When you need PostgreSQL-specific settings beyond what `pool` offers:
-
-```typescript
-const config = declareDriverSetup(0, {
-  url: "postgres://localhost:5432",
-  driverType: "postgres",
-  postgres: {
-    maxConns: 20,
-    minConns: 5,
-    minIdleConns: 3,
-    maxConnLifetime: "1h",
-    maxConnIdleTime: "10m",
-    traceLogLevel: "warn",
-    defaultQueryExecMode: "cache_statement",
-    statementCacheCapacity: 512,
-    descriptionCacheCapacity: 256,
-  },
-});
-```
-
-## Multi-Driver Setup
-
-Stroppy supports multiple simultaneous database connections. This is useful for cross-database tests, migration validation, or comparing query plans across engines.
-
-### From the CLI
-
-Use indexed flags to configure multiple drivers:
+Nested options use dot notation from the CLI:
 
 ```bash
-stroppy run bench.ts -d0 pg -d1 mysql
-stroppy run bench.ts -d pg -d1 pico -D1 url=postgres://admin:T0psecret@remote:1331
+stroppy run tpcc/tx -d pg -D pool.maxConns=100 -D pool.maxConnLifetime=30m
+stroppy run tpcc/tx -d ydb -D caCertFile=./ca.pem -D authToken=t1.xxx
 ```
 
-### In TypeScript
+## Pool Options
 
-Each driver gets its own slot index:
+`pool` is portable sugar. Stroppy maps it to the driver-specific pool block by `driverType`.
 
-```typescript
-const pgConfig = declareDriverSetup(0, {
-  url: "postgres://postgres:postgres@localhost:5432",
-  driverType: "postgres",
-  pool: { maxConns: 2, minConns: 2 },
-});
-const pgDriver = DriverX.create().setup(pgConfig);
+| `pool` option | PostgreSQL/Picodata mapping | MySQL/YDB mapping |
+|---------------|-----------------------------|-------------------|
+| `pool.maxConns` | `postgres.maxConns` | `sql.maxOpenConns` |
+| `pool.minConns` | `postgres.minConns` | `sql.maxIdleConns` |
+| `pool.maxConnLifetime` | `postgres.maxConnLifetime` | `sql.connMaxLifetime` |
+| `pool.maxConnIdleTime` | `postgres.maxConnIdleTime` | `sql.connMaxIdleTime` |
 
-const mysqlConfig = declareDriverSetup(1, {
-  url: "root:pass@tcp(localhost:3306)/mydb",
-  driverType: "mysql",
-});
-const mysqlDriver = DriverX.create().setup(mysqlConfig);
-```
+Explicit `postgres` or `sql` blocks take priority over `pool`.
 
-### Shared vs. per-VU drivers
+PostgreSQL/Picodata-specific options:
 
-Where you call `.setup()` determines sharing semantics:
+| Option | Description |
+|--------|-------------|
+| `postgres.maxConns` | Maximum pgx pool connections. |
+| `postgres.minConns` | Minimum pgx pool connections. |
+| `postgres.minIdleConns` | Minimum idle pgx connections. |
+| `postgres.maxConnLifetime` | Maximum connection lifetime, e.g. `1h`. |
+| `postgres.maxConnIdleTime` | Maximum idle lifetime, e.g. `10m`. |
+| `postgres.traceLogLevel` | pgx trace log level: `debug`, `info`, `warn`, `error`. |
+| `postgres.defaultQueryExecMode` | `exec`, `cache_statement`, `cache_describe`, `describe_exec`, or `simple_protocol`. Stroppy defaults PostgreSQL query execution to `exec`. |
+| `postgres.statementCacheCapacity` | Statement cache size; only valid with `cache_statement`. |
+| `postgres.descriptionCacheCapacity` | Description cache size; only valid with `cache_describe`. |
 
-- **Init phase** (top-level module scope) &mdash; The driver's connection pool is shared across all VUs. This is the common case.
-- **Iteration phase** (inside `default()` or `setup()`) &mdash; Each VU gets its own driver instance and pool.
+MySQL/YDB-specific options:
 
-```typescript
-// Shared: created at init, one pool for all VUs
-const sharedDriver = DriverX.create().setup(sharedConfig);
+| Option | Description |
+|--------|-------------|
+| `sql.maxOpenConns` | Maximum open `database/sql` connections. |
+| `sql.maxIdleConns` | Maximum idle `database/sql` connections. |
+| `sql.connMaxLifetime` | Maximum connection lifetime, e.g. `1h`. |
+| `sql.connMaxIdleTime` | Maximum idle lifetime, e.g. `10m`. |
 
-// Per-VU: created at init, configured per iteration
-const vuDriver = DriverX.create();
+`noop` and `csv` ignore pool options.
 
-export default function () {
-  vuDriver.setup({
-    url: "postgres://localhost:5432?application_name=vu_" + exec.vu.idInTest,
-    driverType: "postgres",
-    pool: { maxConns: 1, minConns: 1 },
-  });
+## DB Drivers
 
-  // Both drivers are usable here
-  sharedDriver.exec("SELECT 1");
-  vuDriver.exec("SELECT 1");
-}
-```
+### PostgreSQL
 
-The `.setup()` call is safe to invoke on every iteration &mdash; it only configures the driver once.
+Use PostgreSQL for full SQL, transaction, and native bulk-load coverage.
 
-## `-e` Environment Overrides
+| Field | Value |
+|-------|-------|
+| `driverType` | `postgres` |
+| Preset | `pg` |
+| Default URL | `postgres://postgres:postgres@localhost:5432` |
+| URL schemes | `postgres://`, `postgresql://`, and pgx-supported connection strings |
+| Default insert method | `native` |
+| Pool config | `pool.*` or `postgres.*` |
 
-The `-e` flag sets environment variables that your test script can read via the `ENV()` helper or k6's `__ENV` object.
+PostgreSQL supports `native`, `plain_bulk`, and `plain_query` inserts. `native` uses pgx `CopyFrom`; `plain_bulk` uses multi-row INSERT; `plain_query` uses one-row INSERT batches.
 
-### Precedence
+Transactions are supported, including regular transaction isolation and `conn` connection-only mode. Use `postgres.defaultQueryExecMode=exec` when you want every query to execute without pgx statement caching; this is Stroppy's default when the field is not set.
 
-From highest to lowest priority:
-
-1. **Real environment** &mdash; Variables already set in the shell (`export SCALE_FACTOR=100`). These always win. If a real env var exists, the `-e` value is silently ignored with a warning.
-2. **`-e` overrides** &mdash; Values from the command line (`-e scale_factor=50`).
-3. **Driver config** &mdash; Values from `-d`/`-D` flags (passed as `STROPPY_DRIVER_N` env vars).
-4. **TypeScript defaults** &mdash; The fallback values in `declareDriverSetup()` and `ENV()`.
-
-### Auto-uppercasing
-
-All `-e` keys are uppercased before being set. This means these are equivalent:
+Example:
 
 ```bash
-stroppy run tpcc -e scale_factor=10
-stroppy run tpcc -e SCALE_FACTOR=10
-stroppy run tpcc -e Scale_Factor=10
+stroppy run tpcc/tx -d pg \
+  -D url=postgres://user:pass@host:5432/bench \
+  -D pool.maxConns=100 \
+  -D postgres.defaultQueryExecMode=exec
 ```
 
-All three set `SCALE_FACTOR=10` in the script environment.
+### MySQL
 
-### Multiple overrides
+Use MySQL for `database/sql` workloads and MySQL-specific dialect SQL.
+
+| Field | Value |
+|-------|-------|
+| `driverType` | `mysql` |
+| Preset | `mysql` |
+| Default URL | `myuser:mypassword@tcp(localhost:3306)/mydb?charset=utf8mb4&parseTime=True&loc=Local` |
+| URL schemes | Go MySQL DSN form, e.g. `user:pass@tcp(host:3306)/db?parseTime=True` |
+| Default insert method | `plain_bulk` |
+| Pool config | `pool.*` or `sql.*` |
+
+MySQL supports `plain_bulk` and `plain_query`. `native` is accepted but maps to the same multi-row INSERT path because the driver does not use `LOAD DATA LOCAL INFILE`.
+
+Transactions are supported through `database/sql`. TLS can be configured through the DSN or with `caCertFile` / `tlsInsecureSkipVerify` when the DSN does not already define TLS.
+
+Example:
 
 ```bash
-stroppy run tpcc -e scale_factor=10 -e pool_size=200 -e custom_flag=true
+stroppy run tpcc/procs -d mysql \
+  -D url='root:secret@tcp(mysql.local:3306)/bench?parseTime=True' \
+  -D pool.maxConns=80
 ```
 
-When the same key appears multiple times, the last value wins.
+### Picodata
 
-## Driver Types
+Use Picodata for SQL workloads over the PostgreSQL wire protocol.
 
-Stroppy supports three database drivers. Each has different capabilities:
+| Field | Value |
+|-------|-------|
+| `driverType` | `picodata` |
+| Preset | `pico` |
+| Default URL | `postgres://admin:T0psecret@localhost:1331` |
+| URL schemes | PostgreSQL-style URL, typically `postgres://user:pass@host:port/db` |
+| Default insert method | `plain_bulk` |
+| Pool config | `pool.*` or `postgres.*` |
 
-### `"postgres"`
+Picodata supports SQL query execution and InsertSpec loading. `native` and `plain_bulk` both use multi-row INSERT; `plain_query` uses one-row INSERT batches.
 
-Full-featured PostgreSQL driver built on [pgx](https://github.com/jackc/pgx).
+Transactions are not supported by the Picodata driver. Workloads that run explicit transactions should use `TX_ISOLATION=none` or a variant that avoids `driver.beginTx()`.
 
-- **Queries**: Full SQL support with `:param` syntax
-- **Transactions**: All isolation levels
-- **Insert methods**: `plain_query`, `plain_bulk`, `copy_from`
-- **Pool config**: `PostgresConfig` (pgx pool)
-- **COPY protocol**: Yes &mdash; use `copy_from` for bulk loads (5-10x faster than individual inserts)
-
-### `"mysql"`
-
-MySQL driver using Go's `database/sql` interface.
-
-- **Queries**: Full SQL support with `:param` syntax
-- **Transactions**: All isolation levels
-- **Insert methods**: `plain_query`, `plain_bulk` (`copy_from` is **not supported**)
-- **Pool config**: `SqlConfig` (database/sql pool)
-
-### `"picodata"`
-
-[Picodata](https://picodata.io/) driver using the PostgreSQL wire protocol.
-
-- **Queries**: SQL support with `:param` syntax
-- **Transactions**: **Not supported** (returns error)
-- **Insert methods**: `plain_query`, `plain_bulk` (`copy_from` is **not supported**)
-- **Pool config**: `PostgresConfig` (pgx pool, same as PostgreSQL)
-
-### Capability matrix
-
-| Capability | `postgres` | `mysql` | `picodata` |
-|-----------|-----------|---------|-----------|
-| `plain_query` insert | Yes | Yes | Yes |
-| `plain_bulk` insert | Yes | Yes | Yes |
-| `copy_from` insert | Yes | No | No |
-| Transactions | Yes | Yes | No |
-| `:param` syntax | Yes | Yes | Yes |
-| Pool type | pgx | database/sql | pgx |
-
-## How It Works Under the Hood
-
-Understanding the plumbing helps when debugging configuration issues.
-
-### The `STROPPY_DRIVER_N` mechanism
-
-When you use `-d` and `-D` flags, the Go CLI:
-
-1. Looks up the preset (if `-d` was used) to get base values (`driverType`, `url`, `defaultInsertMethod`).
-2. Applies `-D` overrides field by field on top of the preset.
-3. Serializes the result to JSON.
-4. Sets it as the `STROPPY_DRIVER_0` environment variable (or `STROPPY_DRIVER_1`, etc.).
-
-On the TypeScript side, `declareDriverSetup(0, defaults)` reads `STROPPY_DRIVER_0`, parses the JSON, and merges CLI values over script defaults. The merged config is then passed to `DriverX.create().setup(config)`, which converts it to the protobuf `DriverConfig` message and sends it to the Go driver layer.
-
-```
-CLI flags                    Environment              TypeScript
-─────────                    ───────────              ──────────
--d pg                   →   STROPPY_DRIVER_0=        →   declareDriverSetup(0, defaults)
--D url=postgres://...        {"driverType":"postgres",     merges CLI JSON over defaults
-                              "url":"postgres://...",  →   DriverX.create().setup(merged)
-                              "defaultInsertMethod":       converts to protobuf
-                              "copy_from"}             →   Go driver.Setup(proto)
-```
-
-### Why `declareDriverSetup` exists
-
-It serves a dual purpose. At runtime, it merges CLI config over script defaults. During the **probe phase** (when Stroppy inspects a script without executing it), the `DeclareDriverSetup` spy function captures the declared defaults so the CLI can report what a script expects. This is how `stroppy probe` can show a script's driver requirements without running it.
-
-### Pass-through fields
-
-The `-D` flag accepts any `key=value` pair. Known fields (`url`, `driverType`, `defaultInsertMethod`) are set on the Go struct; everything else goes into an `Extra` map that is serialized into the JSON and passed through to TypeScript. This lets you define custom fields in your script and override them from the CLI:
-
-```typescript
-const config = declareDriverSetup(0, {
-  url: "postgres://localhost:5432",
-  driverType: "postgres",
-});
-
-// Access a custom CLI-provided field
-const customTimeout = (config as any).queryTimeout ?? "30s";
-```
+Example:
 
 ```bash
-stroppy run bench.ts -d pg -D queryTimeout=60s
+stroppy run tpcc/tx -d pico \
+  -D url=postgres://admin:T0psecret@pico.local:1331/public \
+  -e TX_ISOLATION=none
 ```
+
+### YDB
+
+Use YDB for YQL workloads and native BulkUpsert loading.
+
+| Field | Value |
+|-------|-------|
+| `driverType` | `ydb` |
+| Preset | `ydb` |
+| Default URL | `grpc://localhost:2136/local` |
+| URL schemes | `grpc://host:port/database`, `grpcs://host:port/database` |
+| Default insert method | `native` |
+| Pool config | `pool.*` or `sql.*` |
+
+YDB supports `native`, `plain_bulk`, and `plain_query`. `native` uses YDB Table API `BulkUpsert`; SQL inserts use the generic `database/sql` path.
+
+Transactions are supported. TPC workloads typically default YDB to `serializable`. Use `grpcs://` for TLS, and use `authToken` or `authUser` / `authPassword` when the target requires credentials. If primary auth fails, the driver also tries Yandex Cloud metadata credentials.
+
+Examples:
+
+```bash
+stroppy run tpcc/tx -d ydb -D url=grpc://localhost:2136/local
+
+stroppy run tpcc/tx -d ydb \
+  -D url=grpcs://ydb.example.net:2135/tenant/db \
+  -D caCertFile=./ca.pem \
+  -D authToken=t1.xxx
+```
+
+### Noop
+
+Use Noop to measure Stroppy framework overhead without database I/O.
+
+| Field | Value |
+|-------|-------|
+| `driverType` | `noop` |
+| Preset | `noop` |
+| Default URL | `noop://localhost` |
+| URL schemes | `noop://...` |
+| Default insert method | `plain_bulk` |
+| Pool config | ignored |
+
+Noop drains generators, builds queries, records metrics, and discards all final I/O. It is useful for estimating the cost of TypeScript, data generation, batching, and Stroppy driver plumbing.
+
+Example:
+
+```bash
+stroppy run tpcb/tx -d noop -- --vus 4 --duration 30s
+```
+
+### CSV
+
+Use CSV to emit generated relational data into files instead of a database.
+
+| Field | Value |
+|-------|-------|
+| `driverType` | `csv` |
+| Preset | none |
+| Default URL | current working directory when `url` is empty |
+| URL schemes | Filesystem path with optional query string, e.g. `/tmp/out?merge=true` |
+| Default insert method | set `defaultInsertMethod=native` |
+| Pool config | ignored |
+
+CSV supports only relational InsertSpec loading through `native`. It accepts DDL setup steps for convenience: `DROP` clears output for idempotent reruns, while `CREATE` is a no-op. Runtime query execution is rejected.
+
+CSV URL options:
+
+| Query option | Default | Description |
+|--------------|---------|-------------|
+| `merge` | `true` | Merge worker shards into one `<table>.csv` at teardown. |
+| `header` | `true` | Emit CSV headers. With `merge=false`, headers are sidecar files. |
+| `separator` | `comma` | `comma`, `,`, `tab`, or `\t`. |
+| `workload` | `STROPPY_CSV_WORKLOAD`, then `default` | Output subdirectory under the URL path. |
+
+Example:
+
+```bash
+stroppy run tpcb/tx -D driverType=csv \
+  -D defaultInsertMethod=native \
+  -D url='/tmp/tpcb-csv?separator=comma&header=true&merge=true&workload=tpcb' \
+  --steps drop_schema,create_schema,load_data
+```
+
+## Capability Matrix
+
+| Capability | PostgreSQL | MySQL | Picodata | YDB | Noop | CSV |
+|------------|------------|-------|----------|-----|------|-----|
+| `runQuery` / `exec` | Yes | Yes | Yes | Yes | Stubbed | No |
+| Transactions | Yes | Yes | No | Yes | Stubbed | No |
+| `native` InsertSpec | COPY | Multi-row INSERT | Multi-row INSERT | BulkUpsert | Generator drain | CSV files |
+| `plain_bulk` InsertSpec | Yes | Yes | Yes | Yes | Generator drain | No |
+| `plain_query` InsertSpec | Yes | Yes | Yes | Yes | Generator drain | No |
+| Pool options | `postgres.*` | `sql.*` | `postgres.*` | `sql.*` | Ignored | Ignored |
+
+## Inspecting Driver Setup
+
+Use `stroppy probe` to see the effective defaults declared by a script without running the workload:
+
+```bash
+stroppy probe tpcc/tx --drivers
+stroppy probe tpch/tx --envs --drivers
+```
+
+Use `stroppy help drivers` in the CLI for the same option names in terminal help format.

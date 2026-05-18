@@ -58,7 +58,7 @@ The optional second positional argument specifies an explicit SQL file, overridi
 | `defaultInsertMethod` | string | `plain_query`, `copy_from`, or `plain_bulk` |
 | `defaultTxIsolation` | string | `read_uncommitted`, `read_committed`, `repeatable_read`, `serializable`, `connection_only`, `none` |
 | `errorMode` | string | `silent`, `log`, `throw`, `fail`, `abort` |
-| `bulkSize` | int | Rows per bulk INSERT (default: 500) |
+| `bulkSize` | int | Rows per bulk INSERT or native batch (default: 2500) |
 | `pool.maxConns` | int | Maximum pool connections |
 | `pool.minConns` | int | Minimum pool connections |
 | `pool.maxConnLifetime` | duration | Max connection lifetime (e.g. `1h`) |
@@ -297,19 +297,19 @@ stroppy run <script> [stroppy-flags] -- [k6-args...]
 
 ```bash
 # 10 VUs for 5 minutes
-stroppy run tpcc -- --vus 10 --duration 5m
+stroppy run tpcc/tx -- --vus 10 --duration 5m
 
 # Fixed number of iterations
 stroppy run simple -- --iterations 100
 
 # Export metrics as JSON
-stroppy run tpcc -- --out json=results.json
+stroppy run tpcc/tx -- --out json=results.json
 
 # Pass env vars through k6
-stroppy run tpcc -- -e WAREHOUSES=50 -e DURATION=10m
+stroppy run tpcc/tx -- -e WAREHOUSES=50
 
 # Combine stroppy flags and k6 flags
-stroppy run tpcc -d pg --steps load -- --vus 4 --duration 2m
+stroppy run tpcc/tx -d pg --steps load_data -- --vus 4 --duration 2m
 ```
 
 ---
