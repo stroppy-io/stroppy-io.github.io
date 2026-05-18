@@ -202,12 +202,7 @@ When using `begin()` manually, you must catch errors yourself and call `rollback
 
 ### Interaction with `"fail"` and `"abort"` error modes
 
-The `"fail"` and `"abort"` error modes (set via `errorMode` in driver config or the `STROPPY_ERROR_MODE` env var) affect what happens **after** the transaction error propagates out of `beginTx`:
-
-- `"fail"` &mdash; Marks the current k6 iteration as failed via `test.fail()`. The VU moves on to the next iteration.
-- `"abort"` &mdash; Aborts the entire test run via `test.abort()`.
-
-Inside the transaction itself, however, the error always throws so the rollback can execute first.
+Transaction query errors bypass driver `errorMode` handling inside the helper. `beginTx` rolls back and then rethrows the original error. If you want to turn that error into `test.fail()` or `test.abort()`, catch it outside `beginTx` and handle it explicitly.
 
 ## Transaction Metrics
 
@@ -255,7 +250,8 @@ Here is a complete test script that creates a table, runs transactional inserts,
 ```typescript
 import { Options } from "k6/options";
 import { Teardown } from "k6/x/stroppy";
-import { DriverX, R, declareDriverSetup } from "./helpers.ts";
+import { DriverX, declareDriverSetup } from "./helpers.ts";
+import { DrawRT } from "./datagen.ts";
 
 export const options: Options = {
   iterations: 1,
@@ -270,8 +266,7 @@ const driverConfig = declareDriverSetup(0, {
 
 const driver = DriverX.create().setup(driverConfig);
 
-const aidGen = R.int32(1, 100000).gen();
-const deltaGen = R.int32(-500, 500).gen();
+const deltaGen = DrawRT.intUniform(0xD317A, -500, 500);
 
 export function setup() {
   driver.exec("DROP TABLE IF EXISTS accounts");
@@ -288,7 +283,7 @@ export function setup() {
 export default function () {
   // Callback form — auto-commit on success, auto-rollback on error
   driver.beginTx({ isolation: "serializable", name: "transfer" }, (tx) => {
-    const delta = deltaGen.next();
+    const delta = Number(deltaGen.next());
     tx.exec("UPDATE accounts SET balance = balance - :d WHERE id = 1", { d: delta });
     tx.exec("UPDATE accounts SET balance = balance + :d WHERE id = 2", { d: delta });
 
@@ -315,7 +310,7 @@ On the Go side, the `Driver` interface exposes a single method for starting tran
 type Driver interface {
     Begin(ctx context.Context, isolation stroppy.TxIsolationLevel) (Tx, error)
     RunQuery(ctx context.Context, sql string, args map[string]any) (*QueryResult, error)
-    InsertValues(ctx context.Context, unit *stroppy.InsertDescriptor) (*stats.Query, error)
+    InsertSpec(ctx context.Context, spec *dgproto.InsertSpec) (*stats.Query, error)
     Teardown(ctx context.Context) error
 }
 ```

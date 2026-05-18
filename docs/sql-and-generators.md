@@ -1,457 +1,321 @@
 ---
 sidebar_position: 2
 title: SQL & Generators
-description: Deep dive into SQL syntax, parameterized queries, structured SQL files, and the data generation system
+description: Parameterized SQL, structured SQL files, and relational data generation
 ---
 
 # SQL & Generators
 
-Stroppy provides two core primitives for database testing: **parameterized SQL execution** and **data generation with statistical distributions**. This page covers both in depth.
+Stroppy workload scripts usually combine two things: SQL execution with named parameters, and deterministic relational data generation through InsertSpec.
 
 ## Parameterized Queries
 
 ### The `:param` syntax
 
-Stroppy uses `:paramName` syntax for query parameters. The driver converts these to the native placeholder format (`$1, $2, ...` for PostgreSQL, `?` for MySQL) at execution time.
+Stroppy uses `:paramName` syntax for query parameters. Drivers convert these to native placeholders at execution time, such as `$1`, `$2` for PostgreSQL and `?` for MySQL.
 
 ```typescript
 driver.exec("SELECT :value + :second", {
   value: 100,
   second: 50,
 });
-// Executes: SELECT $1 + $2   with args [100, 50]
 ```
 
-Parameters are deduplicated &mdash; the same name used multiple times maps to the same positional argument:
+Parameters are deduplicated where the dialect supports it:
 
 ```typescript
 driver.exec("SELECT :x + :x", { x: 42 });
-// Executes: SELECT $1 + $1   with args [42]
 ```
 
-### Type casting
-
-PostgreSQL `::` casts work naturally since the parser distinguishes `:param` from `::`:
+PostgreSQL casts work at runtime because the execution parser distinguishes `:param` from `::` casts:
 
 ```typescript
 driver.exec("SELECT :a::int + :b::int", { a: 34, b: 35 });
-// Executes: SELECT $1::int + $2::int   with args [34, 35]
 ```
+
+The SQL metadata parser used by `parse_sql` is intentionally simpler; if you inspect `ParsedQuery.params` for PostgreSQL-heavy SQL, verify casts in probe output.
 
 ### Query API
 
-Both `DriverX` and `TxX` (transactions) implement the same `QueryAPI` interface with five methods:
+Both `DriverX` and `TxX` implement the same query API:
 
 ```typescript
 interface QueryAPI {
-  exec(sql, args?): QueryStats;              // execute, discard rows
-  queryRows(sql, args?, limit?): any[][];    // all rows as arrays
-  queryRow(sql, args?): any[] | undefined;   // first row
-  queryValue<T>(sql, args?): T | undefined;  // first column of first row
-  queryCursor(sql, args?): QueryResult;      // raw cursor for streaming
+  exec(sql, args?): QueryStats;
+  queryRows(sql, args?, limit?): any[][];
+  queryRow(sql, args?): any[] | undefined;
+  queryValue<T>(sql, args?): T | undefined;
+  queryCursor(sql, args?): QueryResult | undefined;
 }
 ```
 
-`exec` is the most common &mdash; it runs the query, closes the result set, and returns timing stats. Use `queryRows`/`queryRow`/`queryValue` when you need to read data back:
+All query methods accept a raw SQL string, a `ParsedQuery` from `parse_sql`, or a tagged query object.
 
 ```typescript
-// Read a single value
 const count = driver.queryValue<number>("SELECT count(*) FROM users");
-
-// Read a single row
 const row = driver.queryRow("SELECT id, name FROM users WHERE id = :id", { id: 1 });
-
-// Read multiple rows
 const rows = driver.queryRows("SELECT id, name FROM users LIMIT :n", { n: 10 });
 ```
 
 ### Argument validation
 
-The driver validates that:
-- Every `:param` in the SQL has a corresponding key in the args object
-- No extra keys are provided that don't appear in the SQL
+Missing parameters are errors. Extra keys currently produce a warning and are ignored for execution.
 
-Both cases produce clear error messages.
+```typescript
+driver.exec("SELECT :a", {});              // error: missed argument a
+driver.exec("SELECT :a", { a: 1, b: 2 });  // warning: extra argument b
+```
 
 ## Structured SQL Files
 
-For larger workloads, Stroppy supports structured SQL files with named sections and queries. This keeps your SQL organized and your TypeScript clean.
-
-### Syntax
+For larger workloads, Stroppy supports SQL files with named sections and named queries.
 
 ```sql
---+ cleanup
---= drop_branches
-DROP TABLE IF EXISTS branches CASCADE;
---= drop_accounts
+--+ drop_schema
+--= accounts
 DROP TABLE IF EXISTS accounts CASCADE;
 
 --+ create_schema
---= create_branches
-CREATE TABLE branches (
-    bid INTEGER NOT NULL PRIMARY KEY,
-    bbalance INTEGER,
-    filler CHAR(88)
-);
-
---= create_accounts
+--= accounts
 CREATE TABLE accounts (
-    aid INTEGER NOT NULL PRIMARY KEY,
-    bid INTEGER,
-    abalance INTEGER,
-    filler CHAR(84)
+  id INTEGER PRIMARY KEY,
+  balance INTEGER NOT NULL
 );
 
 --+ workload
---= transfer
-SELECT transfer(:src_aid, :dst_aid, :amount);
+--= debit
+UPDATE accounts SET balance = balance - :amount WHERE id = :id;
 ```
 
-- `--+ name` &mdash; Starts a new section (group of queries)
-- `--= query_name` &mdash; Names the next query (name is optional)
-- Regular `--` comments are stripped
+Markers:
 
-### Using in TypeScript
+| Marker | Meaning |
+|--------|---------|
+| `--+ name` | Starts a new section. |
+| `--= name` | Names the next query in the current section. |
+| `--=` | Starts an unnamed query. Useful when the script iterates a section in order. |
 
-`parse_sql_with_sections` returns a callable function with overloaded signatures:
+### Using sections in TypeScript
 
 ```typescript
 import { parse_sql_with_sections } from "./parse_sql.js";
 
-// open() is a k6 built-in that reads files at init time
 const sql = parse_sql_with_sections(open(__ENV.SQL_FILE));
 
-sql()                              // → Record<string, ParsedQuery[]> (all sections)
-sql("cleanup")                     // → ParsedQuery[] (all queries in section)
-sql("workload", "transfer")        // → ParsedQuery | undefined (specific query)
-```
-
-Usage in a test script:
-
-```typescript
 export function setup() {
-  // Run all queries in the cleanup section
-  sql("cleanup").forEach((query) => driver.exec(query, {}));
-
-  // Run schema creation
+  sql("drop_schema").forEach((query) => driver.exec(query, {}));
   sql("create_schema").forEach((query) => driver.exec(query, {}));
 }
 
 export default function () {
-  // Run a specific named query with parameters
-  driver.exec(sql("workload", "transfer")!, {
-    src: srcGen.next(),
-    dst: dstGen.next(),
-    amt: amtGen.next(),
-  });
+  driver.exec(sql("workload", "debit")!, { id: 1, amount: 50 });
 }
 ```
 
-For SQL files without sections, use `parse_sql` instead:
+For flat files without `--+` sections, use `parse_sql`:
 
 ```typescript
 import { parse_sql } from "./parse_sql.js";
 
 const queries = parse_sql(open(__ENV.SQL_FILE));
 
-queries()                // → ParsedQuery[] (all queries)
-queries("my_query")      // → ParsedQuery | undefined
+queries();              // ParsedQuery[]
+queries("my_query");    // ParsedQuery | undefined
 ```
 
-Each `ParsedQuery` object has:
-- `name` &mdash; The query name from `--=`
-- `sql` &mdash; The raw SQL string
-- `type` &mdash; Detected type: `"CreateTable"`, `"Insert"`, `"Select"`, or `"Other"`
-- `params` &mdash; Extracted parameter names
+Each `ParsedQuery` has:
 
-## Data Generators
+| Field | Description |
+|-------|-------------|
+| `name` | Query name from `--=`. |
+| `sql` | Raw SQL text. |
+| `type` | `CreateTable`, `Insert`, `Select`, `Other`, or `Invalid`. |
+| `params` | Extracted parameter names. |
 
-Stroppy's generation system is built around three namespaces &mdash; `R` for random values, `S` for unique sequences, and `C` for constants &mdash; designed so that a column definition reads like a declaration of what data it should hold.
+## Multi-Dialect SQL
 
-### The `R`, `S`, and `C` design
-
-The idea is that you describe each column's data shape right where you use it:
+Built-in workloads that support multiple databases ship one SQL file per dialect. The TypeScript script selects the file based on the active `driverType`:
 
 ```typescript
-// C = constant values
-C.int32(42)           // constant 42 every time
-C.str("hello")        // constant string
-C.float(0)            // constant 0.0
-C.datetime(new Date())// constant timestamp
+const _sqlByDriver: Record<string, string> = {
+  postgres: "./pg.sql",
+  mysql: "./mysql.sql",
+  picodata: "./pico.sql",
+  ydb: "./ydb.sql",
+};
 
-// R = random values (ranges)
-R.int32(1, 1000)      // random integer in [1, 1000]
-R.str(10)             // random 10-char string, English alphabet
-R.str(5, 20)          // random length between 5 and 20
-R.str(5, 20, AB.enNum)// alphanumeric
-R.float(0, 100)       // random float
-
-// S = unique/sequential values
-S.int32(1, 100000)    // 1, 2, 3, ... 100000 (unique, sequential)
-S.str(10)             // unique 10-char strings
-S.str(5, 20, AB.enNum)// unique, alphanumeric, variable length
+const SQL_FILE = ENV("SQL_FILE", ENV.auto, "SQL file path")
+  ?? _sqlByDriver[driverConfig.driverType!]
+  ?? "./pg.sql";
 ```
 
-`C` generators produce the same value every call. `S` generators are for primary keys and unique columns where every value must be different. `R` generators are for everything else &mdash; foreign keys, filler data, random balances.
+The section and query names must match across dialect files because the TypeScript workload references those names independent of the database.
 
-### Full `C` reference (constants)
+You can force a variant with the second positional SQL argument:
 
-```typescript
-C.str("hello")                 // fixed string
-C.int32(42)                    // fixed 32-bit integer
-C.int64(9999999999)            // fixed 64-bit integer
-C.float(3.14)                  // fixed 32-bit float
-C.double(2.718)                // fixed 64-bit float
-C.decimal("99.99")             // fixed arbitrary-precision decimal
-C.bool(true)                   // fixed boolean
-C.datetime(new Date())         // fixed timestamp
-C.uuid("550e8400-...")         // fixed UUID
+```bash
+stroppy run tpcc/tx tpcc/pico -d pico
+stroppy run tpch/tx tpch/mysql -d mysql
 ```
 
-### Full `R` reference (random)
+## Relational Data Generation
+
+Stroppy's current load path is InsertSpec: a TypeScript table declaration serialized to protobuf and streamed through the selected driver.
+
+Import the builders from `datagen.ts`:
 
 ```typescript
-// Strings
-R.str(10)                      // random, length 10, English
-R.str(10, AB.en)               // explicit alphabet
-R.str(5, 20)                   // variable length
-R.str(5, 20, AB.enNum)         // variable length, alphanumeric
-
-// Integers
-R.int32(1, 1000)               // random in range
-R.int64(1, 1000000000)         // 64-bit range
-R.uint32(0, 100)               // unsigned 32-bit range
-R.uint64(0, 1000000000)        // unsigned 64-bit range
-
-// Floats and doubles
-R.float(0.0, 100.0)            // random 32-bit float range
-R.double(0.0, 1.0)             // random 64-bit float range
-R.decimal(0, 999.99)           // random decimal range (number bounds)
-R.decimal("0.01", "999.99")    // random decimal range (string bounds)
-
-// Booleans (ratio = probability of true)
-R.bool(0.5)                    // 50% true
-R.bool(1.0)                    // always true
-R.bool(0.5, true)              // unique sequence: [false, true]
-
-// Dates
-R.datetime(new Date("2020-01-01"), new Date("2025-01-01"))
-
-// UUIDs
-R.uuid()                       // random UUID v4
-R.uuidSeeded()                 // reproducible UUID v4
+import {
+  Alphabet,
+  Attr,
+  Draw,
+  DrawRT,
+  Expr,
+  InsertMethod,
+  Rel,
+} from "./datagen.ts";
 ```
 
-### Full `S` reference (sequential/unique)
+A table load is declared with `Rel.table` and executed with `driver.insertSpec(...)`:
 
 ```typescript
-S.int32(1, 100000)             // 1, 2, 3, ... (for primary keys)
-S.int64(1, 1000000000)         // 64-bit sequential
-S.uint32(0, 100)               // unsigned 32-bit sequential
-S.uint64(0, 1000000000)        // unsigned 64-bit sequential
-S.str(10)                      // unique strings, length 10
-S.str(5, 20, AB.enNum)         // unique, variable length, alphanumeric
-S.uuid("ffffffff-...")         // sequential UUIDs up to max
-S.uuid("00000001-...", "fff...") // sequential UUIDs in range
+const accounts = Rel.table("accounts", {
+  size: 100_000,
+  seed: 0xA11CE,
+  method: InsertMethod.NATIVE,
+  parallelism: LOAD_WORKERS || undefined,
+  attrs: {
+    aid: Attr.rowId(),
+    bid: Expr.add(
+      Expr.div(Attr.rowIndex(), Expr.lit(100_000)),
+      Expr.lit(1),
+    ),
+    balance: Expr.lit(0),
+    filler: Draw.ascii({
+      min: Expr.lit(84),
+      max: Expr.lit(84),
+      alphabet: Alphabet.en,
+    }),
+  },
+});
+
+Step("load_data", () => {
+  driver.insertSpec(accounts);
+});
 ```
 
-### Alphabets (`AB`)
+Generated values are deterministic functions of the table seed, attribute path, and row index. This makes loads reproducible and lets drivers split a table into independent parallel chunks.
 
-Built-in character sets for string generation:
+### Core builders
 
-| Alphabet | Characters |
-|----------|-----------|
-| `AB.en` | `a-z`, `A-Z` |
-| `AB.enNum` | `a-z`, `A-Z`, `0-9` |
-| `AB.num` | `0-9` |
-| `AB.enUpper` | `A-Z` |
-| `AB.enSpc` | `a-z`, `A-Z`, space |
-| `AB.enNumSpc` | `a-z`, `A-Z`, `0-9`, space |
+| Builder | Use |
+|---------|-----|
+| `Rel.table(name, spec)` | Declares one table InsertSpec. |
+| `Attr.rowId()` | 1-based row id derived from the row index. |
+| `Attr.rowIndex()` | 0-based row index expression. |
+| `Attr.lookup(...)` | Reads from another generated population. |
+| `Expr.lit(value)` | Literal value expression. |
+| `Expr.add`, `Expr.sub`, `Expr.mul`, `Expr.div` | Arithmetic expressions. |
+| `Expr.if`, `Expr.choose` | Conditional and weighted-choice expressions. |
+| `Draw.*` | Deterministic load-time distributions. |
+| `DrawRT.*` | Transaction-time random generators for workload code. |
 
-### Standalone generators with `.gen()`
+### Insert methods
 
-Every rule has a `.gen()` method that creates a standalone generator object with a `.next()` method:
+| Method | Meaning |
+|--------|---------|
+| `InsertMethod.NATIVE` | Driver-native fast path: PostgreSQL COPY, YDB BulkUpsert, CSV output, Noop drain, or driver-specific equivalent. |
+| `InsertMethod.PLAIN_BULK` | Multi-row INSERT batches. |
+| `InsertMethod.PLAIN_QUERY` | Per-row INSERT path, implemented as batch size 1 where possible. |
+
+Driver configuration can pin every InsertSpec to a method with `defaultInsertMethod`:
 
 ```typescript
-import { R, S, C } from "./helpers.ts";
+const driverConfig = declareDriverSetup(0, {
+  driverType: "postgres",
+  url: "postgres://postgres:postgres@localhost:5432",
+  defaultInsertMethod: "native",
+});
+```
 
-const aidGen = R.int32(1, 100000).gen();
-const deltaGen = R.int32(-5000, 5000).gen();
+## Runtime Draws
+
+Use `DrawRT` for transaction-time randomness inside the workload loop. Construct the generator at init time and call `.next()` inside the exported function.
+
+```typescript
+declare const __VU: number;
+
+const vu = typeof __VU === "number" ? __VU : 0;
+const aidGen = DrawRT.intUniform(0xA11CE ^ vu, 1, 100_000);
+const deltaGen = DrawRT.intUniform(0xD317A ^ vu, -5000, 5000);
 
 export default function () {
-  driver.exec("SELECT transfer(:aid, :delta)", {
-    aid: aidGen.next(),
-    delta: deltaGen.next(),
+  driver.beginTx((tx) => {
+    tx.exec("UPDATE accounts SET balance = balance + :d WHERE aid = :a", {
+      a: aidGen.next(),
+      d: deltaGen.next(),
+    });
   });
 }
 ```
 
-An optional seed argument controls reproducibility: `.gen(42)` produces the same sequence every time, `.gen(0)` (or no argument) uses the module-wide seed set via `setSeed()`.
+## TPC-B Example
 
-### Group generators (Tuples)
-
-Group generators produce tuples &mdash; all parameters advance together on each `.next()` call. Use `R.group()` to build one:
-
-```typescript
-const groupGen = R.group({
-  id: S.int32(1, 100),
-  name: S.str(10),
-  active: R.bool(1, true),
-}).gen();
-
-// Each call returns an array of values in parameter order
-for (let i = 0; i < 100; i++) {
-  const [id, name, active] = groupGen.next();
-  console.log(id, name, active);
-}
-```
-
-## Bulk Insertion
-
-`DriverX.insert()` combines data generation with bulk loading in a single call. You declare the table, the row count, and a generation rule for each column &mdash; Stroppy handles the rest.
-
-The API is overloaded for convenience: you can either pass the table name, count, and column rules as separate arguments, or pass a full descriptor object for advanced cases.
-
-### The ergonomic form
-
-```typescript
-driver.insert("table_name", rowCount, {
-  method: "plain_query",  // or "copy_from"
-  params: {
-    column_name: R.int32(1, 100),    // generation rule per column
-  },
-});
-```
-
-This is the common case. Each key in `params` maps to a column, and its value is a generation rule (`R.*`, `S.*`, or `C.*`) that produces data for that column.
-
-### `plain_query` vs `copy_from`
-
-**`plain_query`** generates individual INSERT statements. Straightforward, works everywhere:
-
-```typescript
-driver.insert("users", 10000, {
-  method: "plain_query",
-  params: {
-    id: S.int32(1, 10000),
-    name: R.str(5, 20, AB.en),
-    email: R.str(10, 30, AB.enNum),
-    balance: R.float(0.0, 10000.0),
-  },
-});
-```
-
-**`copy_from`** uses PostgreSQL's COPY protocol for maximum throughput &mdash; typically 5-10x faster than individual inserts. Use this for loading large data sets:
-
-```typescript
-driver.insert("accounts", 1000000, {
-  method: "copy_from",
-  params: {
-    aid: S.int32(1, 1000000),
-    bid: R.int32(1, 10),
-    abalance: C.int32(0),
-    filler: R.str(84, AB.en),
-  },
-});
-```
-
-Notice how the column definitions read naturally: `aid` is a sequential integer from 1 to 1M (primary key), `bid` is a random integer from 1 to 10 (foreign key), `abalance` starts at 0 (constant via `C`), and `filler` is an 84-character random string.
-
-### Grouped columns
-
-When some columns form a logical group &mdash; like a composite foreign key, or columns that should produce correlated combinations &mdash; use `groups`:
-
-```typescript
-driver.insert("orders", 50000, {
-  method: "copy_from",
-  params: {
-    oid: S.int32(1, 50000),
-    amount: R.float(1.0, 999.99),
-  },
-  groups: {
-    customer: {
-      cid: R.int32(1, 1000),
-      region: R.int32(1, 5),
-    },
-  },
-});
-```
-
-Columns within a group are generated together as tuples, ensuring coherent combinations. Columns in `params` are generated independently.
-
-## Putting It All Together: TPC-B Example
-
-Here's a condensed version of the built-in TPC-B workload showing SQL files, generators, and bulk insertion working together:
+This condensed example mirrors the current `tpcb/tx` style: structured SQL for schema and transaction statements, InsertSpec for loading, and `DrawRT` for hot-loop parameters.
 
 ```typescript
 import { Options } from "k6/options";
 import { Teardown } from "k6/x/stroppy";
-import { DriverX, AB, C, R, Step, S, ENV, declareDriverSetup } from "./helpers.ts";
+import { DriverX, ENV, Step, declareDriverSetup } from "./helpers.ts";
+import { Attr, DrawRT, Expr, InsertMethod, Rel } from "./datagen.ts";
 import { parse_sql_with_sections } from "./parse_sql.js";
 
-const SCALE = ENV("SCALE_FACTOR", 1, "TPC-B scale factor");
-const BRANCHES = SCALE;
-const TELLERS = 10 * SCALE;
-const ACCOUNTS = 100000 * SCALE;
+const SCALE_FACTOR = ENV(["SCALE_FACTOR", "BRANCHES"], 1, "TPC-B scale factor");
+const POOL_SIZE = ENV("POOL_SIZE", 50, "Connection pool size");
+const LOAD_WORKERS = ENV("LOAD_WORKERS", 0, "Load workers") as number;
 
-export const options: Options = {
-  setupTimeout: String(SCALE) + "m",
-};
+const BRANCHES = SCALE_FACTOR;
+const ACCOUNTS = 100_000 * SCALE_FACTOR;
 
-// Initialize driver
+export const options: Options = { setupTimeout: String(SCALE_FACTOR) + "m" };
+
 const driverConfig = declareDriverSetup(0, {
   url: "postgres://postgres:postgres@localhost:5432",
   driverType: "postgres",
+  defaultInsertMethod: "native",
+  pool: { maxConns: POOL_SIZE, minConns: POOL_SIZE },
 });
 
+const SQL_FILE = ENV("SQL_FILE", ENV.auto, "SQL file path") ?? "./pg.sql";
 const driver = DriverX.create().setup(driverConfig);
+const sql = parse_sql_with_sections(open(SQL_FILE));
 
-// Parse SQL file into named sections
-const sql = parse_sql_with_sections(
-  open(ENV("SQL_FILE", "./tpcb.sql", "Path to SQL file")),
-);
+function accountsSpec() {
+  return Rel.table("pgbench_accounts", {
+    size: ACCOUNTS,
+    seed: 0xACC07,
+    method: InsertMethod.NATIVE,
+    parallelism: LOAD_WORKERS || undefined,
+    attrs: {
+      aid: Attr.rowId(),
+      bid: Expr.add(Expr.div(Attr.rowIndex(), Expr.lit(100_000)), Expr.lit(1)),
+      abalance: Expr.lit(0),
+    },
+  });
+}
 
 export function setup() {
-  // Run cleanup and schema creation queries from the SQL file
-  Step("cleanup", () => {
-    sql("cleanup").forEach((q) => driver.exec(q, {}));
-  });
-
-  Step("create_schema", () => {
-    sql("create_schema").forEach((q) => driver.exec(q, {}));
-  });
-
-  // Bulk-load data using COPY protocol
-  Step("load_data", () => {
-    driver.insert("pgbench_accounts", ACCOUNTS, {
-      method: "copy_from",
-      params: {
-        aid: S.int32(1, ACCOUNTS),     // sequential primary key
-        bid: R.int32(1, BRANCHES),      // random branch reference
-        abalance: C.int32(0),           // starting balance (constant)
-        filler: R.str(84, AB.en),       // padding
-      },
-    });
-
-    sql("analyze").forEach((q) => driver.exec(q, {}));
-  });
-
+  Step("drop_schema", () => sql("drop_schema").forEach((q) => driver.exec(q, {})));
+  Step("create_schema", () => sql("create_schema").forEach((q) => driver.exec(q, {})));
+  Step("load_data", () => driver.insertSpec(accountsSpec()));
   Step.begin("workload");
 }
 
-// Standalone generators for the hot loop
-const aidGen = R.int32(1, ACCOUNTS).gen();
-const tidGen = R.int32(1, TELLERS).gen();
-const bidGen = R.int32(1, BRANCHES).gen();
-const deltaGen = R.int32(-5000, 5000).gen();
+const aidGen = DrawRT.intUniform(0xA1D, 1, ACCOUNTS);
 
-// Default export = the workload k6 runs per VU
 export default function () {
-  driver.exec(sql("workload", "tpcb_transaction")!, {
-    p_aid: aidGen.next(),
-    p_tid: tidGen.next(),
-    p_bid: bidGen.next(),
-    p_delta: deltaGen.next(),
+  driver.beginTx((tx) => {
+    tx.exec(sql("workload", "update_account")!, { aid: aidGen.next() });
   });
 }
 
@@ -461,88 +325,4 @@ export function teardown() {
 }
 ```
 
-The pattern here is typical: `setup()` uses structured SQL files and `insert()` with `S`/`R`/`C` rules to prepare the database, then the default export uses standalone `.gen()` generators to feed parameterized queries in a tight loop.
-
-## DDL and Insert in Harmony: TPC-C
-
-The TPC-C workload is where the generator syntax really shines. Look at how the SQL schema and the TypeScript inserts mirror each other.
-
-The SQL defines the `customer` table:
-
-```sql
-CREATE TABLE customer (
-  c_id INTEGER,
-  c_d_id INTEGER,
-  c_w_id INTEGER REFERENCES warehouse(w_id),
-  c_first VARCHAR(16),
-  c_middle CHAR(2),
-  c_last VARCHAR(16),
-  c_street_1 VARCHAR(20),
-  c_street_2 VARCHAR(20),
-  c_city VARCHAR(20),
-  c_state CHAR(2),
-  c_zip CHAR(9),
-  c_phone CHAR(16),
-  c_since TIMESTAMP,
-  c_credit CHAR(2),
-  c_credit_lim DECIMAL(12,2),
-  c_discount DECIMAL(4,4),
-  c_balance DECIMAL(12,2),
-  c_ytd_payment DECIMAL(12,2),
-  c_payment_cnt INTEGER,
-  c_delivery_cnt INTEGER,
-  c_data VARCHAR(500),
-  PRIMARY KEY (c_w_id, c_d_id, c_id)
-);
-```
-
-And the insert reads like a declaration of what data each column should hold:
-
-```typescript
-driver.insert("customer", TOTAL_CUSTOMERS, {
-  method: "copy_from",
-  params: {
-    c_first: R.str(8, 16),                        // VARCHAR(16)
-    c_middle: R.str(2, AB.enUpper),                // CHAR(2)
-    c_last: S.str(6, 16),                          // unique last names
-    c_street_1: R.str(10, 20, AB.enNumSpc),        // VARCHAR(20)
-    c_street_2: R.str(10, 20, AB.enNumSpc),
-    c_city: R.str(10, 20, AB.enSpc),
-    c_state: R.str(2, AB.enUpper),                 // CHAR(2)
-    c_zip: R.str(9, AB.num),                       // CHAR(9), digits only
-    c_phone: R.str(16, AB.num),                    // CHAR(16), digits only
-    c_since: C.datetime(new Date()),               // constant timestamp
-    c_credit: C.str("GC"),                         // constant string
-    c_credit_lim: C.float(50000),                  // constant
-    c_discount: R.float(0, 0.5),                   // DECIMAL(4,4)
-    c_balance: C.float(-10),                       // constant
-    c_ytd_payment: C.float(10),                    // constant
-    c_payment_cnt: C.int32(1),                     // constant
-    c_delivery_cnt: C.int32(0),                    // constant
-    c_data: R.str(300, 500, AB.enNumSpc),          // VARCHAR(500)
-  },
-  groups: {
-    customer_pk: {                                  // PRIMARY KEY (c_w_id, c_d_id, c_id)
-      c_d_id: S.int32(1, DISTRICTS_PER_WAREHOUSE),
-      c_w_id: S.int32(1, WAREHOUSES),
-      c_id: S.int32(1, CUSTOMERS_PER_DISTRICT),
-    },
-  },
-});
-```
-
-Every generation rule maps directly to the column's SQL type and constraints. `VARCHAR(16)` becomes `R.str(8, 16)`. `CHAR(9)` zip codes become `R.str(9, AB.num)`. Fixed values like `c_credit_lim` use `C.float(50000)`. The composite primary key `(c_w_id, c_d_id, c_id)` goes into a `groups` block where each component is a `S.int32` sequence, ensuring unique tuples via Cartesian product.
-
-The full TPC-C workload loads 9 tables this way, then runs 5 concurrent transaction types (new_order, payments, order_status, delivery, stock_level) at a realistic mix ratio &mdash; all in about 270 lines of TypeScript.
-
-## Distribution Types
-
-Under the hood, generators support three statistical distributions:
-
-| Distribution | Use case | Behavior |
-|-------------|----------|----------|
-| **Uniform** | Default. Equal probability across the range | Every value equally likely |
-| **Normal** | Realistic clustering around a mean | Bell curve distribution |
-| **Zipfian** | Hot-spot simulation (80/20 rule) | Few values accessed very frequently |
-
-These are most useful when building custom workloads that need realistic access patterns &mdash; for example, a Zipfian distribution on account IDs simulates the real-world pattern where a small number of accounts see the majority of activity.
+Use `stroppy help datagen` for the terminal summary of the same current API.

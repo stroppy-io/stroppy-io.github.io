@@ -43,6 +43,8 @@ stroppy run tpcb/tx -D driverType=csv -D url='/tmp/tpcb-csv?merge=true&workload=
 
 CLI-composed values do not overwrite an already-set `STROPPY_DRIVER_N` environment variable. This lets CI inject a full JSON driver config directly.
 
+For repeatable runs with full driver objects, environment variables, steps, and k6 arguments, use a [configuration file](./config-file).
+
 ## Presets
 
 Presets are shorthand for `driverType`, `url`, and `defaultInsertMethod`.
@@ -92,6 +94,8 @@ stroppy run tpcc/tx -d ydb -D caCertFile=./ca.pem -D authToken=t1.xxx
 | `pool.minConns` | `postgres.minConns` | `sql.maxIdleConns` |
 | `pool.maxConnLifetime` | `postgres.maxConnLifetime` | `sql.connMaxLifetime` |
 | `pool.maxConnIdleTime` | `postgres.maxConnIdleTime` | `sql.connMaxIdleTime` |
+
+The `pool` object also accepts driver-specific aliases such as `minIdleConns`, `traceLogLevel`, `defaultQueryExecMode`, `statementCacheCapacity`, `descriptionCacheCapacity`, `maxOpenConns`, `maxIdleConns`, `connMaxLifetime`, and `connMaxIdleTime`. Use explicit `postgres.*` or `sql.*` blocks when you want to avoid ambiguity.
 
 Explicit `postgres` or `sql` blocks take priority over `pool`.
 
@@ -260,7 +264,7 @@ Use CSV to emit generated relational data into files instead of a database.
 | Default insert method | set `defaultInsertMethod=native` |
 | Pool config | ignored |
 
-CSV supports only relational InsertSpec loading through `native`. It accepts DDL setup steps for convenience: `DROP` clears output for idempotent reruns, while `CREATE` is a no-op. Runtime query execution is rejected.
+CSV supports only relational InsertSpec loading through `native`. It accepts setup SQL for convenience: `DROP` clears output for idempotent reruns, while `CREATE`, `TRUNCATE`, `ALTER`, `COMMENT`, `SET`, and empty statements are accepted as no-ops. Runtime query execution is rejected.
 
 CSV URL options:
 

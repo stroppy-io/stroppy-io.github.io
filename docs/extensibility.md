@@ -6,158 +6,89 @@ description: How to add a new database driver to Stroppy
 
 # Extensibility
 
-Stroppy uses a driver registry pattern. Adding support for a new database means implementing a Go interface and registering it. This page walks through the process.
+Stroppy uses a driver registry pattern. Adding a database target means implementing the Go driver interface, registering it, and adding the driver type to the shared config schema.
 
-Stroppy currently ships with three drivers:
+Stroppy currently registers six drivers:
 
-| Driver | Package | Interface | Placeholder |
-|--------|---------|-----------|-------------|
-| **PostgreSQL** | `pkg/driver/postgres` | pgx (native) | `$1, $2, ...` |
-| **MySQL** | `pkg/driver/mysql` | `database/sql` via `sqldriver` | `?` |
-| **Picodata** | `pkg/driver/picodata` | picodata-go | `$1, $2, ...` |
-
-The MySQL and Picodata drivers were added in v3.1.0 using the shared `sqldriver` package, which handles the common parts of any `database/sql`-compatible driver.
+| Driver | Package | Notes |
+|--------|---------|-------|
+| PostgreSQL | `pkg/driver/postgres` | pgx pool, COPY for native InsertSpec, transactions. |
+| MySQL | `pkg/driver/mysql` | `database/sql`, multi-row inserts, transactions. |
+| Picodata | `pkg/driver/picodata` | PostgreSQL-wire SQL path, no transactions. |
+| YDB | `pkg/driver/ydb` | YDB SQL and native BulkUpsert. |
+| Noop | `pkg/driver/noop` | Drains generators and discards I/O for framework overhead tests. |
+| CSV | `pkg/driver/csv` | Emits InsertSpec rows to CSV files. |
 
 ## Driver Interface
 
-Every driver implements the `Driver` interface, and may return a `Tx` from `Begin`:
+Every driver implements `pkg/driver.Driver`:
 
 ```go
-// pkg/driver/dispatcher.go
-
 type Driver interface {
-    // Execute a bulk insert operation
-    InsertValues(ctx context.Context, unit *stroppy.InsertDescriptor) (*stats.Query, error)
-
-    // Execute a single SQL query with named parameters
+    InsertSpec(ctx context.Context, spec *dgproto.InsertSpec) (*stats.Query, error)
     RunQuery(ctx context.Context, sql string, args map[string]any) (*QueryResult, error)
-
-    // Begin a transaction with the given isolation level
     Begin(ctx context.Context, isolation stroppy.TxIsolationLevel) (Tx, error)
-
-    // Clean up resources (close connections, pools, etc.)
     Teardown(ctx context.Context) error
 }
+```
 
+Transactions return `pkg/driver.Tx`:
+
+```go
 type Tx interface {
-    // Execute a query within the transaction
     RunQuery(ctx context.Context, sql string, args map[string]any) (*QueryResult, error)
-
-    // Commit the transaction
     Commit(ctx context.Context) error
-
-    // Rollback the transaction
     Rollback(ctx context.Context) error
-
-    // Return the isolation level of this transaction
     Isolation() stroppy.TxIsolationLevel
 }
 ```
 
-`Begin` opens a database transaction at the requested isolation level. The returned `Tx` supports the same `RunQuery` interface as the driver itself, plus `Commit` and `Rollback`. TypeScript scripts access this through `driver.begin()` and `driver.beginTx()`.
+The TypeScript layer calls these through `DriverX.exec()`, `DriverX.insertSpec()`, `DriverX.begin()`, and `DriverX.beginTx()`.
 
-`InsertValues` receives an `InsertDescriptor` containing the table name, insertion method, column definitions with generation rules, and row count. The driver is responsible for generating values according to the rules and inserting them. Returns `*stats.Query` which tracks execution time for metrics.
+## InsertSpec Load Path
 
-`RunQuery` receives raw SQL with `:param` placeholders already present. The driver must convert them to its native placeholder format and execute the query. Returns `*QueryResult` containing both timing statistics and a `Rows` cursor for reading results.
+The current load path is relational InsertSpec. TypeScript builds an InsertSpec with `Rel.table(...)`, serializes it, and sends it to `Driver.InsertSpec`.
 
-Configuration (connection URL, pool settings, k6's `DialFunc` for network metrics) is passed to the driver constructor via the `Options` struct &mdash; there is no separate configuration step.
+Driver implementations usually follow this pattern:
 
-## Step-by-Step: Adding a MySQL Driver
+1. Validate `spec` and method support.
+2. Build a deterministic datagen runtime with `runtime.NewRuntime(spec)`.
+3. If `spec.parallelism.workers` is greater than 1, split work with `common.RunParallelByWorkers`.
+4. Stream rows into the database using `spec.GetMethod()`.
+5. Return `*stats.Query` with elapsed time and row count.
 
-### 1. Create the package
-
-```
-pkg/driver/mysql/
-├── driver.go
-├── query.go
-└── insert.go
-```
-
-### 2. Implement the driver
+Example shape from SQL drivers:
 
 ```go
-// pkg/driver/mysql/driver.go
-package mysql
-
-import (
-    "context"
-    "database/sql"
-
-    "go.uber.org/zap"
-
-    stroppy "github.com/stroppy-io/stroppy/pkg/common/proto/stroppy"
-    "github.com/stroppy-io/stroppy/pkg/driver"
-    "github.com/stroppy-io/stroppy/pkg/driver/sqldriver"
-    "github.com/stroppy-io/stroppy/pkg/driver/sqldriver/queries"
-)
-
-// Register this driver at import time
-func init() {
-    driver.RegisterDriver(
-        stroppy.DriverConfig_DRIVER_TYPE_MYSQL,
-        func(ctx context.Context, opts driver.Options) (driver.Driver, error) {
-            return NewDriver(ctx, opts)
-        },
-    )
-}
-
-type Driver struct {
-    db      *sql.DB
-    dialect queries.Dialect
-    logger  *zap.Logger
-}
-
-// Ensure compile-time interface satisfaction
-var _ driver.Driver = (*Driver)(nil)
-
-func NewDriver(
-    ctx context.Context,
-    opts driver.Options,
-) (*Driver, error) {
-    lg := opts.Logger
-    cfg := opts.Config
-
-    // Open connection — opts.DialFunc is available for k6 network metrics
-    db, err := sql.Open("mysql", cfg.GetUrl())
-    if err != nil {
-        return nil, fmt.Errorf("mysql connect: %w", err)
+func (d *Driver) InsertSpec(ctx context.Context, spec *dgproto.InsertSpec) (*stats.Query, error) {
+    if spec == nil {
+        return nil, fmt.Errorf("%w: nil spec", runtime.ErrInvalidSpec)
     }
 
-    // Wait for the database to become available
-    if err = sqldriver.WaitForDB(ctx, lg, db, 0); err != nil {
-        db.Close()
-        return nil, err
+    workers := int(spec.GetParallelism().GetWorkers())
+    if workers <= 1 {
+        return d.insertSpecSingle(ctx, spec)
     }
 
-    return &Driver{db: db, dialect: mysqlDialect{}, logger: lg}, nil
+    return d.insertSpecParallel(ctx, spec, workers)
 }
 ```
 
-### 3. Implement RunQuery and InsertValues
+Method mapping is driver-specific:
 
-With the shared `sqldriver` package, both methods delegate to common implementations. The only thing specific to your driver is the **Dialect**:
+| Insert method | Typical implementation |
+|---------------|------------------------|
+| `NATIVE` | PostgreSQL COPY, YDB BulkUpsert, CSV output, Noop drain, or a driver-native fast path. |
+| `PLAIN_BULK` | Multi-row INSERT batches. |
+| `PLAIN_QUERY` | Per-row INSERT path, often implemented as batch size 1. |
 
-```go
-// pkg/driver/mysql/dialect.go
-package mysql
+If a method is not supported, return `driver.ErrInsertSpecNotImplemented` or a driver-specific unsupported-method error.
 
-type mysqlDialect struct{}
+## Query Execution
 
-// MySQL uses ? for all placeholders
-func (mysqlDialect) Placeholder(_ int) string { return "?" }
+`RunQuery` receives SQL with Stroppy's named `:param` placeholders and an argument map. The driver is responsible for converting placeholders to the native dialect and returning a cursor-like `Rows` implementation.
 
-// Convert Stroppy protobuf values to Go types MySQL understands
-func (mysqlDialect) ValueToAny(value *stroppy.Value) (any, error) {
-    switch typed := value.GetType().(type) {
-    case *stroppy.Value_Int64:   return typed.Int64, nil
-    case *stroppy.Value_String_: return typed.String_, nil
-    case *stroppy.Value_Decimal: return value.GetDecimal().GetValue(), nil
-    // ... handle other types
-    }
-}
-```
-
-Then `RunQuery` and `InsertValues` use the shared package:
+Drivers based on `database/sql` can use the shared `sqldriver` package:
 
 ```go
 func (d *Driver) RunQuery(
@@ -165,93 +96,76 @@ func (d *Driver) RunQuery(
     sqlStr string,
     args map[string]any,
 ) (*driver.QueryResult, error) {
-    return sqldriver.RunQuery(ctx, d.db, d.dialect, d.logger, sqlStr, args)
-}
-
-func (d *Driver) InsertValues(
-    ctx context.Context,
-    descriptor *stroppy.InsertDescriptor,
-) (*stats.Query, error) {
-    builder, err := queries.NewQueryBuilder(d.logger, d.dialect, seed, descriptor)
-    if err != nil {
-        return nil, err
-    }
-
-    switch descriptor.GetMethod() {
-    case stroppy.InsertMethod_PLAIN_QUERY:
-        return sqldriver.InsertPlainQuery(ctx, d.db, builder)
-    case stroppy.InsertMethod_PLAIN_BULK:
-        return sqldriver.InsertPlainBulk(ctx, d.db, builder, 1000)
-    default:
-        return nil, fmt.Errorf("unsupported insert method: %s", descriptor.GetMethod())
-    }
+    return sqldriver.RunQuery(ctx, d.db, wrapRows, d.dialect, d.logger, sqlStr, args)
 }
 ```
 
-The shared `sqldriver.RunQuery` handles `:param` &rarr; `?` conversion using the dialect's `Placeholder` method, executes the query, and wraps the result rows in a `QueryResult`.
+The dialect supplies placeholder formatting and value conversion. PostgreSQL-like dialects use `$1`, `$2`; MySQL uses `?`.
 
-### 4. Implement Teardown
+## Transactions
 
-```go
-func (d *Driver) Teardown(ctx context.Context) error {
-    return sqldriver.Teardown(ctx, d.db)
+Drivers that support transactions implement `Begin`. Drivers that do not support transactions should return a clear error for normal isolation levels.
+
+Special levels:
+
+| Level | Runtime behavior |
+|-------|------------------|
+| `CONNECTION_ONLY` (`conn`) | Driver acquires a dedicated connection without issuing `BEGIN`; `Commit`/`Rollback` release the connection. |
+| `NONE` (`none`) | The xk6 bridge wraps pool-level `RunQuery`; `Commit`/`Rollback` are no-ops. |
+
+Picodata workloads usually use `TX_ISOLATION=none` because the Picodata driver does not implement database transactions.
+
+## Adding a Driver
+
+### 1. Add the driver type
+
+Add the enum value to `proto/stroppy/config.proto`:
+
+```protobuf
+enum DriverType {
+  DRIVER_TYPE_UNSPECIFIED = 0;
+  DRIVER_TYPE_POSTGRES = 1;
+  DRIVER_TYPE_MYSQL = 2;
+  DRIVER_TYPE_PICODATA = 3;
+  DRIVER_TYPE_YDB = 4;
+  DRIVER_TYPE_NOOP = 5;
+  DRIVER_TYPE_CSV = 6;
+  DRIVER_TYPE_MYDB = 7;
 }
 ```
 
-### 5. Add the driver type enum
-
-In `proto/stroppy/config.proto`, add your driver type to the `DriverType` enum and regenerate the type definitions:
+Regenerate code:
 
 ```bash
 make proto
 ```
 
-### 6. Register via import
+### 2. Create the package
 
-In `cmd/xk6air/instance.go`, add a blank import so `init()` runs:
-
-```go
-import (
-    _ "github.com/stroppy-io/stroppy/pkg/driver/mysql"
-    _ "github.com/stroppy-io/stroppy/pkg/driver/picodata"
-    _ "github.com/stroppy-io/stroppy/pkg/driver/postgres"
-)
+```
+pkg/driver/mydb/
+├── driver.go
+├── run_query.go
+├── insert_spec.go
+└── tx.go
 ```
 
-### 7. Build and test
+### 3. Register the driver
 
-```bash
-make build
-./build/stroppy run my_mysql_test.ts
-```
-
-## How the Registry Works
-
-The dispatcher is minimal by design:
+Register in the package `init()`:
 
 ```go
-var registry = map[stroppy.DriverConfig_DriverType]driverConstructor{}
-
-func RegisterDriver(
-    driverType stroppy.DriverConfig_DriverType,
-    constructor driverConstructor,
-) {
-    registry[driverType] = constructor
-}
-
-func Dispatch(
-    ctx context.Context,
-    opts Options,
-) (Driver, error) {
-    drvType := opts.Config.GetDriverType()
-    if constructor, ok := registry[drvType]; ok {
-        return constructor(ctx, opts)
-    }
-    return nil, fmt.Errorf("driver type '%s': no registered driver", drvType)
+func init() {
+    driver.RegisterDriver(
+        stroppy.DriverConfig_DRIVER_TYPE_MYDB,
+        func(ctx context.Context, opts driver.Options) (driver.Driver, error) {
+            return NewDriver(ctx, opts)
+        },
+    )
 }
 ```
 
-The `Options` struct bundles everything a driver needs at construction time:
+The constructor receives `driver.Options`:
 
 ```go
 type Options struct {
@@ -261,36 +175,64 @@ type Options struct {
 }
 ```
 
-Drivers self-register via Go's `init()` function. The `init()` runs when the package is imported (even as a blank import `_`). This means adding a driver requires zero changes to the dispatcher code &mdash; just implement, register, and import.
+Use `opts.DialFunc` where possible so k6 network metrics still work.
 
-## The k6 Module Layer
+### 4. Import it into the xk6 module
 
-Between your TypeScript and the Go driver sits the k6 module (`cmd/xk6air/`). It:
-
-1. **Deserializes** your `GlobalConfig` from TypeScript
-2. **Dispatches** to the correct driver via the registry, passing `Options` with config, logger, and k6's `DialFunc` for network metrics
-3. **Wraps** the driver with per-VU context (each k6 virtual user gets its own driver wrapper)
-4. **Tracks metrics** (insert duration, query duration, error rates)
-
-You generally don't need to modify this layer when adding a driver. The module calls `driver.Dispatch()` with the config your TypeScript provides, and your registered constructor handles the rest.
-
-## Data Generation in Drivers
-
-When implementing `InsertValues`, your driver receives an `InsertDescriptor` that contains:
-
-- `tableName` &mdash; Target table
-- `count` &mdash; Number of rows to generate
-- `method` &mdash; `PLAIN_QUERY` or `COPY_FROM` (or your own custom method)
-- `params` &mdash; Column definitions with generation rules for each
-- `groups` &mdash; Grouped parameters for tuple generation
-
-Use the `generate` package (`pkg/common/generate/`) to create generators from rules:
+Add a blank import in `cmd/xk6air/instance.go` so the `init()` registration runs:
 
 ```go
-import "github.com/stroppy-io/stroppy/pkg/common/generate"
-
-gen, err := generate.NewValueGenerator(seed, rule)
-value := gen.Next()
+import (
+    _ "github.com/stroppy-io/stroppy/pkg/driver/mydb"
+)
 ```
 
-The PostgreSQL driver's implementation in `pkg/driver/postgres/insert.go` is a good reference for both plain query and COPY protocol insertion.
+### 5. Add CLI and TypeScript names
+
+Update the user-facing mappings so `declareDriverSetup()` and `-D driverType=mydb` understand the new string name:
+
+- `internal/static/helpers.ts` driver type union and map.
+- `internal/runner/driver_preset.go` if you want a short `-d` preset.
+- `proto/stroppy/run.proto` comments for config-file docs if the type is public.
+
+### 6. Build and test
+
+```bash
+make build
+./build/stroppy probe my_workload.ts --drivers --envs --steps
+./build/stroppy run my_workload.ts -D driverType=mydb -D url=mydb://localhost/db
+```
+
+## Registry Behavior
+
+The dispatcher is intentionally small. Drivers self-register at import time, and `Dispatch` selects a constructor from the enum value in `DriverConfig`.
+
+```go
+var registry = map[stroppy.DriverConfig_DriverType]driverConstructor{}
+
+func RegisterDriver(driverType stroppy.DriverConfig_DriverType, constructor driverConstructor) {
+    registry[driverType] = constructor
+}
+
+func Dispatch(ctx context.Context, opts Options) (Driver, error) {
+    drvType := opts.Config.GetDriverType()
+    if constructor, ok := registry[drvType]; ok {
+        return constructor(ctx, opts)
+    }
+    return nil, fmt.Errorf("driver type '%s': %w", drvType.String(), ErrNoRegisteredDriver)
+}
+```
+
+Adding a driver should not require dispatcher changes beyond importing the package.
+
+## Reference Implementations
+
+Use existing drivers as templates:
+
+| Driver | File to study | Why |
+|--------|---------------|-----|
+| PostgreSQL | `pkg/driver/postgres/insert_spec.go` | Native COPY and parallel InsertSpec. |
+| MySQL | `pkg/driver/mysql/insert_spec.go` | `database/sql` plus shared bulk insert path. |
+| YDB | `pkg/driver/ydb/insert_spec.go` | Native BulkUpsert and SQL fallback. |
+| CSV | `pkg/driver/csv` | Sink driver that implements InsertSpec without SQL query execution. |
+| Noop | `pkg/driver/noop` | Minimal driver for overhead measurement. |

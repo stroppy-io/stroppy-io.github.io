@@ -17,7 +17,7 @@ Since k6 v0.49.0, there are two built-in reporting features that work out of the
 Watch your test metrics live in the browser:
 
 ```bash
-K6_WEB_DASHBOARD=true stroppy run tpcc
+K6_WEB_DASHBOARD=true stroppy run tpcc/tx
 ```
 
 This opens a web dashboard (default: `http://localhost:5665`) showing real-time graphs of:
@@ -33,7 +33,7 @@ Generate a self-contained HTML report at the end of a test run:
 ```bash
 K6_WEB_DASHBOARD=true \
 K6_WEB_DASHBOARD_EXPORT=reports/my-report.html \
-  stroppy run tpcc
+  stroppy run tpcc/tx
 ```
 
 The HTML report includes the same detailed graphs from the dashboard, frozen at the end of the test. It's a single file &mdash; no server needed. Open it directly in any browser.
@@ -45,7 +45,7 @@ You can watch live and save the report simultaneously:
 ```bash
 K6_WEB_DASHBOARD=true \
 K6_WEB_DASHBOARD_EXPORT=reports/baseline.html \
-  stroppy run tpcc
+  stroppy run tpcc/tx
 ```
 
 ## The Iterative Benchmarking Workflow
@@ -63,7 +63,7 @@ mkdir -p reports
 
 K6_WEB_DASHBOARD=true \
 K6_WEB_DASHBOARD_EXPORT=reports/00-baseline.html \
-  stroppy run tpcc \
+  stroppy run tpcc/tx \
   -- --duration 10m
 ```
 
@@ -76,7 +76,7 @@ Apply your first optimization (e.g., add an index, tune `work_mem`), then run th
 ```bash
 K6_WEB_DASHBOARD=true \
 K6_WEB_DASHBOARD_EXPORT=reports/01-add-covering-index.html \
-  stroppy run tpcc \
+  stroppy run tpcc/tx \
   -- --duration 10m
 ```
 
@@ -104,13 +104,13 @@ Keep going. Name reports after your changes:
 # After tuning shared_buffers
 K6_WEB_DASHBOARD=true \
 K6_WEB_DASHBOARD_EXPORT=reports/02-shared-buffers-2gb.html \
-  stroppy run tpcc \
+  stroppy run tpcc/tx \
   -- --duration 10m
 
 # After rewriting a query
 K6_WEB_DASHBOARD=true \
 K6_WEB_DASHBOARD_EXPORT=reports/03-optimized-proc.html \
-  stroppy run tpcc \
+  stroppy run tpcc/tx \
   -- --duration 10m
 ```
 
@@ -124,7 +124,7 @@ MSG=$(git log -1 --pretty=%s | tr ' ' '-' | tr -cd '[:alnum:]-' | head -c 50)
 
 K6_WEB_DASHBOARD=true \
 K6_WEB_DASHBOARD_EXPORT="reports/${COMMIT}-${MSG}.html" \
-  stroppy run tpcc \
+  stroppy run tpcc/tx \
   -- --duration 10m
 ```
 
@@ -156,7 +156,7 @@ set -euo pipefail
 
 REPORTS_DIR="${REPORTS_DIR:-reports}"
 DURATION="${DURATION:-10m}"
-WORKLOAD="${1:-tpcc}"
+WORKLOAD="${1:-tpcc/tx}"
 
 mkdir -p "$REPORTS_DIR"
 
@@ -196,7 +196,7 @@ chmod +x bench.sh
 ./bench.sh
 
 # Custom workload and duration
-DURATION=30m ./bench.sh tpcc
+DURATION=30m ./bench.sh tpcc/tx
 ```
 
 ## JSON Output for Programmatic Analysis
@@ -207,10 +207,10 @@ For automated comparison or CI pipelines, export raw metrics as JSON:
 # Using the k6 binary directly
 ./build/k6 run \
   --out json=reports/results.json \
-  workloads/tpcc/tpcc.ts
+  workloads/tpcc/tx.ts
 
 # Or pass through stroppy
-stroppy run tpcc \
+stroppy run tpcc/tx \
   -- --out json=reports/results.json
 ```
 
@@ -222,11 +222,21 @@ Beyond standard k6 metrics, Stroppy tracks:
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `insert_duration` | Trend | Time spent on bulk insert operations (ms) |
-| `insert_error_rate` | Rate | Fraction of failed insert operations |
-| `run_query_duration` | Trend | Time spent on individual query execution (ms) |
-| `run_query_count` | Counter | Total number of queries executed |
-| `run_query_error_rate` | Rate | Fraction of failed queries |
+| `insert_duration` | Trend | Time spent on InsertSpec operations (ms). |
+| `insert_error_rate` | Rate | Fraction of failed InsertSpec operations. |
+| `insert_rows_total` | Counter | Total rows emitted by InsertSpec. |
+| `insert_rows_per_second` | Trend | InsertSpec row throughput. |
+| `run_query_duration` | Trend | Time spent on query execution (ms). |
+| `run_query_count` | Counter | Total number of queries executed. |
+| `run_query_qps` | Trend | Query throughput. |
+| `run_query_error_rate` | Rate | Fraction of failed queries. |
+| `tx_count` | Counter | Total transactions observed by the xk6 layer. |
+| `tx_tps` | Trend | Transaction throughput. |
+| `tx_total_duration` | Trend | Wall-clock transaction duration (ms). |
+| `tx_clean_duration` | Trend | Sum of query execution time inside a transaction (ms). |
+| `tx_commit_rate` | Rate | Fraction of transactions that committed. |
+| `tx_error_rate` | Rate | Fraction of `beginTx` calls that threw. |
+| `tx_queries_per_tx` | Trend | Queries executed per transaction. |
 
 These appear in both the web dashboard and HTML reports alongside standard k6 metrics (http_req_duration, iterations, vus, etc.).
 

@@ -35,7 +35,7 @@ curl -L https://github.com/stroppy-io/stroppy-mcp/releases/latest/download/strop
 sudo mv stroppy-mcp /usr/local/bin/
 ```
 
-**Or build from source** (requires Go 1.24+):
+**Or build from source** (requires Go 1.24.3+):
 
 ```bash
 git clone https://github.com/stroppy-io/stroppy-mcp.git
@@ -89,7 +89,7 @@ If `inspect_db` returns version info and tuning parameters, everything is wired 
 
 | Tool | Parameters | What it does |
 |------|-----------|--------------|
-| `stroppy_gen` | `preset`, `workdir` | Scaffold a workspace from a preset (simple, tpcb, tpcc, tpcds, execute_sql) |
+| `stroppy_gen` | `preset`, `workdir` | Scaffold a workspace from a preset (simple, tpcb, tpcc, tpch, tpcds, execute_sql) |
 | `stroppy_run` | `script`, `sql_file`, `env`, `duration`, `driver_url`, `report_path` | Execute a stress test. Returns k6 metrics summary. |
 | `stroppy_validate` | `script`, `sql_file` | Dry-run transpile check &mdash; catches errors before a real run |
 | `inspect_db` | `url` | Connect to PostgreSQL, return version, tuning parameters, and database size |
@@ -114,8 +114,9 @@ When `report_path` is set, the server automatically enables `K6_WEB_DASHBOARD=tr
 
 Each test script defines its own parameters via the `ENV()` helper. Built-in presets:
 
-- **TPC-B**: `SCALE_FACTOR` (default 1), uses k6 `--vus` and `--duration` flags directly
-- **TPC-C**: `VUS_SCALE` &mdash; multiplier across all 5 scenarios, `1` = 99 VUs, `0.5` &asymp; 50, `0.1` &asymp; 11 (default 1). `DURATION` (default `"1h"`), `POOL_SIZE` (default 100), `SCALE_FACTOR`/`WAREHOUSES` (default 1)
+- **TPC-B**: `SCALE_FACTOR`/`BRANCHES`, `POOL_SIZE`, `LOAD_WORKERS` for `tpcb/tx`, plus k6 `--vus` and `--duration` flags.
+- **TPC-C**: `SCALE_FACTOR`/`WAREHOUSES`, `POOL_SIZE`, `LOAD_WORKERS` for `tpcc/tx`, `RETRY_ATTEMPTS`, `PACING`, plus k6 `--vus` and `--duration` flags.
+- **TPC-H**: `SCALE_FACTOR`, `POOL_SIZE`, `LOAD_WORKERS`, plus query validation at supported reference scales.
 
 For unfamiliar scripts, read the source first to discover its env var knobs.
 
@@ -156,19 +157,17 @@ This is from a real session. The task: sweep TPC-C parameters to find every comb
 
 The assistant started by calling `inspect_db` (confirmed config: `shared_buffers=16GB`, `max_connections=400`), then `stroppy_gen` with the `tpcc` preset, then `read_file` on the generated script to discover its knobs. Three tool calls, no setup friction.
 
-Then it ran 13 benchmarks sequentially, varying `VUS_SCALE`, `WAREHOUSES`, and `POOL_SIZE`. No permission prompts between runs. Selected results:
+Then it ran 13 benchmarks sequentially, varying k6 VUs, `WAREHOUSES`, and `POOL_SIZE`. No permission prompts between runs. Selected results:
 
-| VUS_SCALE | VUs | Pool | Warehouses | TPS |
-|---|---|---|---|---|
-| 0.5 | 50 | 100 | 1 | 10,138 |
-| 1 | 99 | 100 | 1 | 17,960 |
-| 2 | 198 | 100 | 1 | **1,346** |
-| 2 | 198 | 200 | 1 | **19,751** |
-| 3 | 297 | 300 | 1 | 22,728 |
-| 4 | 396 | 400 | 1 | 24,034 |
+| VUs | Pool | Warehouses | TPS |
+|-----|------|------------|-----|
+| 50 | 100 | 1 | 10,138 |
+| 99 | 100 | 1 | 17,960 |
+| 198 | 100 | 1 | **1,346** |
+| 198 | 200 | 1 | **19,751** |
+| 297 | 300 | 1 | 22,728 |
+| 396 | 400 | 1 | 24,034 |
 
-Row 3 is the interesting one. 198 VUs with a 100-connection pool: TPS collapsed to 1,346 &mdash; a **14.7x drop**. The user spotted that the generated script hardcoded `sharedConnections: 100` in the driver config. The assistant read the script, added a `POOL_SIZE` env var, and re-ran. TPS jumped to 19,751. Same session, no context switch.
-
-The assistant also noticed the generated script had VU counts hardcoded (44/43/4/4/4 across the 5 TPC-C scenarios). It added `VUS_SCALE` support by wrapping them in `Math.round(N * VUS_SCALE)`, then immediately used it for the rest of the sweep.
+Row 3 is the interesting one. 198 VUs with a 100-connection pool: TPS collapsed to 1,346 &mdash; a **14.7x drop**. The assistant read the script, identified the pool bottleneck, increased `POOL_SIZE`, and re-ran. TPS jumped to 19,751. Same session, no context switch.
 
 This is what MCP enables that bash doesn't: not just running benchmarks, but an uninterrupted loop where the assistant runs a test, reads the results, diagnoses a problem, edits the script, and re-runs &mdash; all in one conversation. The tool calls and the code edits aren't separate workflows. They're one workflow that MCP makes frictionless enough to actually happen.
