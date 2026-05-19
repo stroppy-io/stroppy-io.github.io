@@ -143,6 +143,8 @@ Core steps are `drop_schema`, `create_schema`, `load_data`, and `workload`. `tpc
 
 TPC-C defines k6 thresholds for the per-transaction latency trends. The post-run summary also reports observed transaction mix, compliance ratios, retry counts, and Stroppy driver/transaction metrics.
 
+See [TPC-C](./tests/tpcc) for the full test article.
+
 ## tpch
 
 TPC-H loads the eight-table analytical schema and runs Q1 through Q22 once with pinned query parameters.
@@ -166,6 +168,8 @@ Parameters:
 | `TX_ISOLATION` | `<auto>` | Override transaction isolation. |
 
 Steps are `drop_schema`, `create_schema`, `load_data`, `set_logged`, `create_indexes`, `finalize_totals`, `queries`, `validate_answers`, and `workload`.
+
+See [TPC-H](./tests/tpch) for the full test article.
 
 ## tpcds
 

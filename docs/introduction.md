@@ -242,7 +242,7 @@ make build
 - [Configuration Files](./config-file) &mdash; Repeatable JSON configs for drivers, env vars, steps, global settings, and k6 args.
 - [Transactions](./transactions) &mdash; Database transactions with configurable isolation levels.
 - [Built-in Workloads](./presets) &mdash; Embedded workload presets and variants.
-- [Tests](./tests/tpcc) &mdash; TPC-C and TPC-H workload details.
+- [Tests](/docs/tests/tpcc) &mdash; TPC-C and TPC-H workload details.
 - [Probe & Script Parameters](./probe) &mdash; Inspect workloads, discover parameters, filter steps.
 - [CLI Reference](./cli-reference) &mdash; Complete reference for commands, flags, and environment variables.
 - [Extensibility](./extensibility) &mdash; How to add a database driver.

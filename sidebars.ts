@@ -1,10 +1,6 @@
 import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
 const sidebars: SidebarsConfig = {
-  testsSidebar: [
-    'tests/tpcc',
-    'tests/tpch',
-  ],
   docsSidebar: [
     'introduction',
     'sql-and-generators',

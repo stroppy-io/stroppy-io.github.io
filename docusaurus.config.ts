@@ -77,10 +77,10 @@ const config: Config = {
       },
       items: [
         {
-          to: '/docs/next/tests/tpcc',
+          to: '/docs/tests/tpcc',
           label: 'Tests',
           position: 'left',
-          activeBaseRegex: '/docs/next/tests/.*',
+          activeBaseRegex: '/docs/tests/.*',
         },
         {
           type: 'docSidebar',

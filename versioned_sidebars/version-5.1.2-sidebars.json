@@ -1,4 +1,8 @@
 {
+  "testsSidebar": [
+    "tests/tpcc",
+    "tests/tpch"
+  ],
   "docsSidebar": [
     "introduction",
     "sql-and-generators",
