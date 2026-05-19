@@ -74,13 +74,13 @@ Select or skip setup phases with `--steps` and `--no-steps`.
 
 | Step | Script | Description |
 |------|--------|-------------|
-| `drop_schema` | both | Drops existing TPC-C tables and functions/procedures. |
-| `create_schema` | both | Creates the nine TPC-C tables from the selected SQL dialect file. |
-| `create_procedures` | `tpcc/procs` | Creates stored procedures for PostgreSQL or MySQL. |
-| `load_data` | both | Bulk-loads warehouse, district, customer, item, stock, orders, order_line, and new_order. |
-| `create_indexes` | `tpcc/tx` | Builds post-load indexes when the dialect file defines them, mainly for YDB. |
-| `validate_population` | both | Checks TPC-C consistency conditions and cardinalities before the workload starts. |
-| `workload` | both | Runs the weighted transaction mix. |
+| `drop_schema` | both | Removes existing TPC-C tables and, for `tpcc/procs`, stored routines. This gives the next load a clean schema instead of appending to old benchmark data. |
+| `create_schema` | both | Executes the selected dialect DDL and creates the nine TPC-C tables: warehouse, district, customer, item, stock, orders, order_line, new_order, and history. |
+| `create_procedures` | `tpcc/procs` | Creates the server-side transaction procedures for PostgreSQL or MySQL. `tpcc/tx` does not use this step because it runs transaction bodies from client-side SQL. |
+| `load_data` | both | Bulk-loads the initial TPC-C population through InsertSpec: warehouses, districts, customers, items, stock, orders, order lines, and new orders. `history` starts empty and grows during Payment transactions. |
+| `create_indexes` | `tpcc/tx` | Builds optional post-load indexes from the SQL file. This is mainly used by YDB for customer-name and latest-order lookups, and is delayed until after load to avoid index maintenance during bulk insert. |
+| `validate_population` | both | Runs pre-workload safety checks and fails setup if loaded data is inconsistent. It verifies expected row counts for the scale factor, TPC-C CC1-CC4 relationships, contiguous `new_order` ranges, `order_line` totals, required fixed values, and sanity bands such as `ORIGINAL` rows and bad-credit customers. |
+| `workload` | both | Starts the k6 workload phase. Each iteration picks one of the five transaction types by the configured TPC-C weights and records workload-specific metrics and thresholds. |
 
 Examples:
 

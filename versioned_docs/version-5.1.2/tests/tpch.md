@@ -67,15 +67,15 @@ For scale factor `SF`, Stroppy loads:
 
 | Step | Description |
 |------|-------------|
-| `drop_schema` | Drops the eight TPC-H tables. |
-| `create_schema` | Creates `region`, `nation`, `part`, `supplier`, `partsupp`, `customer`, `orders`, and `lineitem`. |
-| `load_data` | Bulk-loads all eight tables. |
-| `set_logged` | PostgreSQL-only durability step for tables created as `UNLOGGED`; no-op or absent elsewhere. |
-| `create_indexes` | Creates query-support indexes when defined by the dialect file. |
-| `finalize_totals` | Recomputes `orders.o_totalprice` from loaded lineitems. |
-| `queries` | Executes Q1 through Q22 once with pinned TPC-H parameters. |
-| `validate_answers` | Compares query output with `answers_sf1.json` for PostgreSQL at `SCALE_FACTOR=1`; skips otherwise. |
-| `workload` | Marker step around the empty k6 workload phase. |
+| `drop_schema` | Removes existing TPC-H tables so the next run starts from a clean dataset. |
+| `create_schema` | Executes the dialect DDL and creates `region`, `nation`, `part`, `supplier`, `partsupp`, `customer`, `orders`, and `lineitem`. PostgreSQL creates these as `UNLOGGED` first for faster bulk load. |
+| `load_data` | Bulk-loads all eight tables through InsertSpec. The generated `orders.o_totalprice` is a placeholder at this point because the final value depends on lineitems that are loaded later. |
+| `set_logged` | PostgreSQL-only durability and planner-prep step: changes loaded tables from `UNLOGGED` to `LOGGED` and runs `ANALYZE`. Other dialects leave this step empty or absent. |
+| `create_indexes` | Creates query-support indexes from the selected SQL file, including join keys and date/order keys used by the 22 query templates. |
+| `finalize_totals` | Recomputes `orders.o_totalprice` after `lineitem` exists using the TPC-H formula: sum of `l_extendedprice * (1 + l_tax) * (1 - l_discount)` per order. This must happen after load; Picodata keeps this as a no-op because its SQL layer does not support the required correlated update shape. |
+| `queries` | Executes Q1 through Q22 once with pinned TPC-H parameters, logs per-query duration, and continues through the suite even if an individual query reports an error. |
+| `validate_answers` | Runs correctness comparison only for PostgreSQL at `SCALE_FACTOR=1`, where embedded reference answers are available. Other scale factors and drivers log a skip instead of comparing incompatible result sets. |
+| `workload` | Marks the k6 workload phase. TPC-H has an intentionally empty `default()` function, so no additional query loop runs after setup steps finish. |
 
 Examples:
 
