@@ -43,7 +43,7 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           editUrl: 'https://github.com/stroppy-io/stroppy-docs/tree/main/',
-          lastVersion: '4.0.0',
+          lastVersion: '5.1.2',
           versions: {
             current: {
               label: 'Next',
@@ -76,6 +76,12 @@ const config: Config = {
         src: 'img/logo.svg',
       },
       items: [
+        {
+          to: '/docs/tests/tpcc',
+          label: 'Tests',
+          position: 'left',
+          activeBaseRegex: '/docs/tests/.*',
+        },
         {
           type: 'docSidebar',
           sidebarId: 'docsSidebar',

@@ -5,6 +5,7 @@ const sidebars: SidebarsConfig = {
     'introduction',
     'sql-and-generators',
     'drivers',
+    'config-file',
     'transactions',
     'extensibility',
     'probe',
