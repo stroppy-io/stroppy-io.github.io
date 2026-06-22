@@ -13,6 +13,7 @@ const sidebars: SidebarsConfig = {
     'cli-reference',
     'reports-workflow',
     'mcp',
+    'changelog',
   ],
   legacySidebar: [
     {
