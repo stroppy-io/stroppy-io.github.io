@@ -100,6 +100,15 @@ const config: Config = {
           label: 'Legacy',
         },
         {
+          // Plain link to the full changelog (Next = all releases + Unreleased).
+          // Not a version-aware `type: doc` item — older versions have no
+          // changelog page and onBrokenLinks: 'throw' would fail the build.
+          to: '/docs/next/changelog',
+          label: 'Changelog',
+          position: 'right',
+          activeBaseRegex: '/docs/.*/changelog',
+        },
+        {
           type: 'docsVersionDropdown',
           position: 'right',
           dropdownActiveClassDisabled: true,

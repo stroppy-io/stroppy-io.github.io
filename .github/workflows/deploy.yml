@@ -4,6 +4,10 @@ on:
   push:
     branches: ["next"]
   workflow_dispatch:
+  # Twice daily: re-fetch stroppy CHANGELOG.md (prebuild) so the changelog
+  # page picks up new entries without a docs push. 06:00 and 18:00 UTC.
+  schedule:
+    - cron: "0 6,18 * * *"
 
 permissions:
   contents: read
