@@ -15,6 +15,11 @@ const sidebars: SidebarsConfig = {
     'mcp',
     'changelog',
   ],
+  testsSidebar: [
+    'tests/tpcc',
+    'tests/tpch',
+    'tests/tpcds',
+  ],
   legacySidebar: [
     {
       type: 'category',
