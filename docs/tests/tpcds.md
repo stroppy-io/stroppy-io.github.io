@@ -21,12 +21,12 @@ Use TPC-DS to evaluate:
 
 ## Script
 
-TPC-DS has one script: `tpcds`. It supports PostgreSQL, MySQL, Picodata, and YDB.
+TPC-DS has one script: `tpcds`. PostgreSQL, MySQL, and YDB run the full load + query workload. Picodata is **load-only** (see [Picodata: load-only](#picodata-load-only) below): it creates the schema and loads the 24 tables but does not run the query suite.
 
 ```bash
 stroppy run tpcds -d pg -D url=postgres://user:pass@host:5432/bench -e scale_factor=1
 stroppy run tpcds -d mysql -D url=root:pass@tcp(host:3306)/bench -e scale_factor=0.1
-stroppy run tpcds -d pico -e scale_factor=0.1
+stroppy run tpcds -d pico -e scale_factor=0.1 --steps drop_schema,create_schema,load_data
 stroppy run tpcds -d ydb -D url=grpc://host:2136/database -e scale_factor=0.1
 ```
 
@@ -38,7 +38,17 @@ Stroppy generates the dataset itself with a faithful Go port of the official `ds
 
 ## Query Suite
 
-The 103 queries run from per-dialect SQL files generated from the official query templates. Picodata omits 8 queries that sbroad cannot express &mdash; `query_36`, `query_44`, `query_47`, `query_49`, `query_57`, `query_67`, `query_70`, `query_86`, which need `rank`/`dense_rank`/`lag`/`lead` and correlated-subquery support &mdash; so a Picodata run executes 95 queries and logs the skip once at start.
+The 103 queries run from per-dialect SQL files generated from the official query templates. PostgreSQL and MySQL run the full suite. YDB runs the baked power test only (see below). Picodata does not run the query workload at all &mdash; it is load-only for TPC-DS.
+
+### Picodata: load-only
+
+Picodata ships a typed sbroad schema (`schema.pico.sql`) and loads all 24 tables, but **does not run the TPC-DS query suite**. Current picodata sbroad cannot parse several constructs the TPC-DS templates use (implicit comma joins such as `FROM store_sales, date_dim`, among others), so the `workload` / `validate_answers` steps abort on the first such query. Run only the load steps against Picodata:
+
+```bash
+stroppy run tpcds -d pico -e scale_factor=0.1 --steps drop_schema,create_schema,load_data
+```
+
+This makes Picodata usable for TPC-DS bulk-load throughput benchmarks against the wide, snowflaked schema, which is where the driver adds value. Query-suite execution on Picodata is tracked separately and not yet supported.
 
 By default the workload runs the baked canonical query set once (single power-test stream). For a throughput-style run, generate seeded permutations of the query set and drive several concurrent streams:
 
