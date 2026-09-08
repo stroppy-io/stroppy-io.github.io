@@ -5,7 +5,7 @@ at [stroppy.io](https://stroppy.io).
 
 ## Requirements
 
-- Node.js 20 or newer (deployment uses Node 22)
+- Node.js 20 or newer (deployment uses Node 24 LTS)
 - npm
 
 ## Local development

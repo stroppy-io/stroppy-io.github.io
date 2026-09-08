@@ -16,7 +16,7 @@ The problem was fit. As Stroppy became a database benchmark rather than a thin
 extension, we used less of what k6 was built to provide and added more adapters
 around the parts we did use. Eventually the adapter layer became the product.
 
-<!-- truncate -->
+{/* truncate */}
 
 ## What we needed, and what we carried
 
