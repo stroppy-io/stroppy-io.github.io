@@ -12,8 +12,8 @@ function HomepageHeader() {
           Stroppy
         </Heading>
         <p className="hero__subtitle">
-          Database stress testing CLI powered by k6. Write tests in TypeScript,
-          generate data with flexible generators, get detailed HTML reports.
+          Go-native database stress testing in one binary. Run deterministic TPC
+          workloads, measure client overhead, and export native metrics through OpenTelemetry.
         </p>
         <div style={{display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem'}}>
           <Link
@@ -25,8 +25,8 @@ function HomepageHeader() {
           <Link
             className="button button--outline button--lg"
             style={{color: 'white', borderColor: 'rgba(255,255,255,0.4)'}}
-            href="https://github.com/stroppy-io/stroppy">
-            GitHub
+            href="https://github.com/stroppy-io/stroppy/releases/tag/v6.0.0">
+            Download v6
           </Link>
         </div>
       </div>
@@ -42,66 +42,62 @@ type FeatureItem = {
 
 const features: FeatureItem[] = [
   {
-    title: 'TypeScript Test Scripts',
-    icon: '{}',
+    title: 'One Go Binary',
+    icon: '◆',
     description: (
       <>
-        Write database stress tests in TypeScript with full type safety.
-        Use k6 scenarios, thresholds, and the built-in helpers framework.
+        No external workload runtime. The CLI, executor, workloads, drivers,
+        generators, metrics, and SQL assets ship together.
       </>
     ),
   },
   {
-    title: 'Flexible Data Generation',
-    icon: '\u2684',
+    title: 'Deterministic Generation',
+    icon: '⚄',
     description: (
       <>
-        Generate realistic test data with uniform, normal, and Zipfian distributions.
-        Strings, integers, floats, UUIDs, booleans, dates &mdash; with sequence
-        and random modes.
+        Typed reusable batches and canonical dbgen/dsdgen adapters reproduce
+        data across worker counts and partition boundaries.
       </>
     ),
   },
   {
-    title: 'k6 Under the Hood',
-    icon: '\u26A1',
+    title: 'Native Metrics',
+    icon: '⚡',
     description: (
       <>
-        Built as a k6 extension. Get virtual users, scenarios, thresholds,
-        real-time web dashboard, and HTML report export out of the box.
-        All k6 features work natively.
+        Bounded counters, gauges, and histograms produce terminal summaries and
+        optional OTLP gRPC or HTTP export.
       </>
     ),
   },
   {
     title: 'Built-in Workloads',
-    icon: '\uD83D\uDCCA',
+    icon: '📊',
     description: (
       <>
-        Start immediately with TPC-B, TPC-C, and TPC-DS preset workloads.
-        Or scaffold your own with <code>stroppy gen --preset=simple</code>.
+        Run TPC-B, TPC-C, TPC-H, TPC-DS, direct SQL, and machine-baseline
+        workloads with typed flags.
       </>
     ),
   },
   {
-    title: 'SQL-First Approach',
-    icon: '\uD83D\uDDC3\uFE0F',
+    title: 'SQL-First Assets',
+    icon: '🗃️',
     description: (
       <>
-        Organize SQL in structured files with named sections and queries.
-        Named parameters, automatic placeholder conversion, and argument
-        validation out of the box.
+        Organize dialect SQL with named sections, named queries, bound
+        parameters, and local file overrides.
       </>
     ),
   },
   {
-    title: 'Extensible Drivers',
-    icon: '\uD83D\uDD0C',
+    title: 'Six Drivers',
+    icon: '🔌',
     description: (
       <>
-        PostgreSQL, MySQL, and Picodata drivers built-in with connection pooling.
-        Add your own database driver by implementing a simple Go interface
-        and registering it.
+        PostgreSQL, MySQL, Picodata, YDB, Noop, and CSV drivers expose
+        discoverable load and query capabilities.
       </>
     ),
   },
@@ -125,61 +121,59 @@ function QuickStart() {
       <div className="container">
         <div className="row">
           <div className="col col--4">
-            <Heading as="h2">Up and running in 30 seconds</Heading>
+            <Heading as="h2">Inspect and baseline</Heading>
             <div className="workflow-step">
               <div className="workflow-step-number">1</div>
               <div>
-                <strong>Generate a workspace</strong>
-                <pre><code>stroppy gen --preset=simple</code></pre>
+                <strong>Verify release</strong>
+                <pre><code>stroppy version</code></pre>
               </div>
             </div>
             <div className="workflow-step">
               <div className="workflow-step-number">2</div>
               <div>
-                <strong>Install dependencies</strong>
-                <pre><code>cd simple && npm install</code></pre>
+                <strong>List capabilities</strong>
+                <pre><code>stroppy probe</code></pre>
               </div>
             </div>
             <div className="workflow-step">
               <div className="workflow-step-number">3</div>
               <div>
-                <strong>Run your test</strong>
-                <pre><code>stroppy run simple.ts</code></pre>
+                <strong>Measure this machine</strong>
+                <pre><code>stroppy baseline --quick</code></pre>
               </div>
             </div>
           </div>
           <div className="col col--4">
-            <Heading as="h2">Or use Docker</Heading>
+            <Heading as="h2">Run a database workload</Heading>
             <pre style={{padding: '1.5rem', borderRadius: '8px'}}>
-              <code>{`# Pull and run directly
-docker pull ghcr.io/stroppy-io/stroppy:latest
+              <code>{`# TPC-C on PostgreSQL
+stroppy run tpcc/tx -d pg \\
+  -D url=postgres://host/db \\
+  --executor constant-vus \\
+  --vus 10 --duration 60s
 
-# Run built-in TPC-C benchmark
-docker run --network host \\
-  stroppy run tpcc
-
-# With custom driver and URL
-docker run --network host \\
-  stroppy run tpcb \\
-  -d pg -D url=postgres://u:p@host/db`}</code>
-            </pre>
-          </div>
-          <div className="col col--4">
-            <Heading as="h2">Or ask Claude Code</Heading>
-            <pre style={{padding: '1.5rem', borderRadius: '8px'}}>
-              <code>{`# With the Stroppy MCP server configured,
-# just ask in natural language:
-
-> run a TPC-C benchmark with
-  50 virtual users for 5 minutes
-  and save an HTML report
-
-# Claude Code calls stroppy_run()
-# with the right parameters — no env
-# vars, no flags, no permission prompts.`}</code>
+# Fixed-work TPC-B run
+stroppy run tpcb/tx -d pg \\
+  --iterations 100`}</code>
             </pre>
             <p style={{fontSize: '0.9rem', opacity: 0.8}}>
-              <Link to="/docs/mcp">Set up the MCP server &rarr;</Link>
+              <Link to="/docs/presets">Explore built-in workloads &rarr;</Link>
+            </p>
+          </div>
+          <div className="col col--4">
+            <Heading as="h2">Use Docker</Heading>
+            <pre style={{padding: '1.5rem', borderRadius: '8px'}}>
+              <code>{`docker pull \\
+  ghcr.io/stroppy-io/stroppy:v6.0.0.62
+
+docker run --rm --network host \\
+  ghcr.io/stroppy-io/stroppy:v6.0.0.62 \\
+  run tpch/tx -d pg \\
+  --scale-factor 0.01`}</code>
+            </pre>
+            <p style={{fontSize: '0.9rem', opacity: 0.8}}>
+              <Link to="/docs/introduction#docker">Installation and Docker details &rarr;</Link>
             </p>
           </div>
         </div>
@@ -191,15 +185,15 @@ docker run --network host \\
 export default function Home(): ReactNode {
   return (
     <Layout
-      title="Database Stress Testing Powered by k6"
-      description="Stroppy is a database stress testing CLI tool powered by k6. Write tests in TypeScript, generate data with flexible generators, get detailed HTML reports.">
+      title="Go-Native Database Stress Testing"
+      description="Stroppy v6 is a self-contained Go CLI for deterministic TPC workloads, database stress testing, machine baselines, and OpenTelemetry metrics.">
       <HomepageHeader />
       <main>
         <section style={{padding: '4rem 0'}}>
           <div className="container">
             <div className="row">
-              {features.map((props, idx) => (
-                <Feature key={idx} {...props} />
+              {features.map((props) => (
+                <Feature key={props.title} {...props} />
               ))}
             </div>
           </div>

@@ -40,7 +40,7 @@ type Dialect interface {
 
 With this in place, the MySQL driver itself is compact. The dialect maps Stroppy's protobuf values to Go types MySQL understands, and the shared package handles query building, parameter substitution (`:param` → `?`), bulk inserts, and connection management. The actual MySQL-specific code is one `driver.go` (connection setup, pool config) and one `dialect.go` (placeholder format, type conversions). Everything else — `RunQuery`, `InsertValues`, row scanning, teardown — is shared.
 
-If your database has a `database/sql` driver (and most do), adding it to Stroppy follows the same pattern: implement a Dialect, wire up the constructor, register it. The [Extensibility guide](/docs/extensibility) has the full walkthrough.
+If your database has a `database/sql` driver (and most do), adding it to Stroppy follows the same pattern: implement a Dialect, wire up the constructor, register it. The [Extensibility guide](/docs/3.1.0/extensibility) has the full walkthrough.
 
 ## The Test Matrix
 
@@ -69,7 +69,7 @@ Running 16 sequential 30-minute tests sounds simple. It isn't. You need to:
 - **Manage data efficiently.** At scale=1000, loading TPC-C data into MySQL takes over 90 minutes. If you need the same dataset for multiple connection-pool variants, you don't want to reload it every time.
 - **Handle cleanup.** Databases accumulate WAL segments, binary logs, temporary files. On a 279 GB disk running 12-hour test sessions, that matters.
 
-This is why we wrote [**naggy**](https://github.com/stroppy-io/naggy) — a Go program that reads a test matrix (currently defined in a Go config file), iterates over every database × variant combination, and handles the lifecycle:
+This is why we wrote [**naggy**](https://github.com/stroppy-io/naggy/tree/f6afe22ab1a6c72ca8b75fddd53d43c79d73c776) — a Go program that reads a test matrix (currently defined in a Go config file), iterates over every database × variant combination, and handles the lifecycle:
 
 1. Create or restore the database at the required scale (using `pg_dump`/`pg_restore` for Postgres, `mydumper`/`myloader` for MySQL).
 2. Launch stroppy with the right parameters.
@@ -199,4 +199,4 @@ For **naggy**, the roadmap is longer:
 - Database tuning presets: at minimum, set `max_connections`, buffer pool sizes, and flush strategies to known-good baselines before testing.
 - Full lifecycle ownership: spin up a dedicated database instance in a temp directory, manage its configuration, and tear it down after the run. No reliance on system-installed services.
 
-The MySQL driver and the shared `sqldriver` package are in the [Stroppy repository](https://github.com/stroppy-io/stroppy). Naggy lives in its [own repo](https://github.com/stroppy-io/naggy). If you want to add your own database, the [Extensibility guide](/docs/extensibility) shows how — it's a Dialect implementation and a constructor. Pull requests welcome.
+The MySQL driver and the shared `sqldriver` package are in the [Stroppy repository at v3.1.0](https://github.com/stroppy-io/stroppy/tree/v3.1.0). Naggy lives in its [own repo](https://github.com/stroppy-io/naggy/tree/f6afe22ab1a6c72ca8b75fddd53d43c79d73c776). If you want to add your own database, the [Extensibility guide](/docs/3.1.0/extensibility) shows how — it's a Dialect implementation and a constructor. Pull requests welcome.
