@@ -83,7 +83,7 @@ are merged.
   "drivers": {
     "0": {
       "driverType": "postgres",
-      "url": "postgres://bench:bench@db:5432/tpcc",
+      "url": "postgres://db:5432/tpcc",
       "defaultInsertMethod": "native",
       "pool": {
         "maxConns": 200,

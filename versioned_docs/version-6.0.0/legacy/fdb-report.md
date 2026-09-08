@@ -66,7 +66,7 @@ Three steps:
 | 9 | PG | 2 | 10 | 160 | 100 | 256 | 100 | 100 | **5,915** |
 
 **Key observations:**
-- Additional VCPU doesn't increase throughput for FDB (Run #2 vs #1)
+- Run #2 combined 2 VCPU per node with continuous chaos and matched Run #1 throughput; this pair does not isolate CPU scaling
 - Optimal concurrency: 512 clients for FDB, 128-256 for PostgreSQL
 - Not memory bound &mdash; doubling RAM with 10x data set decreased throughput ~30% (Run #5 vs #4)
 - Scaling 4x nodes roughly doubles throughput (Run #6 vs #5)

@@ -11,7 +11,7 @@ Use `-d` for a preset and `-D` for field overrides.
 
 ```bash
 stroppy run tpcc/tx -d pg
-stroppy run tpcc/tx -d pg -D url=postgres://user:pass@host:5432/bench
+stroppy run tpcc/tx -d pg -D url=postgres://host:5432/bench
 stroppy run tpcc/tx -d pg -D pool.maxConns=100
 ```
 
@@ -27,11 +27,14 @@ stroppy run tpcc/tx -d pg -D pool.maxConns=100
 
 CSV is a driver type without a short preset.
 
+Credentials shown in preset URLs are public local-development defaults compiled
+into Stroppy, not secrets. Always override them outside disposable local setups.
+
 A preset sets `driverType` and URL. Overrides keep untouched preset fields:
 
 ```bash
 stroppy run tpcb/tx -d mysql \
-  -D 'url=root:secret@tcp(mysql.example:3306)/bench?parseTime=true'
+  -D 'url=root@tcp(mysql.example:3306)/bench?parseTime=true'
 ```
 
 Raw JSON can replace a preset:
@@ -167,7 +170,7 @@ PostgreSQL uses pgxpool.
 
 ```bash
 stroppy run tpch/tx -d pg \
-  -D url=postgres://user:pass@host:5432/bench \
+  -D url=postgres://host:5432/bench \
   -D postgres.defaultQueryExecMode=cache_statement
 ```
 
@@ -177,7 +180,7 @@ MySQL uses `database/sql` and Go MySQL DSNs:
 
 ```bash
 stroppy run tpcc/procs -d mysql \
-  -D 'url=root:secret@tcp(mysql.example:3306)/bench?parseTime=true'
+  -D 'url=root@tcp(mysql.example:3306)/bench?parseTime=true'
 ```
 
 `plain_bulk` uses multi-row INSERT. `native` maps to the same bulk path; Stroppy
@@ -209,7 +212,7 @@ YDB accepts `grpc://` and `grpcs://` URLs. Native and columnar loads map to
 stroppy run tpcc/tx -d ydb \
   -D url=grpcs://host:2135/database \
   -D caCertFile=./ca.pem \
-  -D authToken=t1.example
+  -D authToken="$YDB_TOKEN"
 ```
 
 Static credentials are also available through `authUser` and `authPassword`.

@@ -36,7 +36,7 @@ Supported databases: FoundationDB, MongoDB, CockroachDB and PostgreSQL.
 - `dir` &mdash; Directory with configuration files
 
 ```bash
-./bin/stroppy deploy --cloud oracle --flavor small --nodes 4 \
+./bin/stroppy deploy --cloud oracle --flavor small --nodes 3 \
   --dir docs/examples/deploy-oracle-3node-2cpu-8gbRAM-100gbStorage --log-level debug
 ```
 
@@ -185,7 +185,7 @@ kubectl apply -f docs/examples/deploy-minikube-local/cluster/stroppy-manifest.ya
 
 kubectl exec --stdin --tty stroppy-client -- /bin/bash
 stroppy pop --url postgres://stroppy:stroppy@acid-postgres-cluster/stroppy?sslmode=disable \
-  --count 5000 --run-as-pod --kube-master-addr=8.8.8.8 --dir .
+  --count 5000 --run-as-pod --kube-master-addr="$(minikube ip)" --dir .
 ```
 
 ## Usage Notes

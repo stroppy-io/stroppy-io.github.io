@@ -117,7 +117,7 @@ stroppy run tpcb/tx ./workloads/tpcb/pg.sql -d pg
 ## Retry and errors
 
 Drivers classify serialization, deadlock, lock-timeout, and transient errors.
-TPC-B retries selected facts up to `--retry-attempts`. Successful retries do
+TPC-B retries selected errors up to `--retry-attempts`. Successful retries do
 not taint a run; terminal nonfatal errors fail one iteration, let the VU
 continue, and appear in final error counters/summary.
 

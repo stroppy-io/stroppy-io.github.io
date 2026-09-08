@@ -118,7 +118,7 @@ V6 keeps the top-level file envelope but adds typed `run` and `params` objects:
   "drivers": {
     "0": {
       "driverType": "postgres",
-      "url": "postgres://user:pass@db:5432/bench",
+      "url": "postgres://db:5432/bench",
       "pool": {"maxConns": 100, "minConns": 20}
     }
   },

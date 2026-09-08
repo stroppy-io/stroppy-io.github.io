@@ -149,7 +149,7 @@ function QuickStart() {
             <pre style={{padding: '1.5rem', borderRadius: '8px'}}>
               <code>{`# TPC-C on PostgreSQL
 stroppy run tpcc/tx -d pg \\
-  -D url=postgres://u:p@host/db \\
+  -D url=postgres://host/db \\
   --executor constant-vus \\
   --vus 10 --duration 60s
 
@@ -165,10 +165,10 @@ stroppy run tpcb/tx -d pg \\
             <Heading as="h2">Use Docker</Heading>
             <pre style={{padding: '1.5rem', borderRadius: '8px'}}>
               <code>{`docker pull \\
-  ghcr.io/stroppy-io/stroppy:latest
+  ghcr.io/stroppy-io/stroppy:v6.0.0.62
 
 docker run --rm --network host \\
-  ghcr.io/stroppy-io/stroppy:latest \\
+  ghcr.io/stroppy-io/stroppy:v6.0.0.62 \\
   run tpch/tx -d pg \\
   --scale-factor 0.01`}</code>
             </pre>

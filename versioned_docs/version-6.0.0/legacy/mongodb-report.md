@@ -100,7 +100,7 @@ Query routing and execution is managed by a load balancer and configuration serv
 - CPU-bound on master replica (>80% utilization)
 
 **Sharding insights:**
-- Going from 2 to 4 shards with 4x CPU gave only 62% performance gain
+- Going from 2 to 4 shards doubled total CPU (8 VCPU per node, 6 to 12 nodes) and produced a 62% performance gain
 - XFS was ~22% faster than EXT4 for memory-bound workloads, 7% slower for disk-bound
 - Sharded clusters require separate balancer and config server replica sets (hidden cost)
 
@@ -137,6 +137,6 @@ Over 100 test runs in 3 months. Comparison with FoundationDB and PostgreSQL:
 | Test #7 (medium, best single RS) | 2,761 TPS | FDB: 5,782 TPS | **2.1x slower** |
 | Test #7 (medium, best single RS) | 2,761 TPS | PG: ~4,663 TPS | **1.7x slower** |
 | Test #17 (big, best overall) | 3,272 TPS | FDB: 3,369 TPS | **Comparable** |
-| Test #17 hardware | 36 cores, 120GB RAM | FDB: 5 cores, 60GB RAM | **7x more resources** |
+| Test #17 hardware | 36 cores, 120GB RAM | FDB: 5 cores, 80GB RAM | **7.2x cores, 1.5x RAM** |
 
 For multi-document transaction workloads, MongoDB scales best vertically. Even in large clusters, CPU and disk were near 100% utilization. Horizontal scaling showed sub-linear improvement insufficient to justify the added complexity.

@@ -88,16 +88,16 @@ stroppy version --json
 ### Docker
 
 ```bash
-docker pull ghcr.io/stroppy-io/stroppy:latest
+docker pull ghcr.io/stroppy-io/stroppy:v6.0.0.62
 
-docker run --rm ghcr.io/stroppy-io/stroppy:latest version
+docker run --rm ghcr.io/stroppy-io/stroppy:v6.0.0.62 version
 ```
 
 Use `--network host` when the container must reach databases bound to the host:
 
 ```bash
-docker run --rm --network host ghcr.io/stroppy-io/stroppy:latest \
-  run tpcc/tx -d pg -D url=postgres://user:pass@localhost:5432/bench
+docker run --rm --network host ghcr.io/stroppy-io/stroppy:v6.0.0.62 \
+  run tpcc/tx -d pg -D url=postgres://localhost:5432/bench
 ```
 
 ### Build from source
@@ -151,7 +151,7 @@ Release binaries embed the pg-noop loopback server used by the wire tier. See
 
 ```bash
 stroppy run tpcc/tx -d pg \
-  -D url=postgres://user:pass@host:5432/bench \
+  -D url=postgres://host:5432/bench \
   --executor constant-vus --vus 10 --duration 60s
 ```
 

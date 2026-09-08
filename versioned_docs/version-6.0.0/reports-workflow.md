@@ -202,7 +202,7 @@ Save repeatable inputs in JSON:
   "drivers": {
     "0": {
       "driverType": "postgres",
-      "url": "postgres://bench:bench@db:5432/tpcc",
+      "url": "postgres://db:5432/tpcc",
       "pool": {"maxConns": 64}
     }
   },
@@ -263,9 +263,11 @@ A strict smoke job should fail on command exit, error logs, and the nonfatal
 summary marker:
 
 ```bash
-set -o pipefail
+set -euo pipefail
 stroppy run tpcb/tx -f smoke.json 2>&1 | tee stroppy.log
-! grep -q 'bench completed with errors' stroppy.log
+if grep -q 'bench completed with errors' stroppy.log; then
+  exit 1
+fi
 ```
 
 For production performance gates, export OTLP and compare stable aggregate
