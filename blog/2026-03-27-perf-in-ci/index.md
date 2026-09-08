@@ -15,7 +15,7 @@ We worked with the OrioleDB maintainers to build a CI pipeline that runs TPC-C b
 
 OrioleDB is a PostgreSQL extension that combines the advantages of both on-disk and in-memory storage engines, using PostgreSQL's pluggable storage to improve performance and reduce costs.
 
-<!-- truncate -->
+{/* truncate */}
 
 ## How It Works
 

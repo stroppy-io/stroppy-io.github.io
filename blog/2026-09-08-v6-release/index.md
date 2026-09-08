@@ -10,7 +10,7 @@ project so far: Stroppy is now a single Go binary with its own workload engine,
 typed parameters, native metrics, and Go implementations of every built-in
 workload.
 
-<!-- truncate -->
+{/* truncate */}
 
 ## One binary, one runtime
 
