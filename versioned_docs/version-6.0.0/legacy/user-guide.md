@@ -183,9 +183,13 @@ kubectl apply -f docs/examples/deploy-minikube-local/cluster/stroppy-secret.yaml
 kubectl apply -f docs/examples/deploy-minikube-local/cluster/stroppy-manifest.yaml
 ./docs/examples/deploy-minikube-local/databases/postgres/deploy_operator.sh
 
-kubectl exec --stdin --tty stroppy-client -- /bin/bash
+KUBE_MASTER_ADDR="$(minikube ip)"
+kubectl exec --stdin --tty stroppy-client -- \
+  env KUBE_MASTER_ADDR="$KUBE_MASTER_ADDR" /bin/bash
+
+# Inside stroppy-client:
 stroppy pop --url postgres://stroppy:stroppy@acid-postgres-cluster/stroppy?sslmode=disable \
-  --count 5000 --run-as-pod --kube-master-addr="$(minikube ip)" --dir .
+  --count 5000 --run-as-pod --kube-master-addr="$KUBE_MASTER_ADDR" --dir .
 ```
 
 ## Usage Notes
