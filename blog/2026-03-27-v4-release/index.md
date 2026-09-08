@@ -43,7 +43,7 @@ Every transaction automatically tracks `tx_total_duration`, `tx_clean_duration`,
 
 Inside a transaction, errors always throw regardless of the configured error mode — this ensures the rollback path in `beginTx` fires correctly. The error mode (`fail`, `abort`, etc.) takes effect after the transaction error propagates out.
 
-Full details: [Transactions](../docs/transactions).
+Full details: [Transactions](/docs/4.0.0/transactions).
 
 ## CLI Overhaul
 
@@ -79,7 +79,7 @@ stroppy run tpcc -e scale_factor=10 -e pool_size=200
 
 Keys are auto-uppercased: `-e pool_size=200` sets `POOL_SIZE=200`. Real environment variables always take precedence over `-e` values, so you can't accidentally override something the shell has set.
 
-Full CLI reference: [CLI Reference](../docs/cli-reference).
+Full CLI reference: [CLI Reference](/docs/4.0.0/cli-reference).
 
 ### Built-in help
 
@@ -105,7 +105,7 @@ v3.1.0 had three error modes: `silent`, `log`, and `throw`. v4.0.0 adds two more
 
 Set them per-driver via `declareDriverSetup`, the `-D` flag, or globally with the `STROPPY_ERROR_MODE` environment variable.
 
-More on error handling: [Drivers & Configuration](../docs/drivers#error-modes).
+More on error handling: [Drivers & Configuration](/docs/4.0.0/drivers#error-modes).
 
 ## Workload Reorganization
 
@@ -136,7 +136,7 @@ stroppy run tpcb              # tpcb.ts + tpcb.sql (stored procedure)
 stroppy run tpcb/flat         # flat.ts + ansi.sql (individual statements)
 ```
 
-All presets: [Built-in Workloads](../docs/presets).
+All presets: [Built-in Workloads](/docs/4.0.0/presets).
 
 ## Driver Internals
 
@@ -146,7 +146,7 @@ The PostgreSQL and Picodata drivers now share a common `sqldriver` package that 
 
 The `bulkSize` configuration has been unified across all drivers at the proto level instead of being driver-specific.
 
-How to add a driver: [Extensibility](../docs/extensibility).
+How to add a driver: [Extensibility](/docs/4.0.0/extensibility).
 
 ### `conn` isolation unification
 
@@ -165,7 +165,7 @@ const SQL_FILE = ENV("SQL_FILE", ENV.auto, "SQL file path");
 
 `ENV.auto` signals that the script resolves the value itself at runtime (e.g., picking an SQL file based on driver type). Probe shows `(default: <auto>)` for these.
 
-Discover parameters before running: [Probe & Script Parameters](../docs/probe).
+Discover parameters before running: [Probe & Script Parameters](/docs/4.0.0/probe).
 
 ### Type checking
 
@@ -192,10 +192,10 @@ TypeScript type definitions (`stroppy.d.ts`, `tsconfig.json`) are now included i
 ## Links
 
 - [GitHub Release](https://github.com/stroppy-io/stroppy/releases/tag/v4.0.0)
-- [Introduction & Quick Start](../docs/introduction)
-- [CLI Reference](../docs/cli-reference)
-- [Transactions](../docs/transactions)
-- [Drivers & Configuration](../docs/drivers)
-- [Built-in Workloads](../docs/presets)
-- [Probe & Script Parameters](../docs/probe)
-- [Extensibility](../docs/extensibility)
+- [Introduction & Quick Start](/docs/4.0.0/introduction)
+- [CLI Reference](/docs/4.0.0/cli-reference)
+- [Transactions](/docs/4.0.0/transactions)
+- [Drivers & Configuration](/docs/4.0.0/drivers)
+- [Built-in Workloads](/docs/4.0.0/presets)
+- [Probe & Script Parameters](/docs/4.0.0/probe)
+- [Extensibility](/docs/4.0.0/extensibility)

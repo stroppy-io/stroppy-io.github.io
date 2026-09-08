@@ -23,11 +23,11 @@ OrioleDB is a PostgreSQL extension that combines the advantages of both on-disk 
 
 The best place to detect regressions is where changes are introduced: the Pull Request.
 
-Since OrioleDB lives on GitHub, we built **[stroppy-action](https://github.com/stroppy-io/stroppy-action)** to run Stroppy directly from GitHub Actions:
+Since OrioleDB lives on GitHub, we built **[stroppy-action v1.0.0](https://github.com/stroppy-io/stroppy-action/releases/tag/v1.0.0)** to run Stroppy directly from GitHub Actions:
 
 ```yaml
   - name: Run TPC-C benchmark
-    uses: stroppy-io/stroppy-action@main
+    uses: stroppy-io/stroppy-action@v1.0.0
     with:
       preset: tpcc
       driver-url: ...
@@ -63,7 +63,7 @@ jobs:
     runs-on: perf-runner
     steps:
       - name: Run TPC-C benchmark
-        uses: stroppy-io/stroppy-action@main
+        uses: stroppy-io/stroppy-action@v1.0.0
         with:
           preset: tpcc
           driver-url: postgres://${{ env.PGUSER }}@localhost:5432/postgres?sslmode=disable
@@ -77,7 +77,7 @@ jobs:
     runs-on: perf-runner
     steps:
       - name: Run TPC-C benchmark
-        uses: stroppy-io/stroppy-action@main
+        uses: stroppy-io/stroppy-action@v1.0.0
         with:
           preset: tpcc
           driver-url: postgres://${{ env.PGUSER }}@localhost:5432/postgres?sslmode=disable
@@ -94,7 +94,7 @@ The pipeline benchmarks base and head, compares results, and posts a comment wit
 
 ![Example workflow with performance tests running](/img/blog/oriole-ci-action-view.jpg)
 
-Full source: [orioledb/perf-test.yml](https://github.com/orioledb/orioledb/blob/main/.github/workflows/perf-test.yml).
+Full source: [orioledb/perf-test.yml](https://github.com/orioledb/orioledb/blob/acd87e0c39b2c5cc016cecc46c0336009674232f/.github/workflows/perf-test.yml).
 
 ![Example PR comment with performance testing results](/img/blog/oriole-ci-pr-comment-view.png)
 
@@ -129,7 +129,7 @@ Loading 200 warehouses takes ~30 minutes, so we cache the data on disk — cuts 
 
 ## Try It Yourself
 
-- **[orioledb/perf-test.yml](https://github.com/orioledb/orioledb/blob/main/.github/workflows/perf-test.yml)** — the OrioleDB performance testing workflow
-- **[Stroppy](https://github.com/stroppy-io/stroppy)** — the benchmark tool, supports multiple databases and workload types
-    - **[stroppy-action](https://github.com/stroppy-io/stroppy-action)** — GitHub Action for CI integration
-- **[stroppy.io](https://stroppy.io)** — documentation and guides
+- **[orioledb/perf-test.yml](https://github.com/orioledb/orioledb/blob/acd87e0c39b2c5cc016cecc46c0336009674232f/.github/workflows/perf-test.yml)** — the OrioleDB performance testing workflow
+- **[Stroppy v4.0.0](https://github.com/stroppy-io/stroppy/releases/tag/v4.0.0)** — the benchmark tool, supports multiple databases and workload types
+    - **[stroppy-action v1.0.0](https://github.com/stroppy-io/stroppy-action/releases/tag/v1.0.0)** — GitHub Action for CI integration
+- **[Stroppy v4 documentation](https://stroppy.io/docs/4.0.0/introduction)** — documentation and guides
