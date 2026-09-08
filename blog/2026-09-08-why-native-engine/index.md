@@ -55,8 +55,8 @@ and rewrote imports before evaluating a script. We maintained a second runtime
 model so the first runtime could be inspected without doing work.
 
 Lifecycle mismatches spread into workloads too. K6 offered setup, execution, and
-teardown, while Stroppy needed named schema, load, index, validation, and
-workload phases with filters. We built `Step()` around the fixed lifecycle.
+teardown, while Stroppy needed explicitly named schema, load, index, validation,
+and workload phases with filters. We built `Step()` around the fixed lifecycle.
 Metrics were not available where data loading originally belonged, so we moved
 loading into the measured workload phase and guarded it with a process-wide
 once barrier. Live load throughput needed background samplers outside the model.
