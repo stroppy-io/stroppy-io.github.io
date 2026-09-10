@@ -9,7 +9,7 @@ Point two TPC-C load generators at the same database, same data, same concurrenc
 
 This is the trail of guesses and tests we went through. We reached an answer we believe, and found two real bugs in Stroppy along the way.
 
-<!-- truncate -->
+{/* truncate */}
 
 ## Setup
 
