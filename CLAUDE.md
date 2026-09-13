@@ -1,7 +1,7 @@
 # Stroppy Docs
 
 Documentation site for [Stroppy](https://github.com/stroppy-io/stroppy), a
-Go-native database stress-testing CLI. Docusaurus 3.9.2, React 19, TypeScript.
+Go-native database stress-testing CLI. Docusaurus 3.10.2, React 19, TypeScript.
 
 ## Commands
 

@@ -11,7 +11,7 @@ Stroppy is a tool we've been building to make that hands-on testing more practic
 
 This post is a walkthrough of our first attempt at running Stroppy against two databases at once: **PostgreSQL and MySQL**, both with completely stock configurations, running a TPC-C-derived workload for 30 minutes per test. It's not a proper benchmark — more of a practice run to shake out the tooling. Along the way, we'll cover how we added MySQL support, why running 16 sequential tests by hand quickly becomes impractical, and what happens when your test VM runs out of disk space mid-run.
 
-<!-- truncate -->
+{/* truncate */}
 
 ## Adding MySQL to Stroppy
 

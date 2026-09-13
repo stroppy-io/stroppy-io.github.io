@@ -7,7 +7,7 @@ tags: [release, transactions, cli, drivers]
 
 Stroppy v4.0.0 is a major release that adds database transactions, reworks the CLI from the ground up, and ships a built-in help system. If you've been using v3.1.0, this post covers everything that changed and why.
 
-<!-- truncate -->
+{/* truncate */}
 
 ## Transactions
 
