@@ -83,53 +83,96 @@ The native engine did not need to make Go faster than JavaScript in the abstract
 It only needed to stop translating synchronous Go database work through a script
 host and a generic sample stream.
 
-## A framework-only v5 versus v6 measurement
+## Measuring more than one ceiling
 
-We measured official v5.7.3 and v6.0.0 macOS arm64 release binaries on the same
-Apple M5 Pro machine (18 cores, 48 GB RAM). We fixed `GOMAXPROCS=8` and ran
-`tpcb/tx` through the Noop driver with setup excluded.
+A framework-only test can show the cost of the harness, but not the speedup a
+database workload will see. We therefore measured three different boundaries
+with the official v5.7.3 and v6.0.0 Linux amd64 release binaries:
 
-Each iteration performed the same transaction shape: five driver query calls,
-one row read, transaction bookkeeping, workload random draws, and metrics. No
-database or network was involved. This isolates framework overhead; it is not a
-database benchmark.
+- TPC-B through the Noop driver, for framework overhead and scaling;
+- TPC-C against PostgreSQL, for a real multi-statement transaction mix;
+- TPC-H through the Noop driver, for canonical data generation and row transport.
 
-For each version and VU count we ran five 10-second samples, alternated version
-order, set logging to error, redirected terminal output, and used the median
-completed iterations divided by the requested measurement window.
+The host was an Ubuntu 24.04 KVM guest with an AMD EPYC Genoa CPU, 48 vCPUs
+presented as 24 cores with two threads per core, and 47 GiB of RAM. Primary
+measurements used one hardware thread from each guest-visible core. We pinned
+client and database processes to disjoint CPU sets, alternated version order,
+kept every sample, and report medians with full ranges. Unless noted otherwise,
+each point contains five runs. The VM reported no steal time during measured
+runs.
 
-```bash
-# v5.7.3
-LOG_LEVEL=ERROR GOMAXPROCS=8 stroppy-v5 run tpcb/tx -d noop \
-  -e SCALE_FACTOR=1 -e VUS=1 -e DURATION=10s \
-  --steps workload
+### Framework overhead
 
-# v6.0.0
-LOG_LEVEL=error GOMAXPROCS=8 stroppy-v6 run tpcb/tx -d noop \
-  --scale-factor 1 \
-  --executor constant-vus --vus 1 --duration 10s \
-  --steps workload
-```
+The TPC-B Noop case excludes setup, network, and database work. Each iteration
+performs five driver calls, one row read, transaction bookkeeping, random draws,
+and metrics. With `GOMAXPROCS=24`, five 20-second samples produced:
 
 | VUs | v5.7.3 median tx/s | v5 range | v6.0.0 median tx/s | v6 range | Ratio |
 |---:|---:|---:|---:|---:|---:|
-| 1 | 8,363 | 8,159–8,663 | 371,032 | 345,924–377,976 | 44.4× |
-| 8 | 34,709 | 34,189–34,854 | 702,827 | 692,542–721,113 | 20.2× |
+| 1 | 4,368 | 4,354–4,404 | 145,524 | 144,643–146,318 | 33.3× |
+| 2 | 8,261 | 8,211–8,319 | 203,091 | 201,134–203,866 | 24.6× |
+| 4 | 15,298 | 15,244–15,509 | 311,432 | 292,591–313,606 | 20.4× |
+| 8 | 26,409 | 26,147–26,533 | 443,443 | 427,692–449,184 | 16.8× |
+| 16 | 37,649 | 37,444–37,935 | 500,772 | 488,983–506,892 | 13.3× |
+| 24 | 38,694 | 38,296–38,789 | 517,627 | 501,589–525,519 | 13.4× |
 
-The gap is large because this case deliberately removes database latency. A real
-TPC-C run against a database will not become 20–44 times faster: network
-round-trips, locks, storage, query execution, and server capacity dominate long
-before the client reaches these rates.
+V5 scaled 8.86× from one to 24 VUs; v6 scaled 3.56×. V6 remained much faster in
+absolute terms, but its native OpenTelemetry metric pipeline became the next
+bottleneck. Enabling all 48 SMT threads reduced v6 throughput rather than
+increasing it, so we do not present this VM as a 48-core machine.
 
-The result still matters. It gives us more headroom before the load generator
-becomes the bottleneck, and it makes tiny/loopback operations less distorted by
-the harness.
+### Real TPC-C transactions
 
-The scaling result also shows unfinished work. V5 scaled 4.15× from one to eight
-VUs; v6 scaled 1.89×. V6 remained much faster in absolute terms, but its native
-OpenTelemetry metric pipeline contends at very high iteration rates. We expose
-that ceiling in `stroppy baseline` rather than treating it as a machine fault.
-The migration removed one bottleneck and made the next one visible.
+The framework result is a ceiling, not a database claim. For a representative
+transactional test, we loaded 16 TPC-C warehouses into PostgreSQL 16.15 and ran
+the standard 45/43/4/4/4 transaction mix. PostgreSQL used eight pinned cores;
+Stroppy used 16 different cores with `GOMAXPROCS=16`. Each point contains five
+alternating 20-second samples with no terminal iteration failures.
+
+| VUs | v5.7.3 median tx/s | v5 range | v6.0.0 median tx/s | v6 range | Ratio |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 202 | 199–203 | 290 | 277–291 | 1.44× |
+| 8 | 1,610 | 1,608–1,625 | 2,203 | 2,181–2,248 | 1.37× |
+| 16 | 2,892 | 2,862–2,899 | 3,368 | 3,204–3,394 | 1.16× |
+
+This is the practical boundary the Noop result cannot supply. The native engine
+still improved throughput, especially at low concurrency where client overhead
+is more visible, but PostgreSQL execution, locking, and round-trips increasingly
+dominated as concurrency rose. Peak process RSS also fell from 309–597 MiB in
+v5 to 38–45 MiB in v6 across these runs.
+
+### TPC-H generation and load transport
+
+TPC-H answers a different question. Its canonical dbgen implementation and the
+`tpchgen.go` projection code are byte-identical in the two release tags; seeds,
+cardinalities, seeking, fan-out, and generated values did not change. V6 changed
+the transport around that generator: the same rows now pass through reusable
+typed columnar batches and `InsertRequest` instead of the legacy `[]any`
+row-source path.
+
+We generated and drained all 8,660,030 SF=1 rows through the Noop driver with
+`GOMAXPROCS=24`:
+
+| Workers | v5.7.3 median rows/s | v5 range | v6.0.0 median rows/s | v6 range | Ratio |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 473,743 | 469,633–477,400 | 429,992 | 427,234–433,002 | 0.91× |
+| 2 | 658,057 | 653,094–661,576 | 656,063 | 646,754–664,622 | 1.00× |
+| 4 | 820,079 | 795,959–838,338 | 901,148 | 891,867–911,582 | 1.10× |
+| 8 | 934,200 | 906,809–948,525 | 1,108,840 | 1,081,150–1,121,770 | 1.19× |
+| 16 | 953,748 | 946,451–971,945 | 1,237,150 | 1,207,810–1,275,410 | 1.30× |
+| 24 | 940,286 | 927,198–964,369 | 1,258,730 | 1,249,640–1,318,120 | 1.34× |
+
+Typed batching added slight single-worker overhead and was neutral at two
+workers, but scaled better from four workers onward. At 24 workers it delivered
+34% more rows per second. Peak RSS fell by about 18%, from roughly 1.46 GiB to
+1.20 GiB. This is a load-pipeline improvement, not a claim that v6 changed or
+made the TPC-H data formulas faster.
+
+Together the three measurements set the right scope. Removing k6 increased
+framework headroom by 13–33×, improved real PostgreSQL TPC-C throughput by
+16–44%, and improved parallel TPC-H generation-and-drain throughput by up to
+34%. Gains depend on where work is spent; no single multiplier describes every
+workload.
 
 The uncompressed release binary also moved from 74.2 MB in v5.7.3 to 38.8 MB in
 v6.0.0, a 47.7% reduction, even though the v6 binary embeds the pg-noop server
