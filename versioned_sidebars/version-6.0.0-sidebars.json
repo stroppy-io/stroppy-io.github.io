@@ -1,0 +1,37 @@
+{
+  "docsSidebar": [
+    "introduction",
+    "migration-v6",
+    "sql-and-generators",
+    "drivers",
+    "config-file",
+    "transactions",
+    "presets",
+    "probe",
+    "baseline",
+    "reports-workflow",
+    "extensibility",
+    "cli-reference",
+    "changelog"
+  ],
+  "testsSidebar": [
+    "tests/tpcb",
+    "tests/tpcc",
+    "tests/tpch",
+    "tests/tpcds"
+  ],
+  "legacySidebar": [
+    {
+      "type": "category",
+      "label": "Legacy Releases",
+      "collapsible": true,
+      "collapsed": false,
+      "items": [
+        "legacy/overview",
+        "legacy/user-guide",
+        "legacy/fdb-report",
+        "legacy/mongodb-report"
+      ]
+    }
+  ]
+}

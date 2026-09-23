@@ -4,18 +4,18 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Stroppy',
-  tagline: 'Database stress testing powered by k6',
+  tagline: 'Go-native database stress testing',
   favicon: 'img/favicon.ico',
 
   future: {
     v4: true,
   },
 
-  url: 'https://stroppy-io.github.io',
+  url: 'https://stroppy.io',
   baseUrl: '/',
 
   organizationName: 'stroppy-io',
-  projectName: 'stroppy-docs',
+  projectName: 'stroppy-io.github.io',
 
   onBrokenLinks: 'throw',
 
@@ -42,8 +42,8 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/stroppy-io/stroppy-docs/tree/main/',
-          lastVersion: '5.7.0',
+          editUrl: 'https://github.com/stroppy-io/stroppy-io.github.io/edit/next/',
+          lastVersion: '6.0.0',
           versions: {
             current: {
               label: 'Next',
@@ -53,7 +53,7 @@ const config: Config = {
         },
         blog: {
           showReadingTime: true,
-          editUrl: 'https://github.com/stroppy-io/stroppy-docs/tree/main/',
+          editUrl: 'https://github.com/stroppy-io/stroppy-io.github.io/edit/next/',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -63,7 +63,7 @@ const config: Config = {
   ],
 
   themeConfig: {
-    image: 'img/stroppy-social-card.png',
+    image: 'img/hero-logo.svg',
     colorMode: {
       defaultMode: 'light',
       disableSwitch: false,
@@ -77,7 +77,7 @@ const config: Config = {
       },
       items: [
         {
-          to: '/docs/tests/tpcc',
+          to: '/docs/tests/tpcb',
           label: 'Tests',
           position: 'left',
           activeBaseRegex: '/docs/tests/.*',
@@ -134,8 +134,9 @@ const config: Config = {
           title: 'Documentation',
           items: [
             {label: 'Introduction', to: '/docs/introduction'},
-            {label: 'SQL & Generators', to: '/docs/sql-and-generators'},
-            {label: 'Extensibility', to: '/docs/extensibility'},
+            {label: 'Migrating to v6', to: '/docs/migration-v6'},
+            {label: 'Built-in Workloads', to: '/docs/presets'},
+            {label: 'Machine Baseline', to: '/docs/baseline'},
             {label: 'Reports & Workflow', to: '/docs/reports-workflow'},
           ],
         },
