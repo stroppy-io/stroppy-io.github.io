@@ -55,6 +55,7 @@ no diff. Never edit generated `docs/changelog.md` or a frozen changelog by hand.
 - `baseline.md` — Noop and pg-noop machine ceilings
 - `reports-workflow.md` — native summary, OTLP, benchmarking workflow
 - `extensibility.md` — source-level Go extension points
+- `custom-workloads.md` — build, test, register, and package a Go workload
 - `cli-reference.md` — v6 commands and flags
 - `tests/` — TPC-B/C/H/DS details
 - `legacy/` — historical pre-CLI material

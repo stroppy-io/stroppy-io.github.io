@@ -13,6 +13,7 @@ const sidebars: SidebarsConfig = {
     'baseline',
     'reports-workflow',
     'extensibility',
+    'custom-workloads',
     'cli-reference',
     'changelog',
   ],
