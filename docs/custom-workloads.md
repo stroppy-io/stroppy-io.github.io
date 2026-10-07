@@ -21,6 +21,11 @@ Both use the supported authoring API and need no database for their own tests.
 For the engine internals behind them see [Extensibility](./extensibility); for
 the built-in workloads you can already run see [Presets](./presets).
 
+Both are also published as runnable projects in
+[stroppy-contrib](https://github.com/stroppy-io/stroppy-contrib), where CI tests
+them against each project's pinned SDK on every change and against Stroppy `main`
+on a schedule — so the samples are checked, not just documented.
+
 :::note
 The author tooling (`init`, `build`, `eject`, `list`, `remove`, `export`) ships
 with the next v6 release. A binary built from `main` has it today; released
