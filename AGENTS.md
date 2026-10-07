@@ -37,8 +37,9 @@ between runs, and how to preview the site from a browser.
 
 ## The firecode VM
 
-npm work for this site runs inside a [firecode](https://github.com/stroppy-io/firecode)
-Firecracker microVM over the current directory. The host project is never
+npm work for this site runs inside a
+[firecode](https://github.com/deadtrickster/firecode) Firecracker microVM over
+the current directory. The host project is never
 written to: the VM mirrors it, and copies its result out to a sibling directory
 as it stops, which is where build output and `node_modules` land.
 
