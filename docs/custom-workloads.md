@@ -385,9 +385,54 @@ What is new here:
 
 ### Test it
 
-The same recording harness, extended to parameters:
+The same recording harness, with the workload's parameters threaded through. These
+are the helpers from the sample's `workload_test.go`, so the calls below compile as
+written:
 
 ```go
+// runOnce executes the workload once against a canned answer for the loaded
+// statement and returns how many iterations failed.
+func runOnce(t *testing.T, params map[string]string, reply *record.Response) uint64 {
+    t.Helper()
+
+    recorder := &record.Recorder{}
+    if reply != nil {
+        recorder.Reply("SELECT 1", *reply)
+    }
+
+    run, err := testkit.Record(t.Context(), Test, recorder, bench.RunOptions{
+        Params: bench.ParamInputs{CLI: params},
+    })
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    recorded := recorder.Operations()
+    if len(recorded) != 1 {
+        t.Fatalf("expected one query, recorded %d", len(recorded))
+    }
+
+    if recorded[0].SQL != "SELECT 1" {
+        t.Fatalf("recorded SQL %q, want the query loaded from %s", recorded[0].SQL, queryFile)
+    }
+
+    return run.Errors.FailedIterations
+}
+
+func oneRow(value int64) *record.Response {
+    return &record.Response{Columns: []string{"?column?"}, Rows: [][]any{{value}}}
+}
+```
+
+Then the expectations, including the one that proves `--expected` is wired up:
+
+```go
+func TestEmbeddedQuerySatisfiesTheDefaultExpectation(t *testing.T) {
+    if failed := runOnce(t, nil, oneRow(1)); failed != 0 {
+        t.Fatalf("failed iterations = %d; want 0", failed)
+    }
+}
+
 func TestExpectedParameterIsChecked(t *testing.T) {
     if failed := runOnce(t, map[string]string{"expected": "1"}, oneRow(1)); failed != 0 {
         t.Fatalf("failed iterations = %d; want 0", failed)
