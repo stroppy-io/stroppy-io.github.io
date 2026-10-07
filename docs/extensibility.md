@@ -9,107 +9,176 @@ description: Add Go-native workloads, generators, SQL assets, and database drive
 Stroppy v6 extensions are Go source compiled into the binary. There is no
 runtime plugin or script loader. A product extension normally adds one of:
 
-- a registered `bench.Workload`;
+- a registered `bench.Test` workload, either in this repository or as your own
+  standalone project;
 - SQL/JSON/README assets owned by that workload package;
 - a registered `driver.Driver`;
 - deterministic generation code under `pkg/gen` or a workload package.
 
-## Workload interface
+For a hands-on walkthrough — scaffold, test without a database, register,
+package — start with [Custom workloads](./custom-workloads). This page is the
+reference behind it.
+
+## Workload definition
+
+A workload is a `bench.Test` value: a name, a definition function, and an
+optional publication of its own source.
 
 ```go
-type Workload interface {
-    Name() string
-    Define(*Def) error
-    Setup(context.Context, *Bench) error
-    Iterate(context.Context, *Bench) error
-    Teardown(context.Context, *Bench) error
+type Test struct {
+    Name          string
+    Define        func(*Def) error
+    Source        fs.FS  // optional: files or a whole project, for stroppy eject
+    SourcePackage string // original import path of a package-relative publication
 }
 ```
 
-Lifecycle:
-
-1. `Define` declares typed parameters and captures resolved values.
-2. `Setup` runs once before virtual users start.
-3. `Iterate` runs according to selected executor.
-4. `Teardown` runs after completion or graceful cancellation.
-
-Register a fresh factory from package `init`:
-
 ```go
-func init() {
-    bench.Register(func() bench.Workload { return &workload{} })
-}
+var Test = bench.Test{Name: "example/query", Define: define, Source: source,
+    SourcePackage: "example.com/project/workload"}
+
+func init() { bench.Register(Test) }
 ```
 
-Factories must return a new non-nil workload. Names are global and unique.
+`Define` runs twice, with the same input snapshot: first to resolve parameters
+and observe which steps exist — no actions, no database — then again to execute
+the selected actions. Mutable run state is ordinary Go created inside `Define`;
+registration itself carries no shared state. Never create that state at package
+scope, because every replay and worker would share it.
 
 ## Typed parameters
 
-`Define` declares each workload value once:
+Declare each value once and keep what it returns:
 
 ```go
-func (w *workload) Define(d *bench.Def) error {
-    w.scale = d.Param.Int("scale-factor", 1, "Number of partitions.").Value()
-    w.workers = d.Param.Int("load-workers", 1, "Load workers.").Value()
-    w.sqlFile = d.Param.String("sql-file", "", "SQL override.").Value()
+func define(d *bench.Def) error {
+    rows, _ := d.Param.Int64("rows", 100, "Rows to load.", bench.Min(int64(1)))
+    scale, _ := d.Param.Int("scale-factor", 1, "Partition count.", bench.Aliases("partitions"))
+    _ = rows
+    _ = scale
     return nil
 }
 ```
 
-Supported scalar types include string, boolean, integer, float, and duration.
-Each declaration becomes:
+Methods return the resolved value plus `ParamInfo` provenance;
+`String`, `Bool`, `Int`, `Int64`, `Uint64`, `Float64`, and `Duration` are
+available, with `*Var` and generic `Declare[T]`/`Var[T]` forms for callers that
+prefer destinations. A canonical lower-case kebab name projects to every channel:
 
 - a `--name` CLI flag;
 - an uppercase environment input;
 - a lower-camel `params` config key;
 - a schema entry in `stroppy probe -o json`.
 
-Shared executor parameters are declared by the engine under config `run`.
+Source precedence is typed CLI > process environment > matching typed config >
+declared default, and a malformed supplied value fails rather than falling back.
+`Min`, `Max`, and `OneOf` constrain both defaults and supplied values.
+`bench.RunParameters` declares the shared run settings (`--executor`, `--vus`,
+`--iterations`, `--duration`, `--drain-timeout`, `--query-timeout`) and returns
+their resolved policy, but it is convenience over the same declarations rather
+than an injected registry.
 
-## Steps and queries
+## Steps and policies
 
-Wrap setup or workload phases with `Bench.Step`:
+Steps are explicit and immediate: options precede the action, and a step without
+a policy runs once.
 
 ```go
-func (w *workload) Setup(ctx context.Context, b *bench.Bench) error {
-    if err := b.Step("create_schema", func() error {
-        return b.Exec(ctx, "CREATE TABLE events (id BIGINT PRIMARY KEY)", nil)
-    }); err != nil {
-        return err
-    }
+work := &accountWork{rows: rows}
 
-    return b.Step("load_data", func() error {
-        _, err := b.Insert(ctx, w.insertRequest())
-        return err
-    })
-}
+d.Execution.Step("create", work.create)
+d.Execution.Step("load", work.load)
+d.Execution.Step("transfer", work.transfer, bench.SharedIterations(4, 100))
+d.Execution.Step("cleanup", work.drop, bench.Always(30*time.Second))
+return d.Execution.Err()
 ```
 
-Use `StepSilent("workload", ...)` for per-iteration work to avoid log spam.
+Repeated steps are measured automatically; `bench.Measure()` measures a
+once-only step, and `bench.Use(ref)` selects a declared database for that step.
+Policies are `bench.SharedIterations(workers, count)` and
+`bench.ConstantWorkers(workers, duration, drain)`, with
+`bench.SelectExecutor(mode, ...)` for input-driven selection. Timed policies stop
+starting actions at expiry and drain what is running.
 
-`Bench` query helpers include `Exec`, `QueryRows`, `QueryRow`, and `QueryValue`.
-They accept `:named` parameters through `map[string]any`.
+`Step` returns a `Result` with `Status` and `Err`; a linear definition ignores it
+and returns `Execution.Err()` once. A once-only action error, `bench.Fatal`, or
+parent cancellation stops later steps, while ordinary repeated-action errors
+count failed iterations and let workers continue.
+
+## Databases, queries, and reads
+
+Declare references when a workload has soft defaults or more than one database:
+
+```go
+primary := d.Drivers.Declare("primary", bench.DriverConfig{Kind: bench.DriverPostgres})
+secondary := d.Drivers.Declare("secondary", bench.DriverConfig{Kind: bench.DriverMySQL})
+d.Execution.Step("compare", work.compare, policy, bench.Use(primary))
+```
+
+Operator configuration overrides authored defaults. Inside an action, `b.Exec`,
+`b.QueryValue[T]`, `b.Insert`, and `b.Transaction` use the step-selected
+database, and `b.Database(secondary)` returns another facade. `Exec` sends a
+statement and discards rows; the read helpers are what let an iteration check an
+answer. SQL assets load through the workload's own filesystem:
+
+```go
+queries, err := d.Queries.Load(files, "queries.sql")   // cwd, then ~/.stroppy, then embedded
+handle := queries.Require("query", "select_one")
+value, err := b.QueryValue[int64](ctx, handle.Text, nil)
+```
+
+`Override` reads only an explicit local file. See [SQL & Generators](./sql-and-generators)
+for the section/query grammar.
 
 ## Typed loads
 
-Construct a `driver.InsertRequest` with table, method, worker count, and
-`gen.BatchSource`:
+`b.Insert` takes a table and a batch source built by `gen`:
 
 ```go
-return &driver.InsertRequest{
-    Table:   "events",
-    Method:  driver.InsertPlainBulk,
-    Workers: w.workers,
-    Source:  source,
-}
+source := gen.FromRows(rows, accountRow, gen.BatchRows(64), gen.MaxBytes(4096))
+result, err := b.Insert(ctx, "account", source,
+    bench.InsertMethod(bench.InsertPlainBulk), bench.LoadWorkers(4))
 ```
 
-Use `gen.SchemaBuilder` plus `gen.NewIndexedSource` for index-addressable row
-formulas. Stateful canonical generators implement `gen.BatchSource` directly
-and provide partition seeking.
+`gen.FromRows` derives columns from a shallow struct and fills reusable typed
+batches; `accountRow(index uint64) (Account, error)` is an ordinary named
+function. Advanced `BatchSource`/`Cursor`/`Row` sources remain available for
+stateful or variable-cardinality algorithms, and `gen.Root`, `Domain`, `Field`,
+`Draw`, `Permute`, and `SplitMix64` remain available for scalar generation.
 
-See [SQL & Generators](./sql-and-generators) and the pinned
-[v6 parallelism contract](https://github.com/stroppy-io/stroppy/blob/v6.0.0/docs/parallelism.md).
+See [SQL & Generators](./sql-and-generators) and the [parallelism
+contract](https://github.com/stroppy-io/stroppy/blob/main/docs/parallelism.md).
+
+## Transactions
+
+```go
+err := b.Transaction(ctx, bench.TransactionOptions{
+    Name: "transfer",
+    Isolation: bench.IsoReadCommitted,
+    Retry: bench.RetryOptions{MaxAttempts: 3},
+}, transfer.run)
+```
+
+The managed body receives `(context.Context, *bench.Tx)`; a nil return commits
+and an error rolls back, with optional whole-body retry. Zero retry attempts mean
+one attempt. Classification stays in the driver; retry policy stays in the
+workload.
+
+## Metrics and reports
+
+Declare typed instruments under `d.Metrics` and record them with the action's
+context:
+
+```go
+counter := d.Metrics.Counter("requests", bench.LabelValues("database", "primary", "secondary"))
+latency := d.Metrics.Histogram("latency", bench.Unit("s"), bench.Bounds(.001, .01, .1, 1))
+```
+
+Labels must use finite declared keys and values. Database operations and logical
+transactions already emit telemetry, and framework metric names are reserved.
+`d.Report.Contribute(kind, schema, builder)` adds an independently copied final
+snapshot to the run report; `Put` encodes a directly computed payload and
+`Render` writes human output from it. See [Reports workflow](./reports-workflow).
 
 ## Workload-owned assets
 
@@ -131,6 +200,10 @@ register predictably.
 Keep required filenames, sections, and named queries pinned with package
 contract tests. Existing `workloads/internal/workloadtest` helpers validate
 embedded files and SQL structure.
+
+A standalone project has no built-in catalog entry: it embeds its files the same
+way and passes the filesystem to `d.Queries.Load` itself. `Test.Source` is what
+`stroppy eject` restores.
 
 ## Driver interface
 
@@ -244,10 +317,10 @@ behavior depends on a real database.
 
 | Area | Source |
 |---|---|
-| Minimal workload | [`workloads/simple`](https://github.com/stroppy-io/stroppy/tree/v6.0.0/workloads/simple) |
-| Transactional workload | [`workloads/tpcb`](https://github.com/stroppy-io/stroppy/tree/v6.0.0/workloads/tpcb) |
-| Stateful generator adapter | [`pkg/datagen/tpchgen`](https://github.com/stroppy-io/stroppy/tree/v6.0.0/pkg/datagen/tpchgen) |
-| PostgreSQL driver | [`pkg/driver/postgres`](https://github.com/stroppy-io/stroppy/tree/v6.0.0/pkg/driver/postgres) |
-| Shared SQL driver | [`pkg/driver/sqldriver`](https://github.com/stroppy-io/stroppy/tree/v6.0.0/pkg/driver/sqldriver) |
-| Sink driver | [`pkg/driver/csv`](https://github.com/stroppy-io/stroppy/tree/v6.0.0/pkg/driver/csv) |
-| Driver registry | [`pkg/driver/dispatcher.go`](https://github.com/stroppy-io/stroppy/blob/v6.0.0/pkg/driver/dispatcher.go) |
+| Minimal workload | [`workloads/simple`](https://github.com/stroppy-io/stroppy/tree/main/workloads/simple) |
+| Transactional workload | [`workloads/tpcb`](https://github.com/stroppy-io/stroppy/tree/main/workloads/tpcb) |
+| Stateful generator adapter | [`pkg/datagen/tpchgen`](https://github.com/stroppy-io/stroppy/tree/main/pkg/datagen/tpchgen) |
+| PostgreSQL driver | [`pkg/driver/postgres`](https://github.com/stroppy-io/stroppy/tree/main/pkg/driver/postgres) |
+| Shared SQL driver | [`pkg/driver/sqldriver`](https://github.com/stroppy-io/stroppy/tree/main/pkg/driver/sqldriver) |
+| Sink driver | [`pkg/driver/csv`](https://github.com/stroppy-io/stroppy/tree/main/pkg/driver/csv) |
+| Driver registry | [`pkg/driver/dispatcher.go`](https://github.com/stroppy-io/stroppy/blob/main/pkg/driver/dispatcher.go) |
