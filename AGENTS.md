@@ -76,12 +76,33 @@ firecode prepare --in-vm --with "node@24"     # no docker needed on macOS
 time, so npm's cache does not carry over. The image ships a populated
 `~/.npm/_cacache`, which is why `npm ci` is quick, but it is not a cache you can
 grow.
-- **`node_modules` does not.** Each run starts from the project as it exists on
-the host, so unless the directory already contains `node_modules` (for example a
-previous copy-out kept in place) every run reinstalls. The copy-out includes it,
-so keeping that directory as the working clone is the way to avoid reinstalling.
+- **`node_modules` does not, by default.** Gitignored files are left out of the
+  mirror, so a run starts without them and `npm ci` reinstalls. `--all-files`
+  includes them, and the flag is worth it only for a *persistent* VM — see below.
 - **`/var/lib/firecode`** is the VM's state mount and is not writable by the
 unprivileged user, so it is not a place to put a cache.
+
+### The fast loop: `up --all-files`
+
+Measured on this repository, with `node_modules` (790 packages) present on the
+host. `in` reuses the VM's established mirror, so the cost is paid once:
+
+| | wall time |
+|---|---|
+| `exec` default (no `node_modules`; `npm ci` inside) | 5.1s + install |
+| `exec --all-files` (copies the tree each run) | 24.5s, then 27.3s — not cached across `exec` runs |
+| `up --all-files`, once | ~25s |
+| then `in 'ls node_modules \| wc -l'` | 0.53s → 790 packages |
+| then `in 'npm run build'` | 5.9s, no install |
+
+So for one-shot work the flag is a wash, and for iterative work it is the
+difference between a six-second loop and one that reinstalls every time:
+
+```bash
+firecode up --all-files       # pay the mirror once
+firecode in npm run build     # seconds, with the tree already there
+firecode down
+```
 
 ### Preview the site in a browser
 
