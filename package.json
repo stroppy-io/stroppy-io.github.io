@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
+    "check-toolchain": "node scripts/check-toolchain.mjs",
     "sync-changelog": "node scripts/sync-changelog.mjs",
     "prestart": "node scripts/sync-changelog.mjs",
     "prebuild": "node scripts/sync-changelog.mjs",
