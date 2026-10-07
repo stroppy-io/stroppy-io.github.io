@@ -6,15 +6,18 @@ description: Commands, flags, inputs, and exit behavior in Stroppy v6
 
 # CLI Reference
 
-Stroppy v6 exposes five command groups:
+Stroppy v6 exposes command groups for running benchmarks and for authoring your
+own:
 
 ```text
-stroppy version
-stroppy run
-stroppy baseline
-stroppy probe
-stroppy help
+stroppy run          stroppy init       stroppy build      stroppy export
+stroppy baseline     stroppy eject      stroppy list       stroppy cache
+stroppy probe        stroppy remove     stroppy version    stroppy help
 ```
+
+The authoring commands (`init`, `eject`, `build`, `list`, `remove`, `cache`,
+`export`) ship with the next v6 release. See [Custom workloads](./custom-workloads)
+for the workflow they support.
 
 Run `stroppy <command> --help` for terminal help. Registered workloads add
 their typed flags dynamically:
@@ -199,6 +202,119 @@ stroppy probe -o json
 ```
 
 See [Probe & Parameters](./probe).
+
+## Author tooling
+
+These commands scaffold workloads, register them, and manage the catalog they
+live in. See [Custom workloads](./custom-workloads) for a walkthrough.
+
+### `stroppy init`
+
+Create a standalone workload project:
+
+```text
+stroppy init PATH [flags]
+```
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--module` | string | `example.com/<name>` | Go module path for the new project. |
+| `--sdk-version` | string | running binary's version | Stroppy release or pseudo-version to require. |
+| `--offline` | bool | `false` | Resolve only cached dependencies. |
+| `-y`, `--yes` | bool | `false` | Allow a verified private Go download. |
+
+The project is retained when dependency resolution fails, along with the retry
+command.
+
+### `stroppy eject`
+
+Restore explicitly published workload source into a new or empty directory:
+
+```text
+stroppy eject NAME PATH [flags]
+```
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--module` | string | `example.com/<name>` | Go module path for the restored project. |
+| `--sdk-version` | string | running binary's version | Stroppy release or pseudo-version to require. |
+| `--offline` | bool | `false` | Resolve only cached dependencies. |
+| `-y`, `--yes` | bool | `false` | Allow a verified private Go download. |
+
+Non-empty and symlink destinations are refused; there is no overwrite option. A
+workload that published no source reports a source-unavailable error.
+
+### `stroppy build`
+
+Compile and register a custom workload from its project directory:
+
+```text
+stroppy build [path] [flags]
+```
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--replace` | bool | `false` | Replace an existing catalog entry of the same name. |
+| `--refresh` | bool | `false` | Rebuild the local runtime from catalog snapshots, taking no path. |
+| `--source-root` | string | empty | SDK source tree to compile against instead of the pinned module. |
+| `--offline` | bool | `false` | Use only cached tools and modules. |
+| `-y`, `--yes` | bool | `false` | Allow a verified private Go download. |
+
+`path` defaults to the working directory, and `build` checks that directory for
+an importable package before its conventional `workload/` child. Every build
+reports the SDK the activated runtime embeds, and `--source-root` must name the
+Stroppy SDK module — a workload project is rejected by name.
+
+### `stroppy list`
+
+```text
+stroppy list [-o human|json]
+```
+
+Lists built-in and custom workloads with their origin.
+
+### `stroppy remove`
+
+```text
+stroppy remove NAME [flags]
+```
+
+Unregisters a custom workload and rebuilds the runtime without it. Built-in
+workloads cannot be removed. Accepts `--source-root`, `--offline`, and `-y` as
+`build` does.
+
+### `stroppy cache`
+
+```text
+stroppy cache inspect DIGEST [-o human|json]
+stroppy cache clean
+```
+
+`inspect` resolves a full or unique digest prefix and reports non-secret build
+provenance: platform, Go version, embedded workloads, and the SDK origin
+(`sdk=module …` or `sdk=source tree …`). `clean` removes reusable artifacts and
+private Go caches; the active runtime state is preserved.
+
+### `stroppy export`
+
+Build one portable binary containing built-ins and the selected custom
+workloads:
+
+```text
+stroppy export <workload ...> -o PATH [flags]
+stroppy export --all -o PATH [flags]
+```
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--all` | bool | `false` | Include every custom catalog workload. |
+| `-o`, `--output` | string | required | Portable binary output path. |
+| `--source-root` | string | empty | SDK source tree to compile against. |
+| `--offline` | bool | `false` | Use only cached tools and modules. |
+| `-y`, `--yes` | bool | `false` | Allow a verified private Go download. |
+
+`--all` and an explicit workload list are mutually exclusive. `GOOS`/`GOARCH`
+select the target for cross-compilation.
 
 ## `stroppy version`
 
