@@ -490,12 +490,12 @@ Error: failed to run go workload: define "selectfile": query: invalid author inp
 ## Register, list, package
 
 ```bash
-stroppy build .                 # register (from inside the project)
-stroppy build --replace .       # after editing
-stroppy list                    # built-in and custom workloads
+stroppy build .                               # register (from inside the project)
+stroppy build --replace .                     # after editing
+stroppy list                                  # built-in and custom workloads
 stroppy export select1 -o ./stroppy-select1   # portable binary
-stroppy cache inspect DIGEST    # build provenance, including which SDK it used
-stroppy remove select1          # unregister
+stroppy cache inspect DIGEST                  # build provenance, including which SDK it used
+stroppy remove select1                        # unregister
 ```
 
 `Test.Source` is what makes `stroppy eject select1 ./copy` able to restore your
