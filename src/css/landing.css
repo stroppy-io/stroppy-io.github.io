@@ -797,11 +797,12 @@ html.landing-paged .footer .container {
     padding: 4rem 0 3.5rem;
   }
 
+  /* Behind the headline on a narrow screen: quiet enough to read through. */
   .mark {
     right: -18vw;
     height: 60%;
     top: -30%;
-    opacity: 0.7;
+    opacity: 0.3;
   }
 
   .story {
