@@ -63,6 +63,8 @@ html[data-theme] {
   --docusaurus-highlighted-code-line-bg: color-mix(in srgb, var(--st-primary) 14%, transparent);
 
   --ifm-navbar-background-color: var(--st-panel);
+  /* Infima's 83vw drawer covers the search on tablet widths; a fixed width doesn't. */
+  --ifm-navbar-sidebar-width: min(83vw, 20rem);
   --ifm-navbar-shadow: none;
   --ifm-footer-background-color: var(--st-panel);
   --ifm-footer-color: var(--st-muted);
@@ -120,6 +122,11 @@ body {
 
 /* Narrow screens: footer columns flow side by side instead of one under another. */
 @media (max-width: 996px) {
+  /* The ctrl K hint sits on top of the narrowed search field and hides its placeholder. */
+  .navbar .navbar__search [class*='searchHintContainer'] {
+    display: none;
+  }
+
   .footer__links {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
