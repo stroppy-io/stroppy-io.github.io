@@ -21,7 +21,8 @@
   top: 0;
   bottom: 0;
   right: 4vw;
-  height: 78%;
+  /* One size on the first page and the last, set by the viewport. */
+  height: clamp(18rem, 62dvh, 40rem);
   aspect-ratio: 100 / 132;
   margin: auto 0;
   pointer-events: none;
@@ -54,9 +55,9 @@
   transform: translateY(calc(var(--open) * var(--lift)));
 }
 
-/* Muted under text, a little louder as it opens. */
+/* Under the headline but clearly the logo; a little louder as it opens. */
 .mark__body {
-  opacity: calc(0.06 + 0.05 * var(--open));
+  opacity: calc(0.28 + 0.07 * var(--open));
   fill: var(--st-text);
 }
 
@@ -65,13 +66,13 @@
 }
 
 .mark__band {
-  opacity: calc(0.2 + 0.2 * var(--open));
+  opacity: calc(0.8 + 0.2 * var(--open));
   fill: var(--st-mark);
 }
 
 .mark__ray {
   transform: translate(calc(var(--open) * var(--dx)), calc(var(--open) * var(--dy)));
-  opacity: calc(0.55 + 0.35 * var(--open));
+  opacity: calc(0.9 + 0.1 * var(--open));
   fill: var(--st-mark);
 }
 
@@ -764,7 +765,6 @@
 /* Here nothing overlaps the mark, so it reads as the logo. */
 .finale .mark {
   right: 0;
-  height: 100%;
 }
 
 .mark--solid .mark__body {
