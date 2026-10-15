@@ -823,17 +823,41 @@ html.landing-paged .footer .container {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* One column: each row's label sits above its line. */
+  /* One column: each row's label and multiplier sit above its line; the
+     grid stays, inset so the leftmost values keep room for their tags. */
   .plot__row-label,
   .plot__lane,
+  .plot__ratio,
+  .plot__per,
+  .plot__group,
+  .plot__grid,
   .plot__axis {
     grid-column: 1;
+  }
+
+  .plot__grid,
+  .plot__lane {
+    margin-left: 2.25rem;
+    margin-right: 2.25rem;
   }
 
   .plot__row-label {
     align-self: start;
     padding: 0.3rem 0 0;
     font-size: 0.75rem;
+  }
+
+  .plot__ratio {
+    align-self: start;
+    justify-self: end;
+    padding-top: 0.3rem;
+    font-size: 0.75rem;
+  }
+
+  .plot__per {
+    position: relative;
+    z-index: 2;
+    justify-self: end;
   }
 
   .plot__lane {
@@ -845,18 +869,11 @@ html.landing-paged .footer .container {
     top: 72%;
   }
 
-  .plot__ratio,
-  .plot__per {
-    display: none;
+  .plot__axis {
+    flex-direction: column;
+    gap: 0.4rem;
   }
 
-  .plot__group {
-    grid-column: 1;
-  }
-
-  .plot__grid {
-    display: none;
-  }
 }
 
 /* ---------- Paging ---------- */
