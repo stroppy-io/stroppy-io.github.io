@@ -1,11 +1,12 @@
-import {themes as prismThemes} from 'prism-react-renderer';
+import prismStroppy from './src/prism-stroppy';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Stroppy',
   tagline: 'Go-native database stress testing',
-  favicon: 'img/favicon.ico',
+  // Stroppy Cloud's favicon (scripts/sync-kit.mjs), so both sites show one icon.
+  favicon: 'kit/favicon.svg',
 
   future: {
     v4: true,
@@ -56,14 +57,20 @@ const config: Config = {
           editUrl: 'https://github.com/stroppy-io/stroppy-io.github.io/edit/next/',
         },
         theme: {
-          customCss: './src/css/custom.css',
+          // The Stroppy UI kit (scripts/sync-kit.mjs), then the site's mapping onto it.
+          customCss: [
+            './src/kit/tokens.css',
+            './src/kit/fonts.css',
+            './src/kit/base.css',
+            './src/css/custom.css',
+          ],
         },
       } satisfies Preset.Options,
     ],
   ],
 
   themeConfig: {
-    image: 'img/hero-logo.svg',
+    image: 'kit/mark-dark.svg',
     colorMode: {
       defaultMode: 'light',
       disableSwitch: false,
@@ -73,7 +80,8 @@ const config: Config = {
       title: 'Stroppy',
       logo: {
         alt: 'Stroppy Logo',
-        src: 'img/logo.svg',
+        src: 'kit/mark-light.svg',
+        srcDark: 'kit/mark-dark.svg',
       },
       items: [
         {
@@ -109,6 +117,11 @@ const config: Config = {
           activeBaseRegex: '/docs/.*/changelog',
         },
         {
+          href: 'https://cloud.stroppy.io',
+          label: 'Cloud',
+          position: 'right',
+        },
+        {
           type: 'docsVersionDropdown',
           position: 'right',
           dropdownActiveClassDisabled: true,
@@ -128,7 +141,7 @@ const config: Config = {
       ],
     },
     footer: {
-      style: 'dark',
+      style: 'light',
       links: [
         {
           title: 'Documentation',
@@ -169,8 +182,8 @@ const config: Config = {
       copyright: `Copyright ${new Date().getFullYear()} Stroppy Authors. Apache 2.0 License.`,
     },
     prism: {
-      theme: prismThemes.vsLight,
-      darkTheme: prismThemes.vsDark,
+      theme: prismStroppy,
+      darkTheme: prismStroppy,
       additionalLanguages: ['bash', 'typescript', 'sql', 'go', 'protobuf', 'json'],
     },
   } satisfies Preset.ThemeConfig,

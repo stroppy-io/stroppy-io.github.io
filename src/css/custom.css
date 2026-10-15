@@ -1,232 +1,178 @@
-:root {
-  --ifm-color-primary: #5fa0ff;
-  --ifm-color-primary-dark: #4284fb;
-  --ifm-color-primary-darker: #2d6fe8;
-  --ifm-color-primary-darkest: #1a5cd4;
-  --ifm-color-primary-light: #7cb4ff;
-  --ifm-color-primary-lighter: #a0cbff;
-  --ifm-color-primary-lightest: #c8e0ff;
-  --ifm-code-font-size: 90%;
-  --ifm-font-size-base: 95%;
-  --ifm-font-family-base: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --ifm-heading-color: var(--ifm-color-emphasis-900);
-  --ifm-leading-desktop: 1.75;
-  --ifm-code-border-radius: 0.25rem;
-  --ifm-code-padding-vertical: 2px;
+/* The site on the Stroppy UI kit. tokens.css, fonts.css and base.css come from
+   the kit (scripts/sync-kit.mjs, pinned in kit.json) and switch with the same
+   data-theme attribute Docusaurus sets on <html>. This file maps Infima onto
+   the kit's --st-* variables; colours are never written here directly.
+   Prose keeps a reading size: the kit's 14px base is for the app's dense UI.
+   html[data-theme] matches Infima's own dark-mode selector, so this wins in
+   both modes by coming later. */
+
+:root,
+html[data-theme] {
+  --ifm-font-family-base: var(--st-font-sans);
+  --ifm-font-family-monospace: var(--st-font-mono);
+  --ifm-font-size-base: 15px;
+  --ifm-leading-desktop: 1.7;
+  --ifm-heading-font-weight: var(--st-font-weight-medium);
+  --ifm-font-weight-bold: var(--st-font-weight-bold);
+
+  --ifm-background-color: var(--st-canvas);
+  --ifm-background-surface-color: var(--st-panel);
+  --ifm-card-background-color: var(--st-panel);
+  --ifm-font-color-base: var(--st-text);
+  --ifm-heading-color: var(--st-text);
+  --ifm-color-content-secondary: var(--st-muted);
+  --ifm-hr-background-color: var(--st-line);
+  --ifm-toc-border-color: var(--st-line);
+  --ifm-table-border-color: var(--st-line);
+  --ifm-table-head-background: var(--st-raised);
+  --ifm-table-stripe-background: transparent;
+
+  --ifm-color-emphasis-100: var(--st-raised);
+  --ifm-color-emphasis-200: var(--st-line);
+  --ifm-color-emphasis-300: var(--st-line-strong);
+  --ifm-color-emphasis-600: var(--st-muted);
+  --ifm-color-emphasis-700: var(--st-muted);
+  --ifm-color-emphasis-800: var(--st-text);
+  --ifm-color-emphasis-900: var(--st-text);
+
+  --ifm-color-primary: var(--st-primary);
+  --ifm-color-primary-dark: color-mix(in srgb, var(--st-primary) 90%, black);
+  --ifm-color-primary-darker: color-mix(in srgb, var(--st-primary) 85%, black);
+  --ifm-color-primary-darkest: color-mix(in srgb, var(--st-primary) 70%, black);
+  --ifm-color-primary-light: color-mix(in srgb, var(--st-primary) 90%, white);
+  --ifm-color-primary-lighter: color-mix(in srgb, var(--st-primary) 85%, white);
+  --ifm-color-primary-lightest: color-mix(in srgb, var(--st-primary) 70%, white);
+  --ifm-link-color: var(--st-primary-text);
+  --ifm-menu-color: var(--st-muted);
+  --ifm-menu-color-active: var(--st-primary-text);
+  --ifm-menu-color-background-active: color-mix(in srgb, var(--st-primary) 12%, transparent);
+  --ifm-menu-color-background-hover: var(--st-raised);
+  --ifm-navbar-link-color: var(--st-muted);
+  --ifm-navbar-link-hover-color: var(--st-text);
+  --ifm-dropdown-background-color: var(--st-panel);
+
+  --ifm-global-radius: var(--st-radius-md);
+  --ifm-card-border-radius: var(--st-radius-lg);
+  --ifm-button-border-radius: var(--st-radius-md);
+  --ifm-code-border-radius: var(--st-radius-sm);
+  --ifm-code-font-size: 0.9em;
+  --ifm-code-background: var(--st-raised);
+  --ifm-code-padding-vertical: 1px;
   --ifm-code-padding-horizontal: 5px;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --ifm-pre-background: var(--st-panel);
+  --docusaurus-highlighted-code-line-bg: color-mix(in srgb, var(--st-primary) 14%, transparent);
+
+  --ifm-navbar-background-color: var(--st-panel);
+  --ifm-navbar-shadow: none;
+  --ifm-footer-background-color: var(--st-panel);
+  --ifm-footer-color: var(--st-muted);
+  --ifm-footer-link-color: var(--st-muted);
+  --ifm-footer-link-hover-color: var(--st-text);
+  --ifm-footer-title-color: var(--st-text);
+
+  /* Admonitions and alerts: kit tones, a tint on the panel, text unchanged. */
+  --ifm-color-info: var(--st-info);
+  --ifm-color-info-dark: var(--st-info);
+  --ifm-color-info-contrast-background: color-mix(in srgb, var(--st-info) 10%, var(--st-panel));
+  --ifm-color-info-contrast-foreground: var(--st-text);
+  --ifm-color-success: var(--st-success);
+  --ifm-color-success-dark: var(--st-success);
+  --ifm-color-success-contrast-background: color-mix(in srgb, var(--st-success) 10%, var(--st-panel));
+  --ifm-color-success-contrast-foreground: var(--st-text);
+  --ifm-color-warning: var(--st-warning);
+  --ifm-color-warning-dark: var(--st-warning);
+  --ifm-color-warning-contrast-background: color-mix(in srgb, var(--st-warning) 10%, var(--st-panel));
+  --ifm-color-warning-contrast-foreground: var(--st-text);
+  --ifm-color-danger: var(--st-error);
+  --ifm-color-danger-dark: var(--st-error);
+  --ifm-color-danger-contrast-background: color-mix(in srgb, var(--st-error) 10%, var(--st-panel));
+  --ifm-color-danger-contrast-foreground: var(--st-text);
+  --ifm-color-secondary-dark: var(--st-line-strong);
+  --ifm-color-secondary-contrast-background: var(--st-panel);
+  --ifm-color-secondary-contrast-foreground: var(--st-text);
 }
 
-[data-theme='dark'] {
-  --ifm-color-primary: #5fa0ff;
-  --ifm-color-primary-dark: #4284fb;
-  --ifm-color-primary-darker: #2d6fe8;
-  --ifm-color-primary-darkest: #1a5cd4;
-  --ifm-color-primary-light: #7cb4ff;
-  --ifm-color-primary-lighter: #a0cbff;
-  --ifm-color-primary-lightest: #c8e0ff;
-  --ifm-font-color-base: #bdbdbd;
-  --ifm-background-color: #1e1e1e;
-  --ifm-background-surface-color: #272727;
-  --ifm-footer-background-color: var(--ifm-navbar-background-color);
-  --ifm-card-background-color: #272727;
-  --ifm-color-emphasis-200: #353535;
-  --ifm-hr-background-color: #424242;
-  --docusaurus-highlighted-code-line-bg: rgba(66, 66, 66, 0.35);
+body {
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Code blocks — nanos-world style */
-[data-theme='dark'] .prism-code,
-[data-theme='dark'] div[class^='codeBlockTitle'],
-[data-theme='dark'] span[class^='codeLineNumber'] {
-  background-color: #222 !important;
+/* Numbers line up in tables and summaries, as in the app. */
+.markdown table {
+  font-variant-numeric: tabular-nums;
 }
 
-.prism-code,
-div[class^='codeBlockTitle'],
-span[class^='codeLineNumber'] {
-  background-color: #f6f8fa !important;
-  font-size: 14px;
+.navbar {
+  border-bottom: 1px solid var(--st-line);
+}
+
+/* The kit has no colour for text on primary; white, as on Stroppy Cloud. */
+.button--primary {
+  --ifm-button-color: #fff;
+}
+
+.button--primary:hover {
+  color: #fff;
+}
+
+.footer {
+  border-top: 1px solid var(--st-line);
+}
+
+/* Code blocks: a bordered panel, like the kit's <pre>. */
+.theme-code-block {
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-lg);
+  box-shadow: none;
+}
+
+.theme-code-block pre {
+  font-size: 13.5px;
   line-height: 1.6;
 }
 
-.prism-code {
-  border-radius: 8px !important;
+div[class^='codeBlockTitle'] {
+  border-bottom: 1px solid var(--st-line);
+  color: var(--st-muted);
+  font-size: var(--st-font-size-sm);
 }
 
-/* Navbar */
-[data-theme='dark'] .navbar {
-  background: rgba(30, 30, 30, 0.97);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid #353535;
+.theme-admonition {
+  box-shadow: none;
+  border-radius: var(--st-radius-md);
 }
 
-/* Fix iOS Safari: backdrop-filter creates a stacking context that can hide
-   the mobile sidebar. Ensure sidebar renders above the navbar layer. */
-[data-theme='dark'] .navbar-sidebar {
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  background: var(--ifm-background-surface-color);
-}
-
-[data-theme='dark'] .navbar-sidebar__backdrop {
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-
-/* Hero section */
-.hero--stroppy {
-  background:
-    radial-gradient(ellipse 80% 50% at 50% 120%, rgba(95, 160, 255, 0.2) 0%, transparent 70%),
-    linear-gradient(135deg, #1a5cd4 0%, #2d6fe8 40%, #5fa0ff 100%);
-  color: white;
-  padding: 5rem 0 4rem;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.hero--stroppy::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle at 30% 70%, rgba(251, 191, 36, 0.06) 0%, transparent 50%),
-              radial-gradient(circle at 70% 30%, rgba(95, 160, 255, 0.08) 0%, transparent 50%);
-  pointer-events: none;
-}
-
-[data-theme='dark'] .hero--stroppy {
-  background:
-    radial-gradient(ellipse 60% 50% at 50% 120%, rgba(95, 160, 255, 0.1) 0%, transparent 70%),
-    linear-gradient(135deg, #121212 0%, #1e1e1e 40%, #272727 100%);
-}
-
-.hero--stroppy .hero__title {
-  font-size: 3.5rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.hero--stroppy .hero__subtitle {
-  font-size: 1.4rem;
-  opacity: 0.9;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-/* Feature cards */
-.feature-card {
-  background: var(--ifm-card-background-color);
-  border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 12px;
-  padding: 2rem;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-}
-
-.feature-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  border-color: var(--ifm-color-primary-lighter);
-}
-
-[data-theme='dark'] .feature-card:hover {
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-  border-color: rgba(95, 160, 255, 0.3);
-}
-
-.feature-card h3 {
-  margin-top: 1rem;
-}
-
-.feature-card svg {
-  width: 48px;
-  height: 48px;
-}
-
-/* Workflow steps */
-.workflow-step {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.workflow-step-number {
-  background: var(--ifm-color-primary);
-  color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-/* Logo */
-.hero-logo {
-  width: 300px;
-  height: 300px;
-  margin-bottom: -2rem;
-  margin-top: -3rem;
-}
-
-/* Markdown heading separators — nanos-world style */
+/* Markdown heading separators */
 .markdown h2:not(:first-of-type)::before {
   height: 1px;
-  content: "";
+  content: '';
   display: block;
-  background-color: var(--ifm-color-emphasis-200);
+  background-color: var(--st-line);
   margin-bottom: 2rem;
 }
 
-/* Navbar icon links */
+/* Navbar icon links: one glyph as a mask, coloured by the theme. */
 .header-github-link::before,
 .header-discord-link::before {
   content: '';
   display: flex;
-  width: 24px;
-  height: 24px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+  width: 22px;
+  height: 22px;
+  background-color: var(--st-muted);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  transition: background-color 0.15s;
+}
+
+.header-github-link:hover::before,
+.header-discord-link:hover::before {
+  background-color: var(--st-text);
 }
 
 .header-github-link::before {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23333' d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/%3E%3C/svg%3E");
 }
 
 .header-discord-link::before {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23333' d='M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z'/%3E%3C/svg%3E");
-}
-
-[data-theme='dark'] .header-github-link::before {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23fff' d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/%3E%3C/svg%3E");
-}
-
-[data-theme='dark'] .header-discord-link::before {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23fff' d='M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z'/%3E%3C/svg%3E");
-}
-
-.header-github-link:hover,
-.header-discord-link:hover {
-  opacity: 0.7;
-}
-
-@media screen and (max-width: 996px) {
-  .hero--stroppy .hero__title {
-    font-size: 2.5rem;
-  }
-
-  .hero-logo {
-    width: 200px;
-    height: 200px;
-    margin-top: -2rem;
-    margin-bottom: -1rem;
-  }
+  mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z'/%3E%3C/svg%3E");
 }

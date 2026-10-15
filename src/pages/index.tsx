@@ -1,184 +1,338 @@
-import type {ReactNode} from 'react';
+import {useEffect, useRef, useState, type CSSProperties, type ReactNode} from 'react';
+import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
+import {PairsPlot, type Group} from '@site/src/components/landing/Charts';
+import HeroMark from '@site/src/components/landing/HeroMark';
+import {PagerCue, PagerNav, PagerSnap, usePager, type Page as PageInfo} from '@site/src/components/landing/Pager';
+import RunReplay, {type RunPart} from '@site/src/components/landing/RunReplay';
+import useScrollProgress from '@site/src/components/landing/useScrollProgress';
+import '../css/landing.css';
 
-function HomepageHeader() {
+const RELEASES = 'https://github.com/stroppy-io/stroppy/releases/latest';
+
+const PAGES: readonly PageInfo[] = [
+  {id: 'start', label: 'Start'},
+  {id: 'run', label: 'A run'},
+  {id: 'evidence', label: 'How fast'},
+  {id: 'cloud', label: 'Stroppy Cloud'},
+];
+
+/** One page of the landing; its content arrives with the scroll that brings it in. */
+function Page({id, className, children}: {id: string; className?: string; children: ReactNode}) {
+  const ref = useRef<HTMLElement>(null);
+  const p = useScrollProgress(ref, {start: 1, end: 0.25});
   return (
-    <header className="hero hero--stroppy">
-      <div className="container">
-        <img src="/img/hero-logo.svg" alt="Stroppy" className="hero-logo" />
-        <Heading as="h1" className="hero__title">
-          Stroppy
+    <section ref={ref} id={id} className={clsx('page', className)}>
+      <div className="page__inner" style={{'--in': String(p)} as CSSProperties}>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function CopyButton({text}: {text: string}) {
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return undefined;
+    const t = window.setTimeout(() => setCopied(false), 1600);
+    return () => window.clearTimeout(t);
+  }, [copied]);
+  return (
+    <button
+      type="button"
+      className="copy"
+      onClick={() => navigator.clipboard?.writeText(text).then(() => setCopied(true))}>
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  );
+}
+
+function Shell({children}: {children: string}) {
+  return (
+    <div className="shell">
+      <pre>
+        <code>{children}</code>
+      </pre>
+      <CopyButton text={children} />
+    </div>
+  );
+}
+
+const PLATFORMS = [
+  {id: 'linux_amd64', label: 'Linux x86-64'},
+  {id: 'linux_arm64', label: 'Linux ARM64'},
+  {id: 'darwin_arm64', label: 'macOS Apple silicon'},
+  {id: 'darwin_amd64', label: 'macOS Intel'},
+] as const;
+
+const installScript = (platform: string) =>
+  `curl -fsSL ${RELEASES}/download/stroppy_${platform}.tar.gz | tar -xz
+sudo install stroppy /usr/local/bin/`;
+
+function Install() {
+  const [platform, setPlatform] = useState<string>(PLATFORMS[0].id);
+  // A Mac visitor most likely wants the Mac build; Apple silicon is the default there.
+  useEffect(() => {
+    if (/Mac/.test(navigator.platform || navigator.userAgent)) setPlatform('darwin_arm64');
+  }, []);
+  return (
+    <div className="install">
+      <div className="install__tabs" role="tablist" aria-label="Platform">
+        {PLATFORMS.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            role="tab"
+            aria-selected={platform === p.id}
+            className="install__tab"
+            onClick={() => setPlatform(p.id)}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+      <Shell>{installScript(platform)}</Shell>
+      <p className="install__more">
+        It’s one file, about 40 MB, and the archive has nothing else in it. Docker and building from source are covered
+        in <Link to="/docs/introduction#installation">the introduction</Link>.
+      </p>
+    </div>
+  );
+}
+
+function Hero() {
+  // The mark opens as the page scrolls away from the headline.
+  const ref = useRef<HTMLElement>(null);
+  const open = useScrollProgress(ref, {start: 0.12, end: -0.45, settled: 0});
+  return (
+    <header ref={ref} id="start" className="intro page">
+      <HeroMark open={open} />
+      <div className="container intro__inner">
+        <Heading as="h1" className="intro__title">
+          Stress-test your database, not your load generator.
         </Heading>
-        <p className="hero__subtitle">
-          Go-native database stress testing in one binary. Run deterministic TPC
-          workloads, measure client overhead, and export native metrics through OpenTelemetry.
+        <p className="intro__lede">
+          Stroppy is a single Go binary that runs TPC-B, TPC-C, TPC-H and TPC-DS against PostgreSQL, MySQL, Picodata and
+          YDB. We kept catching benchmarks that were really measuring the client, so Stroppy can tell you where its own
+          limit is before you start blaming the database.
         </p>
-        <div style={{display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem'}}>
-          <Link
-            className="button button--lg"
-            style={{background: '#fbbf24', color: '#1e1e1e', border: 'none', fontWeight: 700}}
-            to="/docs/introduction">
-            Get Started
-          </Link>
-          <Link
-            className="button button--outline button--lg"
-            style={{color: 'white', borderColor: 'rgba(255,255,255,0.4)'}}
-            href="https://github.com/stroppy-io/stroppy/releases/tag/v6.0.0">
-            Download v6
+        <div className="intro__actions">
+          <Link className="button button--primary button--lg" to="/docs/introduction">
+            Read the docs
           </Link>
         </div>
+        <Install />
       </div>
     </header>
   );
 }
 
-type FeatureItem = {
-  title: string;
-  icon: string;
-  description: ReactNode;
-};
-
-const features: FeatureItem[] = [
+// Published measurements only; each group names its post.
+const GROUPS: Group[] = [
   {
-    title: 'One Go Binary',
-    icon: '◆',
-    description: (
+    title: 'go-tpc → Stroppy',
+    per: 'go-tpc',
+    setting: (
       <>
-        No external workload runtime. The CLI, executor, workloads, drivers,
-        generators, metrics, and SQL assets ship together.
+        TPC-C on OrioleDB, one hour, 1000 warehouses, 100 VUs, Stroppy 5.7.2.{' '}
+        <Link to="/blog/stroppy-vs-go-tpc">How we found it</Link>
       </>
     ),
+    rows: [{label: 'go-tpc → tpcc/procs', them: 6399, us: 15791}],
   },
   {
-    title: 'Deterministic Generation',
-    icon: '⚄',
-    description: (
+    title: 'v5 on k6 → v6',
+    per: 'v5',
+    setting: (
       <>
-        Typed reusable batches and canonical dbgen/dsdgen adapters reproduce
-        data across worker counts and partition boundaries.
+        Medians of five runs on one AMD EPYC Genoa VM. Big on the noop driver, small on a real database, which is how
+        it should be. <Link to="/blog/why-stroppy-moved-off-k6">Why we dropped k6</Link>
       </>
     ),
+    rows: [
+      {label: 'TPC-B ceiling, 1 VU', them: 4368, us: 145524},
+      {label: 'TPC-B ceiling, 24 VUs', them: 38694, us: 517627},
+      {label: 'TPC-C on PostgreSQL, 1 VU', them: 202, us: 290},
+      {label: 'TPC-C on PostgreSQL, 16 VUs', them: 2892, us: 3368},
+    ],
   },
   {
-    title: 'Native Metrics',
-    icon: '⚡',
-    description: (
-      <>
-        Bounded counters, gauges, and histograms produce terminal summaries and
-        optional OTLP gRPC or HTTP export.
-      </>
-    ),
-  },
-  {
-    title: 'Built-in Workloads',
-    icon: '📊',
-    description: (
-      <>
-        Run TPC-B, TPC-C, TPC-H, TPC-DS, direct SQL, and machine-baseline
-        workloads with typed flags.
-      </>
-    ),
-  },
-  {
-    title: 'SQL-First Assets',
-    icon: '🗃️',
-    description: (
-      <>
-        Organize dialect SQL with named sections, named queries, bound
-        parameters, and local file overrides.
-      </>
-    ),
-  },
-  {
-    title: 'Six Drivers',
-    icon: '🔌',
-    description: (
-      <>
-        PostgreSQL, MySQL, Picodata, YDB, Noop, and CSV drivers expose
-        discoverable load and query capabilities.
-      </>
-    ),
+    title: 'Database → Stroppy ceiling',
+    per: 'PostgreSQL',
+    setting: 'Same VM, 16 VUs. Different workloads; the gap is the room the client leaves.',
+    rows: [{label: 'PostgreSQL TPC-C → noop TPC-B', them: 3368, us: 500772}],
   },
 ];
 
-function Feature({title, icon, description}: FeatureItem) {
+function Evidence() {
   return (
-    <div className="col col--4" style={{marginBottom: '2rem'}}>
-      <div className="feature-card">
-        <div style={{fontSize: '2.5rem'}}>{icon}</div>
-        <Heading as="h3">{title}</Heading>
-        <p>{description}</p>
+    <Page id="evidence" className="story">
+      <div className="container">
+        <div className="story__head">
+          <Heading as="h2">How fast the client is, and why it matters</Heading>
+          <p>
+            Every number a load generator reports includes the load generator. If the client is slow, the database
+            waits and you end up measuring the tool. <code>stroppy baseline</code> shows how much room it leaves on
+            your machine.
+          </p>
+        </div>
+        <PairsPlot groups={GROUPS} />
       </div>
-    </div>
+    </Page>
   );
 }
 
-function QuickStart() {
+type Note = {part: RunPart; title: string; body: ReactNode};
+
+// What the command asks for: each note is something the binary carries.
+const ASK: Note[] = [
+  {
+    part: 'workload',
+    title: 'tpcb/tx',
+    body: (
+      <>
+        The workload: TPC-B, TPC-C, TPC-H, TPC-DS or a <code>.sql</code> file of your own. The built-in SQL is just a
+        file too, and a copy in your working directory wins.
+      </>
+    ),
+  },
+  {
+    part: 'driver',
+    title: '-d pg',
+    body: (
+      <>
+        PostgreSQL, MySQL, Picodata or YDB, each loading through its fast path (<code>COPY</code> on Postgres). The same
+        seed gives the same rows however many workers load them.
+      </>
+    ),
+  },
+  {
+    part: 'executor',
+    title: '--executor',
+    body: 'Eight VUs keep sending transactions for 30 seconds; shared-iterations splits a fixed count instead.',
+  },
+];
+
+// What comes back.
+const GET: Note[] = [
+  {part: 'steps', title: 'Steps', body: 'Schema, data load and ANALYZE run first, and each one logs how long it took.'},
+  {part: 'counters', title: 'Counters', body: '5,603 transactions, 5,603 commits, not one failed iteration.'},
+  {
+    part: 'rates',
+    title: 'tps',
+    body: '186 a second. TPC-B at scale 1 has one branch row and every transaction updates it, so that row is the bottleneck here.',
+  },
+  {
+    part: 'tail',
+    title: 'p(99)',
+    body: 'One transaction in a hundred took around 250 ms while the average was 43, which is why we don’t lead with averages.',
+  },
+];
+
+function Notes({notes, part, setPart}: {notes: Note[]; part: RunPart | null; setPart: (p: RunPart | null) => void}) {
   return (
-    <section style={{padding: '4rem 0', background: 'var(--ifm-background-surface-color)'}}>
+    <ul className="notes">
+      {notes.map((n) => (
+        <li key={n.part}>
+          <button
+            type="button"
+            className="note"
+            aria-pressed={part === n.part}
+            onMouseEnter={() => setPart(n.part)}
+            onMouseLeave={() => setPart(null)}
+            onFocus={() => setPart(n.part)}
+            onBlur={() => setPart(null)}>
+            <span className="note__title">{n.title}</span>
+            <span className="note__body">{n.body}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Anatomy() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [seen, setSeen] = useState(false);
+  const [part, setPart] = useState<RunPart | null>(null);
+  useEffect(() => {
+    if (!ref.current) return undefined;
+    const io = new IntersectionObserver(([e]) => e.isIntersecting && setSeen(true), {threshold: 0.5});
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <Page id="run" className="story story--panel">
       <div className="container">
-        <div className="row">
-          <div className="col col--4">
-            <Heading as="h2">Inspect and baseline</Heading>
-            <div className="workflow-step">
-              <div className="workflow-step-number">1</div>
-              <div>
-                <strong>Verify release</strong>
-                <pre><code>stroppy version</code></pre>
-              </div>
-            </div>
-            <div className="workflow-step">
-              <div className="workflow-step-number">2</div>
-              <div>
-                <strong>List capabilities</strong>
-                <pre><code>stroppy probe</code></pre>
-              </div>
-            </div>
-            <div className="workflow-step">
-              <div className="workflow-step-number">3</div>
-              <div>
-                <strong>Measure this machine</strong>
-                <pre><code>stroppy baseline --quick</code></pre>
-              </div>
-            </div>
+        <div className="story__head">
+          <Heading as="h2">One command in, a summary out</Heading>
+          <p>
+            All of it ships in the one binary, since version 6 dropped k6 and TypeScript and there’s nothing left to
+            install next to it. Hover a note to see which part of the run it’s about.
+          </p>
+        </div>
+        <div className="anatomy">
+          <div ref={ref} className="anatomy__run">
+            <RunReplay active={seen} highlight={part} />
           </div>
-          <div className="col col--4">
-            <Heading as="h2">Run a database workload</Heading>
-            <pre style={{padding: '1.5rem', borderRadius: '8px'}}>
-              <code>{`# TPC-C on PostgreSQL
-stroppy run tpcc/tx -d pg \\
-  -D url=postgres://host/db \\
-  --executor constant-vus \\
-  --vus 10 --duration 60s
-
-# Fixed-work TPC-B run
-stroppy run tpcb/tx -d pg \\
-  --iterations 100`}</code>
-            </pre>
-            <p style={{fontSize: '0.9rem', opacity: 0.8}}>
-              <Link to="/docs/presets">Explore built-in workloads &rarr;</Link>
-            </p>
-          </div>
-          <div className="col col--4">
-            <Heading as="h2">Use Docker</Heading>
-            <pre style={{padding: '1.5rem', borderRadius: '8px'}}>
-              <code>{`docker pull \\
-  ghcr.io/stroppy-io/stroppy:v6.0.0.62
-
-docker run --rm --network host \\
-  ghcr.io/stroppy-io/stroppy:v6.0.0.62 \\
-  run tpch/tx -d pg \\
-  --scale-factor 0.01`}</code>
-            </pre>
-            <p style={{fontSize: '0.9rem', opacity: 0.8}}>
-              <Link to="/docs/introduction#docker">Installation and Docker details &rarr;</Link>
-            </p>
+          <div className="anatomy__side">
+            <h3 className="anatomy__group">What you ask for</h3>
+            <Notes notes={ASK} part={part} setPart={setPart} />
+            <h3 className="anatomy__group">What you get back</h3>
+            <Notes notes={GET} part={part} setPart={setPart} />
           </div>
         </div>
       </div>
-    </section>
+    </Page>
+  );
+}
+
+function Cloud() {
+  // The closing mark opens as this last page arrives, answering the one that
+  // opened as the headline left.
+  const ref = useRef<HTMLDivElement>(null);
+  const open = useScrollProgress(ref, {start: 1, end: 0.3, settled: 1});
+  return (
+    <Page id="cloud" className="finale page--end">
+      <div ref={ref} className="container finale__inner">
+        <div className="finale__text">
+          <Heading as="h2">Don’t feel like setting up the machines?</Heading>
+          <p>
+            Stroppy Cloud does that part. You pick a database and a workload; it brings up the stand in your cloud, runs
+            the test and gives you a report with queries per second, latency and the moment errors began. Run it again
+            next week and the two sit side by side.
+          </p>
+          <a className="button button--primary button--lg" href="https://cloud.stroppy.io">
+            Open Stroppy Cloud
+          </a>
+        </div>
+        <HeroMark open={open} className="mark--solid" />
+      </div>
+    </Page>
+  );
+}
+
+function Landing() {
+  const root = useRef<HTMLDivElement>(null);
+  const pager = usePager(PAGES, root);
+  return (
+    <PagerSnap>
+      <div ref={root}>
+        <Hero />
+        <main>
+          <Anatomy />
+          <Evidence />
+          <Cloud />
+        </main>
+        {pager.paged && (
+          <>
+            <PagerNav pages={PAGES} {...pager} />
+            <PagerCue pages={PAGES} {...pager} />
+          </>
+        )}
+      </div>
+    </PagerSnap>
   );
 }
 
@@ -186,20 +340,8 @@ export default function Home(): ReactNode {
   return (
     <Layout
       title="Go-Native Database Stress Testing"
-      description="Stroppy v6 is a self-contained Go CLI for deterministic TPC workloads, database stress testing, machine baselines, and OpenTelemetry metrics.">
-      <HomepageHeader />
-      <main>
-        <section style={{padding: '4rem 0'}}>
-          <div className="container">
-            <div className="row">
-              {features.map((props) => (
-                <Feature key={props.title} {...props} />
-              ))}
-            </div>
-          </div>
-        </section>
-        <QuickStart />
-      </main>
+      description="Stroppy is a database stress tester in a single Go binary: TPC-B, TPC-C, TPC-H and TPC-DS against PostgreSQL, MySQL, Picodata and YDB, with a baseline that measures the tool's own limit.">
+      <Landing />
     </Layout>
   );
 }

@@ -24,12 +24,14 @@ npm ci
 npm run check-toolchain # compare installed node/npm against what this repo prescribes
 npm run start          # development server, no local search/llms output
 npm run sync-changelog
+npm run sync-kit       # fetch the Stroppy UI kit pinned in kit.json into src/kit
 npm run typecheck
 npm run build          # production build under ./build
 npm run serve
 ```
 
-`prestart` and `prebuild` refresh `docs/changelog.md` from Stroppy main.
+`prestart` and `prebuild` fetch the UI kit (skipped when `src/kit` already has
+the pinned version) and refresh `docs/changelog.md` from Stroppy main.
 Search and `llms.txt`/`llms-full.txt` are generated only by production builds.
 
 See [The firecode VM](#the-firecode-vm) for the base image, what persists
@@ -185,10 +187,37 @@ docusaurus.config.ts     site metadata, plugins, navbar, footer, versions
 sidebars.ts               current navigation
 src/css/custom.css        site styling
 src/pages/index.tsx       landing page
-static/img/logo.svg       navbar logo
-static/img/hero-logo.svg  hero/social image
-scripts/                  changelog synchronization and slicing
+src/components/landing/   landing pieces: scroll-driven mark, charts from blog data, run replay
+src/css/landing.css       landing styles
+src/prism-stroppy.ts      code highlighting on the kit's variables, both modes
+kit.json                  pinned UI kit release: version and archive sha256
+scripts/                  changelog and UI kit synchronization, changelog slicing
 ```
 
-Theme uses a neutral blue palette with light/dark modes. Preserve existing
-visual system unless a task explicitly requests redesign.
+## UI kit
+
+The site's look is the Stroppy UI kit, published as `stroppy-kit-<version>.tar.gz`
+on [stroppy-cloud releases](https://github.com/stroppy-io/stroppy-cloud/releases).
+`scripts/sync-kit.mjs` downloads the version pinned in `kit.json`, checks its
+sha256, and writes two generated, gitignored directories:
+
+- `src/kit/` — the bundle: `tokens.css` (`--st-*`, dark unless
+  `data-theme="light"`), `fonts.css` with Inter and Roboto Mono, `base.css`
+  (opt-in, everything scoped to `.st-doc`), `logo/`, `chart.js`, README.
+  `mark.json` is generated next to them: the mark's paths for the landing's
+  animated logo.
+- `static/kit/` — `mark-light.svg` and `mark-dark.svg`, the mark with the kit
+  variables resolved, for places that load it as an image (navbar, social
+  card); `favicon.svg`, Stroppy Cloud's `web/public/org-logo.svg` at the same
+  tag, so both sites share one icon (sha256 pinned as `faviconSha256`).
+
+`docusaurus.config.ts` loads `tokens.css`, `fonts.css`, `base.css`, then
+`src/css/custom.css`, which maps Infima's `--ifm-*` onto `--st-*`. Docusaurus
+and the kit switch on the same `data-theme` attribute. Colours come from the
+kit only: style through `--st-*`, never a literal colour. Prose keeps a
+reading size (15px) rather than the kit's 14px app base.
+
+To move to a new kit release, put its version and sha256 in `kit.json` and run
+`npm run sync-kit`. To try an unreleased bundle (`make kit-bundle` in
+stroppy-cloud), run `KIT_SOURCE=path/to/stroppy-kit-X.tar.gz npm run sync-kit`;
+`--force` refetches the pinned release.
