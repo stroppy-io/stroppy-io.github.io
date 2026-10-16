@@ -86,15 +86,16 @@
 
   <!-- the scan -->
   <rect x="532" y="238" width="410" height="96" rx="8" fill="#1e1e1e" stroke="#4284fb" stroke-dasharray="4 3"/>
-  <text x="548" y="262" fill="#a0cbff" font-size="12" font-weight="600">one query, schematically</text>
+  <text x="548" y="262" fill="#a0cbff" font-size="12" font-weight="600">one query's shape — q14</text>
   <rect x="548" y="278" width="378" height="20" rx="4" fill="#2d2d2d"/>
   <rect x="548" y="278" width="330" height="20" rx="4" fill="#2d6fe8" opacity="0.55"/>
   <text x="937" y="292" text-anchor="end" fill="#a0cbff" font-size="10">date range</text>
   <text x="548" y="320" fill="#bdbdbd" font-size="11">A predicate on ship dates removes most of</text>
 
   <text x="548" y="358" fill="#bdbdbd" font-size="11">lineitem, and what survives is joined to the</text>
-  <text x="548" y="376" fill="#bdbdbd" font-size="11">small dimensions and aggregated. The cost is</text>
-  <text x="548" y="394" fill="#bdbdbd" font-size="11">I/O over one large table, not row contention.</text>
+  <text x="548" y="376" fill="#bdbdbd" font-size="11">small dimensions and aggregated.</text>
+  <text x="548" y="394" fill="#bdbdbd" font-size="11">Other queries read differently: five never</text>
+  <text x="548" y="412" fill="#bdbdbd" font-size="11">touch lineitem at all.</text>
 
   <text x="532" y="440" fill="#a0cbff" font-size="13" font-weight="600">Why the diagram is worth having</text>
   <text x="532" y="462" fill="#bdbdbd" font-size="11">The row counts differ by six orders of magnitude,</text>

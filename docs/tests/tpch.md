@@ -46,13 +46,14 @@ remain stable across worker counts.
 
 ![The essence of TPC-H: eight tables, one of which dwarfs the rest](/img/tpch-essence.svg)
 
-Eight tables, but one of them decides the work. At scale factor 1 `lineitem` holds about
+Eight tables, but one of them dominates the data. At scale factor 1 `lineitem` holds about
 six million rows — roughly 69% of everything in the database — while six of the other
-tables are small enough to be an afterthought. The cost of a query is therefore I/O over
-that one table: a predicate on ship dates removing most of it, then joins to the small
-dimensions. That is the inverse of TPC-C, where the same family of concerns is decided by
-how fast ten rows per warehouse can be updated in turn. The proportions hold at any scale
-factor — `SF` multiplies rows, not the shape.
+tables are small enough to be an afterthought. That shapes the workload without dictating
+it. Many queries scan `lineitem` (q6 and q14 filter it by ship date), but five never read
+it at all — q2, q11, q13, q16 and q22 — and q1 joins nothing, so a query's cost follows
+its own plan rather than the row share alone. The contrast with TPC-C is the point: there,
+ten rows per warehouse decide throughput; here, which tables a query reads decides its
+cost. The proportions hold at any scale factor — `SF` multiplies rows, not the shape.
 
 ## Parameters
 
