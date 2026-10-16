@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" width="980" height="560"
+     role="img" aria-labelledby="banking-title banking-desc" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+  <title id="banking-title">How the banking workload stresses a cluster, and where injection points sit</title>
+  <desc id="banking-desc">Left: one iteration, from a virtual user reading two account rows through three
+  conditional token writes and two balance updates to a single COMMIT, with a retry loop. Right: the engine
+  callbacks Macavity hooks, with before_commit marked as the point the fault injector uses, and the two
+  actions available there.</desc>
+
+  <rect x="0" y="0" width="980" height="560" rx="14" fill="#1e1e1e"/>
+
+  <!-- Panel A: one iteration -->
+  <rect x="18" y="18" width="452" height="470" rx="10" fill="#272727" stroke="#353535"/>
+  <text x="40" y="48" fill="#a0cbff" font-size="15" font-weight="600">One iteration, under load</text>
+  <text x="40" y="70" fill="#bdbdbd" font-size="12">every VU runs this loop concurrently, on neighbouring rows</text>
+
+  <g font-size="13" fill="#bdbdbd">
+    <rect x="40" y="86" width="180" height="34" rx="6" fill="#2d2d2d" stroke="#353535"/>
+    <text x="130" y="108" text-anchor="middle">VU picks two accounts</text>
+
+    <rect x="40" y="138" width="180" height="34" rx="6" fill="#2d2d2d" stroke="#353535"/>
+    <text x="130" y="160" text-anchor="middle">reads both tokens</text>
+
+    <rect x="40" y="190" width="180" height="76" rx="6" fill="#2d2d2d" stroke="#353535"/>
+    <text x="130" y="212" text-anchor="middle">3 conditional token writes</text>
+    <text x="130" y="232" text-anchor="middle" fill="#7cb4ff" font-size="11">A parks in a sentinel</text>
+    <text x="130" y="248" text-anchor="middle" fill="#7cb4ff" font-size="11">B takes A's token</text>
+    <text x="130" y="262" text-anchor="middle" fill="#7cb4ff" font-size="11">A takes B's token</text>
+
+    <rect x="40" y="284" width="180" height="34" rx="6" fill="#2d2d2d" stroke="#353535"/>
+    <text x="130" y="306" text-anchor="middle">2 balance updates</text>
+
+    <rect x="40" y="336" width="180" height="38" rx="6" fill="#2d6fe8" stroke="#5fa0ff"/>
+    <text x="130" y="360" text-anchor="middle" fill="#ffffff" font-weight="600">COMMIT</text>
+  </g>
+
+  <g stroke="#5fa0ff" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <path d="M130 120 L130 136"/>
+    <path d="M130 172 L130 188"/>
+    <path d="M130 266 L130 282"/>
+    <path d="M130 318 L130 334"/>
+  </g>
+
+  <g stroke="#f59e0b" stroke-width="1.8" fill="none" marker-end="url(#arrow-amber)">
+    <path d="M224 355 C 300 355 306 168 226 155"/>
+  </g>
+  <text x="316" y="246" fill="#fbbf24" font-size="12">retry</text>
+  <text x="316" y="264" fill="#bdbdbd" font-size="11">conflicts are expected here:</text>
+  <text x="316" y="280" fill="#bdbdbd" font-size="11">two VUs touching the same</text>
+  <text x="316" y="296" fill="#bdbdbd" font-size="11">row pair is the point</text>
+
+  <rect x="40" y="400" width="396" height="70" rx="8" fill="#1e1e1e" stroke="#4284fb" stroke-dasharray="4 3"/>
+  <text x="58" y="424" fill="#a0cbff" font-size="13" font-weight="600">verify, after every run</text>
+  <text x="58" y="446" fill="#bdbdbd" font-size="12">sum(balance) = accounts × 1000</text>
+  <text x="58" y="462" fill="#bdbdbd" font-size="12">tokens are still the permutation 1..accounts</text>
+
+  <!-- Panel B: the callbacks and the points -->
+  <rect x="490" y="18" width="472" height="470" rx="10" fill="#272727" stroke="#353535"/>
+  <text x="512" y="48" fill="#a0cbff" font-size="15" font-weight="600">Where the injector sits</text>
+  <text x="512" y="70" fill="#bdbdbd" font-size="12">Macavity hooks supported callbacks — no patched server</text>
+
+  <g font-size="13" fill="#bdbdbd">
+    <rect x="512" y="90" width="240" height="34" rx="6" fill="#2d2d2d" stroke="#353535"/>
+    <text x="632" y="112" text-anchor="middle">executor_start</text>
+
+    <rect x="512" y="140" width="240" height="34" rx="6" fill="#2d2d2d" stroke="#353535"/>
+    <text x="632" y="162" text-anchor="middle">queries run: reads, writes</text>
+
+    <rect x="512" y="226" width="240" height="42" rx="6" fill="#1e1e1e" stroke="#f59e0b" stroke-width="2"/>
+    <text x="632" y="246" text-anchor="middle" fill="#fbbf24" font-weight="600">before_commit</text>
+    <text x="632" y="262" text-anchor="middle" fill="#fde68a" font-size="11">the point this workload arms</text>
+
+    <rect x="512" y="288" width="240" height="34" rx="6" fill="#2d2d2d" stroke="#353535"/>
+    <text x="632" y="310" text-anchor="middle">commit record written</text>
+
+    <rect x="512" y="356" width="240" height="34" rx="6" fill="#2d2d2d" stroke="#353535"/>
+    <text x="632" y="378" text-anchor="middle">executor_end</text>
+  </g>
+
+  <g stroke="#5fa0ff" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <path d="M632 124 L632 138"/>
+    <path d="M632 174 L632 224"/>
+    <path d="M632 268 L632 286"/>
+    <path d="M632 322 L632 354"/>
+  </g>
+
+  <g stroke="#f59e0b" stroke-width="1.8" fill="none" marker-end="url(#arrow-amber)">
+    <path d="M512 247 C 448 247 448 330 508 372"/>
+  </g>
+  <text x="326" y="330" fill="#fbbf24" font-size="12">a fault is armed here</text>
+
+  <rect x="792" y="196" width="152" height="52" rx="6" fill="#1e1e1e" stroke="#f59e0b"/>
+  <text x="868" y="217" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="600">action: error</text>
+  <text x="868" y="235" text-anchor="middle" fill="#bdbdbd" font-size="11">the commit is refused</text>
+
+  <rect x="792" y="262" width="152" height="66" rx="6" fill="#1e1e1e" stroke="#f59e0b"/>
+  <text x="868" y="283" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="600">action: crash</text>
+  <text x="868" y="301" text-anchor="middle" fill="#bdbdbd" font-size="11">backend SIGKILLed,</text>
+  <text x="868" y="317" text-anchor="middle" fill="#bdbdbd" font-size="11">cluster recovers</text>
+
+  <g stroke="#f59e0b" stroke-width="1.2" fill="none">
+    <path d="M752 235 L790 224"/>
+    <path d="M752 247 L790 292"/>
+  </g>
+
+  <text x="512" y="428" fill="#bdbdbd" font-size="12">The invariant is asserted whether a fault was injected</text>
+  <text x="512" y="446" fill="#bdbdbd" font-size="12">or not. Both actions fire before the commit record is</text>
+  <text x="512" y="464" fill="#bdbdbd" font-size="12">written, so the faulted transfer does not commit; the crash</text>
+  <text x="512" y="482" fill="#bdbdbd" font-size="12">takes the connection, leaving other sessions uncertain.</text>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5fa0ff"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b"/>
+    </marker>
+  </defs>
+</svg>
