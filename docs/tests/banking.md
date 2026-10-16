@@ -28,7 +28,8 @@ money conserved and the tokens where they were, and is invisible to both.
 
 | What goes wrong | `sum(balance)` | token permutation |
 |---|---|---|
-| the money moves but the swap never runs | **caught** | missed — the tokens are untouched |
+| a one-sided balance update, its token write missing | **caught** — the total changes | missed |
+| a complete debit and credit with no token swap (1000/1000 → 990/1010) | missed — the total is unchanged | missed — the tokens are untouched |
 | the swap runs only in part: a row parks in the sentinel, or two rows hold the same token | missed | **caught** |
 | a whole transfer is lost, or a whole one applied twice | missed | missed |
 
@@ -54,12 +55,15 @@ absorbs them, and the run's counters separate three things worth keeping apart:
 | Counter | Meaning |
 |---|---|
 | `terminal_errors_total` | transfers that exhausted their retry budget |
-| `retry_attempts_total` | contention the retry policy absorbed |
+| `retry_attempts_total` | retries the policy scheduled — conflicts and injected faults alike |
 | `tx_commits_total` | transactions that actually committed |
 
-A run that reports non-zero terminal errors with exit status 0 is normal here: those
-are iterations that lost their retry race, not a broken run. `verify` is what decides
-whether the data is sound.
+Terminal errors with exit status 0 are common here, **but they are not all contention**. A
+missing `GRANT` on the injector's arm function, or an asset that does not fit the engine,
+produces the same shape: failed iterations, exit 0, and a `verify` that passes because the
+data was never touched. Read the error groups rather than assuming, and note that
+`retry_attempts_total` counts *scheduled* retries, which injected faults and conflicts
+alike produce.
 
 ## Variants
 
@@ -87,9 +91,14 @@ actions produce different situations, and the difference matters:
 
 - `error` aborts the transaction *before* the commit record is written, so the attempt
   is unambiguously not committed. A client that retries it loses nothing.
-- `crash` kills the backend and takes the connection with it, so the client never
-  learns what the server did — which is the genuinely uncertain case a
-  crash-consistency test is about.
+- `crash` sends SIGKILL from the same pre-commit moment, so the faulted transfer does
+  not commit either. What the client loses is the *knowledge*, not the certainty — and
+  the genuinely uncertain outcomes belong to the *other* sessions that recovery tears
+  down with work in flight.
+
+An injected error fails an **attempt**, not necessarily the **iteration**: the injector is
+armed once per iteration, so a retry follows it and commits. Only when the retries are
+exhausted does an injected fault become a failed iteration.
 
 ```bash
 stroppy run banking/inject -d pg \
