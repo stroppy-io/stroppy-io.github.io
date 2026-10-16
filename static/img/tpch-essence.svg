@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 640" width="980" height="640"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 700" width="980" height="700"
      role="img" aria-labelledby="tpch-title tpch-desc" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
   <title id="tpch-title">The essence of TPC-H: eight tables, one of which dwarfs the rest</title>
   <desc id="tpch-desc">Left: the TPC-H schema with box heights proportional to row counts at scale factor 1,
@@ -8,7 +8,7 @@
   <rect x="0" y="0" width="980" height="620" rx="14" fill="#1e1e1e"/>
 
   <!-- Panel A: the schema, sized by rows -->
-  <rect x="18" y="18" width="470" height="500" rx="10" fill="#272727" stroke="#353535"/>
+  <rect x="18" y="18" width="470" height="540" rx="10" fill="#272727" stroke="#353535"/>
   <text x="40" y="48" fill="#a0cbff" font-size="15" font-weight="600">Eight tables, wildly uneven</text>
   <text x="40" y="70" fill="#bdbdbd" font-size="12">box height is proportional to rows, at scale factor 1</text>
 
@@ -68,7 +68,7 @@
   <text x="44" y="520" fill="#bdbdbd" font-size="12">supplier into lineitem; the rest reach it that way.</text>
 
   <!-- Panel B: why this is the opposite of TPC-C -->
-  <rect x="510" y="18" width="452" height="500" rx="10" fill="#272727" stroke="#353535"/>
+  <rect x="510" y="18" width="452" height="540" rx="10" fill="#272727" stroke="#353535"/>
   <text x="532" y="48" fill="#a0cbff" font-size="15" font-weight="600">The opposite shape to TPC-C</text>
   <text x="532" y="70" fill="#bdbdbd" font-size="12">same family, inverted by the questions it asks</text>
 
@@ -102,10 +102,10 @@
   <text x="532" y="498" fill="#bdbdbd" font-size="11">Scan reads fall with scale factor; the shape does not.</text>
 
   <!-- footer: what the scale factor changes -->
-  <rect x="18" y="534" width="944" height="88" rx="8" fill="#1e1e1e" stroke="#4284fb" stroke-dasharray="4 3"/>
-  <text x="40" y="560" fill="#a0cbff" font-size="13" font-weight="600">Scale factor is not a benchmark size, it is a row multiplier</text>
-  <text x="40" y="584" fill="#bdbdbd" font-size="12">SF multiplies every table except the two tiny ones, so the proportions above hold at any size. Stroppy&#8217;s</text>
-  <text x="40" y="604" fill="#bdbdbd" font-size="12">own integration runs use SF=0.01 — the same shape at a hundredth of the rows.</text>
+  <rect x="18" y="574" width="944" height="88" rx="8" fill="#1e1e1e" stroke="#4284fb" stroke-dasharray="4 3"/>
+  <text x="40" y="600" fill="#a0cbff" font-size="13" font-weight="600">Scale factor is not a benchmark size, it is a row multiplier</text>
+  <text x="40" y="624" fill="#bdbdbd" font-size="12">SF multiplies every table except the two tiny ones, so the proportions above hold at any size. Stroppy&#8217;s</text>
+  <text x="40" y="644" fill="#bdbdbd" font-size="12">own integration runs use SF=0.01 — the same shape at a hundredth of the rows.</text>
 
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
