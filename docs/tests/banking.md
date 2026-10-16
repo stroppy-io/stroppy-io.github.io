@@ -21,15 +21,16 @@ stroppy run banking -d pg \
 ## A second witness
 
 Every transfer swaps a `UNIQUE` token between the two rows it touches, as well as
-moving the money. A transfer that is lost or applied twice therefore breaks the token
-set **even when the balances happen to sum correctly** — which is the difference
-between this workload and a balance check:
+moving the money — so the two invariants cover different failures. Both are
+*conservation* properties, and **neither proves that every intended transfer happened
+exactly once**: a whole transfer that is lost, or a whole one applied twice, leaves the
+money conserved and the tokens where they were, and is invisible to both.
 
-| Failure | Balance check | Token witness |
+| What goes wrong | `sum(balance)` | token permutation |
 |---|---|---|
-| a transfer applied twice | only if the amounts differ | caught |
-| a transfer lost | only if the amounts differ | caught |
-| a half-applied transfer surviving a crash | missed | caught |
+| the money moves but the swap never runs | **caught** | missed — the tokens are untouched |
+| the swap runs only in part: a row parks in the sentinel, or two rows hold the same token | missed | **caught** |
+| a whole transfer is lost, or a whole one applied twice | missed | missed |
 
 `verify` asserts both: `sum(balance) = accounts × 1000`, and that the tokens are still
 a permutation of `1..accounts`.
@@ -81,9 +82,14 @@ supported callbacks — nothing in PostgreSQL is patched or rebuilt.
 | `executor_start` | after the executor is initialized, before any tuples |
 | `executor_end` | as the executor finishes |
 
-`before_commit` is the interesting one because the client cannot tell from the error
-alone whether the transfer committed — which is exactly the uncertainty a
-crash-consistency test is about.
+`before_commit` is where a commit is decided, which is why it is the default. The two
+actions produce different situations, and the difference matters:
+
+- `error` aborts the transaction *before* the commit record is written, so the attempt
+  is unambiguously not committed. A client that retries it loses nothing.
+- `crash` kills the backend and takes the connection with it, so the client never
+  learns what the server did — which is the genuinely uncertain case a
+  crash-consistency test is about.
 
 ```bash
 stroppy run banking/inject -d pg \

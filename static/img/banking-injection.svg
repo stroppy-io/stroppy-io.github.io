@@ -103,9 +103,9 @@
   </g>
 
   <text x="512" y="428" fill="#bdbdbd" font-size="12">The invariant is asserted whether a fault was injected</text>
-  <text x="512" y="446" fill="#bdbdbd" font-size="12">or not, which is what before_commit is for: the client</text>
-  <text x="512" y="464" fill="#bdbdbd" font-size="12">cannot tell from the error alone whether the transfer</text>
-  <text x="512" y="482" fill="#bdbdbd" font-size="12">committed.</text>
+  <text x="512" y="446" fill="#bdbdbd" font-size="12">or not. An injected error aborts the transaction before</text>
+  <text x="512" y="464" fill="#bdbdbd" font-size="12">the commit record is written; a crash takes the connection</text>
+  <text x="512" y="482" fill="#bdbdbd" font-size="12">with it, so the client never learns what the server did.</text>
 
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
