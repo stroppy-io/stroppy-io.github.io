@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 620" width="980" height="620"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 640" width="980" height="640"
      role="img" aria-labelledby="tpcc-title tpcc-desc" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
   <title id="tpcc-title">The essence of TPC-C: most of the load lands on a handful of district rows</title>
   <desc id="tpcc-desc">Left: the schema hierarchy with what scales with the warehouse count. Right: the
@@ -83,13 +83,13 @@
 
   <!-- converge on the district row -->
   <g stroke="#f59e0b" stroke-width="2" fill="none" marker-end="url(#arrow-amber)">
-    <path d="M700 112 C 700 252 700 262 724 276"/>
-    <path d="M700 138 C 700 220 700 250 724 272"/>
+    <path d="M872 100 C 902 200 900 236 800 262"/>
+    <path d="M872 126 C 902 200 900 232 800 262"/>
   </g>
   <g stroke="#5fa0ff" stroke-width="1.4" fill="none" marker-end="url(#arrow)">
-    <path d="M700 154 C 700 300 700 330 724 344"/>
-    <path d="M700 180 C 700 320 700 348 724 358"/>
-    <path d="M700 206 C 700 380 700 400 724 410"/>
+    <path d="M872 152 C 906 240 904 300 794 330"/>
+    <path d="M872 178 C 910 260 908 330 790 356"/>
+    <path d="M872 204 C 914 290 912 360 800 404"/>
   </g>
 
   <rect x="536" y="262" width="180" height="34" rx="6" fill="#1e1e1e" stroke="#f59e0b" stroke-width="2"/>
@@ -108,10 +108,10 @@
   <text x="536" y="506" fill="#bdbdbd" font-size="12">write traffic, so throughput is decided by how</text>
   <text x="536" y="522" fill="#bdbdbd" font-size="12">fast those rows can be updated in turn.</text>
   <!-- the footer line -->
-  <rect x="18" y="534" width="944" height="68" rx="8" fill="#1e1e1e" stroke="#4284fb" stroke-dasharray="4 3"/>
+  <rect x="18" y="534" width="944" height="88" rx="8" fill="#1e1e1e" stroke="#4284fb" stroke-dasharray="4 3"/>
   <text x="40" y="560" fill="#a0cbff" font-size="13" font-weight="600">A rollback is part of the mix</text>
-  <text x="40" y="582" fill="#bdbdbd" font-size="12">New-Order rolls back when an item is not found: a required part of the mix, not a fault. The workload</text>
-  <text x="40" y="598" fill="#bdbdbd" font-size="12">counts it separately from real failures, so a run&#8217;s error counters stay readable.</text>
+  <text x="40" y="584" fill="#bdbdbd" font-size="12">New-Order rolls back when an item is not found: a required part of the mix, not a fault. The workload</text>
+  <text x="40" y="604" fill="#bdbdbd" font-size="12">counts it separately from real failures, so a run&#8217;s error counters stay readable.</text>
 
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
