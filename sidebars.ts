@@ -22,6 +22,7 @@ const sidebars: SidebarsConfig = {
     'tests/tpcc',
     'tests/tpch',
     'tests/tpcds',
+    'tests/banking',
   ],
   legacySidebar: [
     {
