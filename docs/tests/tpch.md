@@ -44,6 +44,16 @@ For scale factor `SF`:
 Order keys follow TPC-H's sparse-key scheme. Canonical seeds and distributions
 remain stable across worker counts.
 
+![The essence of TPC-H: eight tables, one of which dwarfs the rest](/img/tpch-essence.svg)
+
+Eight tables, but one of them decides the work. At scale factor 1 `lineitem` holds about
+six million rows — roughly 69% of everything in the database — while six of the other
+tables are small enough to be an afterthought. The cost of a query is therefore I/O over
+that one table: a predicate on ship dates removing most of it, then joins to the small
+dimensions. That is the inverse of TPC-C, where the same family of concerns is decided by
+how fast ten rows per warehouse can be updated in turn. The proportions hold at any scale
+factor — `SF` multiplies rows, not the shape.
+
 ## Parameters
 
 | Flag | Default | Meaning |
