@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 700" width="980" height="700"
+     role="img" aria-labelledby="tpch-title tpch-desc" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+  <title id="tpch-title">The essence of TPC-H: eight tables, one of which dwarfs the rest</title>
+  <desc id="tpch-desc">Left: the TPC-H schema with box heights proportional to row counts at scale factor 1,
+  showing lineitem holding about 69 percent of all rows. Right: why it measures the opposite of TPC-C —
+  a few long analytical queries scanning that one large table.</desc>
+
+  <rect x="0" y="0" width="980" height="620" rx="14" fill="#1e1e1e"/>
+
+  <!-- Panel A: the schema, sized by rows -->
+  <rect x="18" y="18" width="470" height="540" rx="10" fill="#272727" stroke="#353535"/>
+  <text x="40" y="48" fill="#a0cbff" font-size="15" font-weight="600">Eight tables, wildly uneven</text>
+  <text x="40" y="70" fill="#bdbdbd" font-size="12">box height is proportional to rows, at scale factor 1</text>
+
+  <g font-size="12" fill="#bdbdbd">
+    <!-- dimensions -->
+    <rect x="44" y="92" width="120" height="18" rx="4" fill="#2d2d2d" stroke="#353535"/>
+    <text x="52" y="105" font-size="10">region</text>
+    <text x="158" y="105" text-anchor="end" fill="#7cb4ff" font-size="10">5</text>
+
+    <rect x="44" y="118" width="120" height="22" rx="4" fill="#2d2d2d" stroke="#353535"/>
+    <text x="52" y="133" font-size="10">nation</text>
+    <text x="158" y="133" text-anchor="end" fill="#7cb4ff" font-size="10">25</text>
+
+    <rect x="44" y="148" width="120" height="28" rx="4" fill="#2d2d2d" stroke="#353535"/>
+    <text x="52" y="165" font-size="10">supplier</text>
+    <text x="158" y="165" text-anchor="end" fill="#7cb4ff" font-size="10">10,000</text>
+
+    <rect x="44" y="184" width="120" height="38" rx="4" fill="#2d2d2d" stroke="#353535"/>
+    <text x="52" y="206" font-size="10">customer</text>
+    <text x="158" y="206" text-anchor="end" fill="#7cb4ff" font-size="10">150,000</text>
+
+    <rect x="44" y="230" width="120" height="42" rx="4" fill="#2d2d2d" stroke="#353535"/>
+    <text x="52" y="254" font-size="10">part</text>
+    <text x="158" y="254" text-anchor="end" fill="#7cb4ff" font-size="10">200,000</text>
+
+    <rect x="44" y="280" width="120" height="62" rx="4" fill="#2d2d2d" stroke="#353535"/>
+    <text x="52" y="312" font-size="10">partsupp</text>
+    <text x="158" y="312" text-anchor="end" fill="#7cb4ff" font-size="10">800,000</text>
+
+    <rect x="44" y="350" width="120" height="84" rx="4" fill="#2d2d2d" stroke="#353535"/>
+    <text x="52" y="394" font-size="10">orders</text>
+    <text x="158" y="394" text-anchor="end" fill="#7cb4ff" font-size="10">1,500,000</text>
+
+    <!-- the dominant fact table -->
+    <rect x="196" y="92" width="264" height="342" rx="6" fill="#1e1e1e" stroke="#5fa0ff" stroke-width="2"/>
+    <text x="328" y="250" text-anchor="middle" fill="#a0cbff" font-size="15" font-weight="600">lineitem</text>
+    <text x="328" y="276" text-anchor="middle" fill="#7cb4ff" font-size="13">6,000,000</text>
+    <text x="328" y="300" text-anchor="middle" fill="#bdbdbd" font-size="11">about 4 rows per order</text>
+  </g>
+
+  <!-- the relationships -->
+  <g stroke="#4284fb" stroke-width="1.4" fill="none">
+    <!-- only the three tables a query joins lineitem to directly -->
+    <path d="M164 394 L196 394"/>
+    <path d="M164 251 L196 251"/>
+    <path d="M164 165 L196 165"/>
+    <!-- the rest reach it through those, so they connect to their parents instead -->
+    <path d="M104 118 L104 92"/>
+    <path d="M104 148 L104 140"/>
+    <path d="M110 184 L110 148"/>
+    <path d="M120 280 L120 272"/>
+  </g>
+
+  <text x="44" y="462" fill="#a0cbff" font-size="13" font-weight="600">lineitem is about 69% of all rows</text>
+  <text x="44" y="484" fill="#bdbdbd" font-size="12">Six of these tables are small by comparison. The</text>
+  <text x="44" y="502" fill="#bdbdbd" font-size="12">joins a query makes run through orders, part and</text>
+  <text x="44" y="520" fill="#bdbdbd" font-size="12">supplier into lineitem; the rest reach it that way.</text>
+
+  <!-- Panel B: why this is the opposite of TPC-C -->
+  <rect x="510" y="18" width="452" height="540" rx="10" fill="#272727" stroke="#353535"/>
+  <text x="532" y="48" fill="#a0cbff" font-size="15" font-weight="600">The opposite shape to TPC-C</text>
+  <text x="532" y="70" fill="#bdbdbd" font-size="12">same family, inverted by the questions it asks</text>
+
+  <rect x="532" y="88" width="200" height="120" rx="8" fill="#1e1e1e" stroke="#353535"/>
+  <text x="546" y="112" fill="#7cb4ff" font-size="12" font-weight="600">TPC-C</text>
+  <text x="546" y="136" fill="#bdbdbd" font-size="11">many small transactions,</text>
+  <text x="546" y="154" fill="#bdbdbd" font-size="11">each touching a few rows</text>
+  <text x="546" y="180" fill="#f59e0b" font-size="11">contention decides it</text>
+
+  <rect x="752" y="88" width="190" height="120" rx="8" fill="#1e1e1e" stroke="#5fa0ff" stroke-width="2"/>
+  <text x="766" y="112" fill="#a0cbff" font-size="12" font-weight="600">TPC-H</text>
+  <text x="766" y="136" fill="#bdbdbd" font-size="11">22 analytical queries,</text>
+  <text x="766" y="154" fill="#bdbdbd" font-size="11">each reading millions</text>
+  <text x="766" y="180" fill="#7cb4ff" font-size="11">scan width decides it</text>
+
+  <!-- the scan -->
+  <rect x="532" y="238" width="410" height="96" rx="8" fill="#1e1e1e" stroke="#4284fb" stroke-dasharray="4 3"/>
+  <text x="548" y="262" fill="#a0cbff" font-size="12" font-weight="600">one query's shape — q14</text>
+  <rect x="548" y="278" width="378" height="20" rx="4" fill="#2d2d2d"/>
+  <rect x="548" y="278" width="330" height="20" rx="4" fill="#2d6fe8" opacity="0.55"/>
+  <text x="937" y="292" text-anchor="end" fill="#a0cbff" font-size="10">date range</text>
+  <text x="548" y="320" fill="#bdbdbd" font-size="11">A predicate on ship dates removes most of</text>
+
+  <text x="548" y="358" fill="#bdbdbd" font-size="11">lineitem, and what survives is joined to the</text>
+  <text x="548" y="376" fill="#bdbdbd" font-size="11">small dimensions and aggregated.</text>
+  <text x="548" y="394" fill="#bdbdbd" font-size="11">Other queries read differently: five never</text>
+  <text x="548" y="412" fill="#bdbdbd" font-size="11">touch lineitem at all.</text>
+
+  <text x="532" y="440" fill="#a0cbff" font-size="13" font-weight="600">Why the diagram is worth having</text>
+  <text x="532" y="462" fill="#bdbdbd" font-size="11">The row counts differ by six orders of magnitude,</text>
+  <text x="532" y="480" fill="#bdbdbd" font-size="11">and no table on the page shows that at a glance.</text>
+  <text x="532" y="498" fill="#bdbdbd" font-size="11">Scan reads fall with scale factor; the shape does not.</text>
+
+  <!-- footer: what the scale factor changes -->
+  <rect x="18" y="574" width="944" height="88" rx="8" fill="#1e1e1e" stroke="#4284fb" stroke-dasharray="4 3"/>
+  <text x="40" y="600" fill="#a0cbff" font-size="13" font-weight="600">Scale factor is not a benchmark size, it is a row multiplier</text>
+  <text x="40" y="624" fill="#bdbdbd" font-size="12">SF multiplies every table except the two tiny ones, so the proportions above hold at any size. Stroppy&#8217;s</text>
+  <text x="40" y="644" fill="#bdbdbd" font-size="12">own integration runs use SF=0.01 — the same shape at a hundredth of the rows.</text>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5fa0ff"/>
+    </marker>
+  </defs>
+</svg>

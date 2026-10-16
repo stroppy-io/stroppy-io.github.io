@@ -49,6 +49,14 @@ stroppy run tpcc/procs -d mysql \
 Without pacing, Stroppy drives raw throughput. `--pacing=true` adds TPC-C keying
 and think times to both `tx` and `procs`.
 
+![The essence of TPC-C: 88% of transactions update one of ten district rows per warehouse](/img/tpcc-essence.svg)
+
+The mix and the schema together explain the shape of the load. New-Order and Payment
+both update a district row, and there are only ten of those per warehouse — so most of
+a run is queueing on a handful of rows, and throughput is decided by how fast they can
+be updated in turn. The two read-only transactions are 8% of the mix, and one of them
+reads the same district row.
+
 ## Scale and initial population
 
 `--scale-factor` is integer warehouse count `W` (legacy environment alias
