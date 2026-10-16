@@ -121,9 +121,9 @@ leaves the transaction aborted and nothing behind, an attempt fails, and the nex
 attempt commits once, which is the machinery the invariant is being checked through.
 
 **`error` and `crash` are different instruments.** `error` is the one a pipeline can
-gate on: a rejected commit fails an attempt, the retry normally commits, the run exits 0,
-and `verify` decides. `crash` SIGKILLs the backend so the postmaster reinitializes the cluster, and
-a run under it cannot finish: measured, a 10-second run at `--inject-every 5` attempted
+gate on: a rejected commit fails an attempt, the retry normally commits, the run exits
+0, and `verify` decides. `crash` SIGKILLs the backend so the postmaster reinitializes
+the cluster, and a run under it cannot finish: measured, a 10-second run at `--inject-every 5` attempted
 10156 iterations, **10146 failed**, only 10 committed, and the run **exits non-zero**.
 The invariants still held after every crash — which is what that variant exists to
 show. Point it at a disposable database.
