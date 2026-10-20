@@ -31,7 +31,6 @@ mis-cased, malformed, and trailing input is rejected.
   "drivers": {},
   "run": {},
   "params": {},
-  "env": {},
   "steps": [],
   "noSteps": []
 }
@@ -43,10 +42,9 @@ mis-cased, malformed, and trailing input is rejected.
 | `script` | string | Registered workload, `.sql` path, or inline SQL. |
 | `sql` | string | Explicit SQL override for a registered workload. |
 | `global` | object | Run identity, seed, metadata, logger, and exporter. |
-| `drivers` | object | Driver configs keyed by index (`"0"`, `"1"`, ...). |
+| `drivers` | object | Driver configs keyed by declared name (`"default"`, `"primary"`, ...). |
 | `run` | object | Typed executor, VU, iteration, duration, and query-timeout values. |
 | `params` | object | Typed parameters declared by selected workload. |
-| `env` | object | String-valued compatibility inputs. |
 | `steps` | string array | Step allowlist. |
 | `noSteps` | string array | Step blocklist. |
 
@@ -81,7 +79,7 @@ are merged.
     }
   },
   "drivers": {
-    "0": {
+    "default": {
       "driverType": "postgres",
       "url": "postgres://db:5432/tpcc",
       "defaultInsertMethod": "native",
@@ -101,6 +99,7 @@ are merged.
     "executor": "constant-vus",
     "vus": 64,
     "duration": "30m",
+    "drainTimeout": "30s",
     "queryTimeout": "5s"
   },
   "params": {
@@ -134,7 +133,8 @@ Every registered workload accepts:
 | `executor` | string | `shared-iterations` | `shared-iterations` or `constant-vus`. |
 | `vus` | integer | `1` | Virtual users. |
 | `iterations` | integer | `1` | Total shared iterations. |
-| `duration` | duration string | `"0s"` | Constant-VU duration. |
+| `duration` | duration string | `"1m"` | Constant-VU duration. |
+| `drainTimeout` | string | `"30s"` | Grace for in-flight timed work; `"none"` waits without a timeout. |
 | `queryTimeout` | duration string | `"0s"` | Per-statement deadline; zero disables it. |
 
 `constant-vus` requires positive `vus` and `duration`. `shared-iterations`
@@ -180,11 +180,15 @@ stroppy probe -o json
 
 ## Driver objects
 
+Keys are workload-declared database names. Built-ins use `default`; a multi-driver
+workload might declare `primary` and `secondary`. Numeric keys and flags such as
+`-d1` are rejected. Configure the latter as `-dprimary pg -dsecondary mysql`.
+
 Each `drivers` value supports:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `driverType` | string | `postgres`, `mysql`, `picodata`, `ydb`, `noop`, or `csv`. |
+| `driverType` | string | `postgres`, `mysql`, `crdb`, `yugabyte`, `tidb`, `picodata`, `ydb`, `noop`, `csv`, or `recording`. |
 | `url` | string | Connection URL, DSN, or CSV output path. |
 | `defaultInsertMethod` | string | Fallback method when workload leaves method unset. |
 | `bulkSize` | integer | Rows per SQL/native batch. |
@@ -194,6 +198,7 @@ Each `drivers` value supports:
 | `insertProgress` | object | Load progress reporting. |
 | `caCertFile` | string | CA certificate path. |
 | `authToken` | string | Token credential. |
+| `serviceAccountKeyFile` | string | YDB service-account key JSON file; requires `grpcs://` and verified TLS. |
 | `authUser` / `authPassword` | string | Static credentials. |
 | `tlsInsecureSkipVerify` | boolean | Skip TLS verification for testing. |
 
@@ -258,9 +263,8 @@ Logging precedence:
 
 1. `--log-level` / `--log-mode`;
 2. process `LOG_LEVEL` / `LOG_MODE`;
-3. `-e LOG_LEVEL=...` / `-e LOG_MODE=...`;
-4. `global.logger`;
-5. defaults.
+3. `global.logger`;
+4. defaults.
 
 Database URLs printed in configuration diagnostics redact passwords, tokens,
 secrets, credentials, and API-key values.
@@ -307,12 +311,12 @@ Former int32 fields accept numeric or quoted decimal/exponent forms only when
 the value is exactly integral and in range. `global.seed` accepts null or a
 bare unsigned JSON integer only.
 
-Removed fields such as `k6Args`, `k6Config`, `errorMode`, and
+Removed fields such as `env`, `k6Args`, `k6Config`, `errorMode`, and
 `defaultTxIsolation` are rejected as unknown. See [Migrating to v6](./migration-v6).
 
 Generated schema:
 
-- [v6.0.0 JSON Schema](https://github.com/stroppy-io/stroppy/blob/v6.0.0/docs/jsonschema/run.schema.json)
+- [v6.2.0 JSON Schema](https://github.com/stroppy-io/stroppy/blob/v6.2.0/docs/jsonschema/run.schema.json)
 
 ## Precedence
 
@@ -320,10 +324,8 @@ Typed parameters, highest first:
 
 1. typed CLI flag;
 2. process environment;
-3. `-e` compatibility value;
-4. matching `run` or `params` value;
-5. config `env` map;
-6. declared default.
+3. matching `run` or `params` value;
+4. declared default.
 
 Other precedence:
 

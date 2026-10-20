@@ -25,19 +25,30 @@ stroppy run ./queries.sql
 | Workload | Purpose | Drivers |
 |---|---|---|
 | `simple` | Small create/load/read/drop smoke | SQL drivers with row results |
-| `tpcb/tx` | TPC-B client-side transaction | PostgreSQL, MySQL, Picodata, YDB |
+| `tpcb/tx` | TPC-B client-side transaction | PostgreSQL, MySQL, CockroachDB, YugabyteDB, TiDB, Picodata, YDB |
 | `tpcb/procs` | TPC-B stored procedure | PostgreSQL, MySQL |
-| `tpcc/tx` | TPC-C five-transaction mix | PostgreSQL, MySQL, Picodata, YDB |
+| `tpcc/tx` | TPC-C five-transaction mix | PostgreSQL, MySQL, CockroachDB, YugabyteDB, TiDB, Picodata, YDB |
 | `tpcc/procs` | TPC-C stored procedures | PostgreSQL, MySQL |
-| `tpch/tx` | TPC-H load plus q1–q22 | PostgreSQL, MySQL, Picodata, YDB |
+| `tpch/tx` | TPC-H load plus q1–q22 | PostgreSQL, MySQL, CockroachDB, YugabyteDB, TiDB, Picodata, YDB |
 | `tpcds` | TPC-DS load plus query suite | PostgreSQL, MySQL, YDB; Picodata load-only |
+| `banking` | Balance and token conservation checks | PostgreSQL, MySQL, CockroachDB, YugabyteDB, TiDB, YDB; Picodata reduced checks |
+| `banking/inject` | Banking with commit fault injection | PostgreSQL with Macavity |
+| `baseline` | Framework and wire overhead | Noop and PostgreSQL wire; use `stroppy baseline` for orchestration |
 | `execute_sql` | SQL file or inline SQL | SQL query drivers |
+
+Engine names select workload-specific SQL and transaction defaults, not just a
+protocol. Procedure variants are supported on PostgreSQL/MySQL, not the new
+engine presets. In particular, `tpcc/procs -d tidb` is not rejected safely in
+v6.2.0; use `tpcc/tx -d tidb` ([#219](https://github.com/stroppy-io/stroppy/issues/219)).
+TPC-DS rejects CockroachDB; TiDB/YugabyteDB require the workarounds described
+[below](#tpcds). Banking verification has a [known false-negative risk](./tests/banking).
 
 Discover exact schemas and embedded assets:
 
 ```bash
 stroppy probe
 stroppy probe -o json
+stroppy probe tpcc/tx --resolved -d crdb
 stroppy run tpcc/tx --help
 ```
 
@@ -50,8 +61,12 @@ All registered workloads accept:
 | `--executor` | `shared-iterations` | `shared-iterations` or `constant-vus`. |
 | `--vus` | `1` | Virtual users. |
 | `--iterations` | `1` | Total shared iterations. |
-| `--duration` | `0s` | Constant-VU duration. |
+| `--duration` | `1m` | Constant-VU duration; does not select the executor. |
+| `--drain-timeout` | `30s` | Grace after a timed phase; `none` waits without a deadline. |
 | `--query-timeout` | `0s` | Per-statement deadline; zero disables it. |
+
+Timed runs must explicitly select `constant-vus`. Boolean workload flags need
+an explicit value (`--pacing=true`, not a bare `--pacing`).
 
 Power/fixed-work run:
 
@@ -84,7 +99,14 @@ stroppy run tpcc/tx -d pg --scale-factor 50 \
 ```
 
 Step filters apply to both passes. Ensure both commands use the same database,
-scale, SQL variant, and workload-specific range settings.
+scale, SQL variant, and workload-specific range settings. When TPC-C warmup is
+enabled, use `--steps warmup,workload` for the second pass; `--steps workload`
+excludes warmup.
+
+Workload runs save reports under `~/.stroppy/reports/` by default. Use
+`--report-html run.html` for a standalone report, or `--no-save-report` to omit
+history for one invocation. See [Reports & Workflow](./reports-workflow) for
+capture, browsing, and comparison commands.
 
 ## `simple`
 
@@ -127,8 +149,8 @@ Typed workload flags:
 | `--tx-isolation` | driver-derived | Isolation override. |
 | `--sql-file` | dialect asset | SQL override. |
 
-Default isolation: `read_committed` on PostgreSQL/MySQL, `none` on Picodata,
-`serializable` on YDB.
+Default isolation: `read_committed` on PostgreSQL/MySQL/YugabyteDB/TiDB, `none`
+on Picodata, and `serializable` on CockroachDB/YDB.
 
 Setup order:
 
@@ -161,18 +183,20 @@ Typed workload flags:
 
 | Flag | Default | Meaning |
 |---|---|---|
-| `--scale-factor` | `1` | Warehouse count; legacy alias `WAREHOUSES`. |
+| `--scale-factor` | `1` | Warehouse count; alias `--warehouses`, environment `SCALE_FACTOR`/`WAREHOUSES`. |
 | `--warehouse-start` | `1` | First warehouse ID for distributed loading. |
 | `--load-items` | contextual | Load global item table; defaults true only at warehouse 1. |
 | `--load-workers` | `1` | Workers per table load. |
 | `--pacing` | `false` | Apply TPC-C keying and think times. |
+| `--spread-warehouses` | `false` | Choose a home warehouse per transaction across the configured slice; not fixed-terminal TPC-C. |
+| `--warmup` | `0s` | Unmeasured traffic before `workload`; requires `constant-vus`. |
 | `--retry-attempts` | `3` | Maximum transaction attempts. |
 | `--pg-unlogged` | `false` | Opt into PostgreSQL unlogged load. |
 | `--tx-isolation` | driver-derived | Isolation override. |
 | `--sql-file` | dialect asset | SQL override. |
 
-Default isolation: `repeatable_read` on PostgreSQL/MySQL, `none` on Picodata,
-`serializable` on YDB.
+Default isolation: `repeatable_read` on PostgreSQL/MySQL/TiDB, `read_committed`
+on YugabyteDB, `none` on Picodata, and `serializable` on CockroachDB/YDB.
 
 Setup order:
 
@@ -187,13 +211,17 @@ set_logged              # when set_unlogged ran
 create_foreign_keys
 analyze
 validate_population
+warmup                  # when --warmup is positive
 workload
 ```
 
 A population-validation failure is structural and exits nonzero. Both variants
 emit per-transaction count, mix, throughput, and p50/p90/p95/p99 summaries.
 Paced runs additionally report response-time/mix verdicts and steady-state
-assessment.
+assessment. Warmup uses the same mix and VUs but is excluded from the TPC-C
+measurement; generic metrics retain both phases under separate step labels.
+Spread-warehouse mode changes the terminal model and is a stress profile, not
+a compliant fixed-terminal result.
 
 See [TPC-C](./tests/tpcc).
 
@@ -239,7 +267,12 @@ See [TPC-H](./tests/tpch).
 ## `tpcds`
 
 TPC-DS loads all 24 canonical dsdgen tables. PostgreSQL, MySQL, and YDB execute
-the baked query suite; Picodata supports loading only.
+the baked query suite; Picodata supports loading only. CockroachDB is rejected
+before setup. In v6.2.0, TiDB selects the wrong baked dialect, and generated
+streams reject TiDB/YugabyteDB engine names
+([#218](https://github.com/stroppy-io/stroppy/issues/218)). Use `-d mysql` with an
+explicit TiDB DSN, or `-d pg` with an explicit YugabyteDB URL for those runs;
+these are workarounds, not fixes to the engine-name path.
 
 ```bash
 stroppy run tpcds -d pg --scale-factor 0.1
@@ -282,6 +315,23 @@ workload
 
 See [TPC-DS](./tests/tpcds).
 
+## `banking` and `banking/inject`
+
+`banking` transfers money and swaps unique tokens between accounts, then checks
+balance conservation and the token permutation. Picodata checks only total
+balance. `banking/inject` additionally exercises PostgreSQL commit faults
+through Macavity.
+
+```bash
+stroppy run banking -d pg --accounts 1000 \
+  --executor constant-vus --vus 8 --duration 2m
+```
+
+**v6.2.0 verification limitation:** an observed invariant violation can be retried
+away if a later check succeeds ([#217](https://github.com/stroppy-io/stroppy/issues/217)).
+A successful run is not conclusive evidence of correctness. See
+[Banking](./tests/banking) for the checks, fault controls, and limitations.
+
 ## `execute_sql`
 
 A `.sql` first positional or inline statement selects `execute_sql`:
@@ -302,13 +352,14 @@ Shared executor and query-timeout flags also apply. Named queries in a flat file
 run in order. Nonfatal query errors are counted and the remaining query set
 continues.
 
-## Environment compatibility
+## Typed inputs
 
-Uppercase environment names and `-e` remain supported, but direct flags are
-preferred:
+Use typed CLI flags, projected process environment, or config `params`/`run`.
+Legacy `-e` and config `env` are rejected in v6.2.0:
 
 ```bash
-stroppy run tpcc/tx -e warehouses=10 -e load_workers=8
+stroppy run tpcc/tx --scale-factor 10 --load-workers 8
+SCALE_FACTOR=10 LOAD_WORKERS=8 stroppy run tpcc/tx
 ```
 
 Typed source precedence and config mapping are documented in

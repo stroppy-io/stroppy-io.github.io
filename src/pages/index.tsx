@@ -113,8 +113,8 @@ function Hero() {
           Stress-test your database, not your load generator.
         </Heading>
         <p className="intro__lede">
-          Stroppy is a single Go binary that runs TPC-B, TPC-C, TPC-H and TPC-DS against PostgreSQL, MySQL, Picodata and
-          YDB. We kept catching benchmarks that were really measuring the client, so Stroppy can tell you where its own
+          Stroppy is a single Go binary for database workloads, including TPC-B, TPC-C, TPC-H, TPC-DS and banking checks.
+          Drivers cover PostgreSQL, MySQL, CockroachDB, YugabyteDB, TiDB, Picodata and YDB, with support varying by workload. We kept catching benchmarks that were really measuring the client, so Stroppy can tell you where its own
           limit is before you start blaming the database.
         </p>
         <div className="intro__actions">

@@ -16,12 +16,15 @@ stroppy run tpch/tx -d pg --scale-factor 0.01
 stroppy run tpch/tx -d mysql --scale-factor 0.01
 stroppy run tpch/tx -d pico --scale-factor 0.01
 stroppy run tpch/tx -d ydb --scale-factor 0.01
+stroppy run tpch/tx -d crdb --scale-factor 0.01
+stroppy run tpch/tx -d yugabyte --scale-factor 0.01
+stroppy run tpch/tx -d tidb --scale-factor 0.01
 ```
 
 ## Canonical data generation
 
 Rows come from the retained canonical dbgen implementation through
-`pkg/datagen/tpchgen`. The adapter streams typed batches into
+`workloads/tpch/tpchgen`. The adapter streams typed batches into
 `driver.InsertRequest` and supports deterministic partition seeking.
 
 `orders.o_totalprice` is computed while each order and its line items are
@@ -110,10 +113,17 @@ stroppy run tpch/tx -d pg --scale-factor 1 \
 |---|---|---|
 | PostgreSQL | `workloads/tpch/pg.sql` | Full q1–q22 and SF=1 answer comparison. |
 | MySQL | `workloads/tpch/mysql.sql` | MySQL 8 rewrites for intervals, rollup, full joins, and casts. |
+| CockroachDB | `workloads/tpch/crdb.sql` | Dedicated CockroachDB schema and q1–q22 port, selected by `-d crdb`. |
+| YugabyteDB | `workloads/tpch/pg.sql` | Uses the PostgreSQL dialect over YSQL. |
+| TiDB | `workloads/tpch/mysql.sql` | Uses the MySQL dialect. |
 | Picodata | `workloads/tpch/pico.sql` | sbroad-compatible explicit joins, date bounds, and decorrelated queries. |
 | YDB | `workloads/tpch/ydb.sql` | YQL port; column-store schema by default. |
 
-Local override:
+The engine preset selects the embedded dialect automatically. `--pg-unlogged`
+applies only to the PostgreSQL driver, not CockroachDB/YugabyteDB. SF=1 answer
+comparison remains PostgreSQL-only, not every engine using its protocol.
+
+`--sql-file` takes a local filesystem path. Local override:
 
 ```bash
 stroppy run tpch/tx ./workloads/tpch/pico.sql -d pico
@@ -186,8 +196,8 @@ make tmpfs-down
 
 ## Reference data and source
 
-- [`workloads/tpch` at v6.0.0](https://github.com/stroppy-io/stroppy/tree/v6.0.0/workloads/tpch)
-- [`pkg/datagen/tpchgen` at v6.0.0](https://github.com/stroppy-io/stroppy/tree/v6.0.0/pkg/datagen/tpchgen)
+- [`workloads/tpch` at v6.2.0](https://github.com/stroppy-io/stroppy/tree/v6.2.0/workloads/tpch)
+- [`workloads/tpch/tpchgen` at v6.2.0](https://github.com/stroppy-io/stroppy/tree/v6.2.0/workloads/tpch/tpchgen)
 
 Regenerate committed distributions and answers only with upstream inputs:
 

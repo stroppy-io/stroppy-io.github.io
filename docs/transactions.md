@@ -14,9 +14,9 @@ code owns transaction boundaries and retry policy.
 
 | Workload | Model | Drivers |
 |---|---|---|
-| `tpcb/tx` | Ordered DML inside a driver transaction | PostgreSQL, MySQL, Picodata (`none`), YDB |
+| `tpcb/tx` | Ordered DML inside a driver transaction | PostgreSQL, MySQL, CockroachDB, YugabyteDB, TiDB, Picodata (`none`), YDB |
 | `tpcb/procs` | One server-side procedure call per iteration | PostgreSQL, MySQL |
-| `tpcc/tx` | Five TPC-C transaction bodies as ordered DML | PostgreSQL, MySQL, Picodata (`none`), YDB |
+| `tpcc/tx` | Five TPC-C transaction bodies as ordered DML | PostgreSQL, MySQL, CockroachDB, YugabyteDB, TiDB, Picodata (`none`), YDB |
 | `tpcc/procs` | One stored procedure per selected TPC-C transaction | PostgreSQL, MySQL |
 
 ```bash
@@ -26,6 +26,14 @@ stroppy run tpcc/tx -d pg \
 stroppy run tpcc/procs -d mysql \
   --executor shared-iterations --iterations 100
 ```
+
+Procedure variants are supported on PostgreSQL/MySQL only. `tpcb/procs` rejects
+other database engines before setup. In v6.2.0, `tpcc/procs -d tidb` can instead
+panic on missing procedure queries; use `tpcc/tx -d tidb`
+([#219](https://github.com/stroppy-io/stroppy/issues/219)).
+
+The [banking workload](./tests/banking) also uses driver transactions and the
+same retry/error machinery, with a post-run invariant check.
 
 ## Isolation levels
 
@@ -46,12 +54,20 @@ stroppy run tpcb/tx -d pg --tx-isolation serializable
 stroppy run tpcc/tx -d pico --tx-isolation none
 ```
 
-V6 defaults:
+TPC-B/C defaults in v6.2.0:
 
-| Workload family | PostgreSQL | MySQL | Picodata | YDB |
-|---|---|---|---|---|
-| TPC-B | `read_committed` | `read_committed` | `none` | `serializable` |
-| TPC-C | `repeatable_read` | `repeatable_read` | `none` | `serializable` |
+| Driver | TPC-B | TPC-C |
+|---|---|---|
+| PostgreSQL | `read_committed` | `repeatable_read` |
+| MySQL | `read_committed` | `repeatable_read` |
+| CockroachDB | `serializable` | `serializable` |
+| YugabyteDB | `read_committed` | `read_committed` |
+| TiDB | `read_committed` | `repeatable_read` |
+| Picodata | `none` | `none` |
+| YDB | `serializable` | `serializable` |
+
+Engine presets retain these defaults even when they share a wire protocol.
+TiDB's `repeatable_read` is snapshot isolation without MySQL's gap locking.
 
 Picodata's driver does not implement `Begin`, so `none` is required for its
 portable transaction-shaped workload paths.
@@ -89,6 +105,12 @@ stroppy run tpcc/tx --retry-attempts 5
 
 A scheduled retry increments retry metrics. If a later attempt succeeds, the
 iteration succeeds and the run is not marked as completed with errors.
+MySQL/MariaDB snapshot conflict error 1020 is classified as serialization and
+follows the same retry policy.
+
+A rejected `COMMIT` ends the attempt and increments `tx_errors_total` in v6.2.0;
+it no longer leaves an extra client-side `tx is closed` error beside the backend
+failure.
 
 ## Terminal nonfatal errors
 
@@ -134,7 +156,23 @@ queries and load workers, then runs teardown.
 | Graceful SIGTERM | 143 |
 | Second signal, forced exit | 2 |
 
-Cancellation is not counted as a terminal benchmark error.
+Cancellation is not counted as a terminal benchmark error. TPC-C keying and
+think-time waits also stop on cancellation. Thinking happens once after all
+attempts, including after a nonfatal failure; interruption during post-transaction
+thinking does not turn an already successful transaction into a failure.
+
+## Timed phases and drain
+
+`constant-vus` runs use an explicit drain policy. Built-in workloads default to
+`--drain-timeout 30s`; `--drain-timeout none` waits for in-flight work without a
+drain deadline. `--query-timeout` independently bounds individual statements.
+The wall-clock measured window includes actual drain, not setup or teardown.
+
+TPC-C optionally adds `--warmup 5m` before its measured workload, with the same
+VUs, transaction mix, and drain policy. `--duration` remains the measurement
+duration. Select both with `--steps warmup,workload` when reusing a loaded
+dataset; `--steps workload` excludes warmup. See [TPC-C](./tests/tpcc) for
+phase/outcome labels and measured-completion reporting.
 
 ## Transaction metrics
 
@@ -179,8 +217,9 @@ This keeps load time out of the transaction throughput interval.
 
 ## Driver authoring interface
 
-Go workloads call `Bench.Begin` with a `BeginOpts` isolation/name and use the
-returned query API. Drivers implement:
+Go workloads use `b.Transaction(ctx, bench.TransactionOptions{...}, fn)` for a
+logical operation with retries and transaction-scoped queries. The public
+workload API is distinct from the backend driver interface. Drivers implement:
 
 ```go
 type Tx interface {

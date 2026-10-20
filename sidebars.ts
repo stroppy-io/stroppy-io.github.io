@@ -12,6 +12,7 @@ const sidebars: SidebarsConfig = {
     'probe',
     'baseline',
     'reports-workflow',
+    'run-reports',
     'extensibility',
     'custom-workloads',
     'cli-reference',

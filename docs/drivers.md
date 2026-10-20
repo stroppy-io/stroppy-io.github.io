@@ -20,17 +20,28 @@ stroppy run tpcc/tx -d pg -D pool.maxConns=100
 | Preset | `driverType` | Default local URL | Notes |
 |---|---|---|---|
 | `pg` | `postgres` | `postgres://postgres:postgres@localhost:5432` | pgx pool; native COPY. |
-| `mysql` | `mysql` | `myuser:mypassword@tcp(localhost:3306)/mydb` | `database/sql`; bulk INSERT. |
+| `mysql` | `mysql` | `myuser:mypassword@tcp(localhost:3306)/mydb?charset=utf8mb4&parseTime=True&loc=Local` | `database/sql`; bulk INSERT. |
 | `pico` | `picodata` | `postgres://admin:T0psecret@localhost:1331` | PostgreSQL wire; no transactions. |
 | `ydb` | `ydb` | `grpc://localhost:2136/local` | SQL plus native BulkUpsert. |
 | `noop` | `noop` | `noop://localhost` | Discards I/O to measure framework overhead. |
+| `crdb` | `crdb` | `postgres://root:@localhost:26257/defaultdb?sslmode=disable` | CockroachDB through pgx; engine-specific SQL and isolation defaults. |
+| `yugabyte` | `yugabyte` | `postgres://yugabyte:@localhost:5433/yugabyte?sslmode=disable` | YugabyteDB YSQL through pgx. |
+| `tidb` | `tidb` | `root:@tcp(localhost:4000)/test?charset=utf8mb4&parseTime=True&loc=Local` | TiDB through the MySQL driver. |
+| `recording` | `recording` | `recording.json` | Database-free typed operation snapshots for workload tests. |
 
-CSV is a driver type without a short preset.
+Aliases: `postgres` → `pg`, `picodata` → `pico`, `cockroach`/`cockroachdb` →
+`crdb`, and `ysql`/`yb` → `yugabyte`. CSV is a driver type without a short preset.
+
+The engine presets preserve the server's identity, not just its wire protocol.
+Workloads can select their embedded engine-specific SQL automatically; use
+`-d crdb`, rather than passing an embedded filename to `--sql-file`. That flag
+requires a file on disk.
 
 Credentials shown in preset URLs are public local-development defaults compiled
 into Stroppy, not secrets. Always override them outside disposable local setups.
 
-A preset sets `driverType` and URL. Overrides keep untouched preset fields:
+A preset sets `driverType`, URL, and a default insert method. Overrides keep
+untouched preset fields:
 
 ```bash
 stroppy run tpcb/tx -d mysql \
@@ -46,24 +57,22 @@ stroppy run tpcc/tx \
 
 Raw JSON is validated with the same strict field rules as config files.
 
-## Indexed drivers
+## Named drivers
 
-Use numbered flags for workloads that need multiple drivers:
+`-d`/`-D` configure the default database. Workloads that explicitly declare named
+databases also accept `-dNAME` and `-DNAME`, such as `-dprimary pg` and
+`-Dprimary url=postgres://pg/bench`. Names must match the workload's declarations;
+`stroppy probe <workload>` lists them.
 
-```bash
-stroppy run tpcc/tx -d pg -d1 mysql
-stroppy run tpcc/tx -d pg -D url=postgres://pg/bench \
-  -d1 mysql -D1 'url=root@tcp(mysql:3306)/bench'
-```
-
-`-d`/`-D` target index 0; `-d1`/`-D1` target index 1.
+Built-in TPC workloads use one default database. Numeric suffixes such as `-d1`
+and `-D1` are rejected in v6.2.0.
 
 ## Driver fields
 
 | Field | Type | Description |
 |---|---|---|
 | `url` | string | Driver connection URL, DSN, or output path. |
-| `driverType` | string | `postgres`, `mysql`, `picodata`, `ydb`, `noop`, `csv`. |
+| `driverType` | string | `postgres`, `mysql`, `picodata`, `ydb`, `crdb`, `yugabyte`, `tidb`, `noop`, `csv`, `recording`. |
 | `bulkSize` | integer | Rows per multi-row INSERT/native batch; default 2500. |
 | `defaultInsertMethod` | string | Fallback for requests with no workload-selected method. |
 | `pool.*` | nested | Portable pool settings. |
@@ -72,6 +81,7 @@ stroppy run tpcc/tx -d pg -D url=postgres://pg/bench \
 | `insertProgress.*` | nested | Load progress watcher. |
 | `caCertFile` | string | CA certificate PEM path. |
 | `authToken` | string | Token credential, especially for YDB. |
+| `serviceAccountKeyFile` | string | Yandex Cloud JSON service-account key; SDK-managed IAM tokens. Requires verified `grpcs://`; takes precedence over `authToken`. |
 | `authUser` / `authPassword` | string | Static credentials. |
 | `tlsInsecureSkipVerify` | boolean | Skip certificate verification for testing only. |
 
@@ -83,7 +93,7 @@ parameter (`--tx-isolation`).
 
 Portable pool fields map by driver family:
 
-| Portable field | PostgreSQL/Picodata | MySQL/YDB |
+| Portable field | PostgreSQL/Picodata/CockroachDB/YugabyteDB | MySQL/TiDB/YDB |
 |---|---|---|
 | `pool.maxConns` | `postgres.maxConns` | `sql.maxOpenConns` |
 | `pool.minConns` | `postgres.minConns` | `sql.maxIdleConns` |
@@ -99,7 +109,7 @@ stroppy run tpcc/tx -d pg \
 
 Explicit `postgres.*` or `sql.*` values take priority over `pool.*`.
 
-Additional PostgreSQL/Picodata fields:
+Additional pgx-family fields (PostgreSQL, Picodata, CockroachDB, YugabyteDB):
 
 ```text
 postgres.minIdleConns
@@ -109,7 +119,7 @@ postgres.descriptionCacheCapacity
 postgres.statementCacheCapacity
 ```
 
-Additional MySQL/YDB fields:
+Additional `database/sql`-family fields (MySQL, TiDB, YDB):
 
 ```text
 sql.maxOpenConns
@@ -118,7 +128,7 @@ sql.connMaxLifetime
 sql.connMaxIdleTime
 ```
 
-Noop and CSV ignore pool settings.
+Noop, CSV, and recording do not use connection pools.
 
 ## Insert progress
 
@@ -140,16 +150,20 @@ always emitted when tracking is enabled.
 
 ## Insert capabilities
 
-`stroppy probe` reports current methods. In v6.0.0:
+`stroppy probe` reports current methods. In v6.2.0:
 
 | Driver | `plain_query` | `plain_bulk` | `columnar` | `native` |
 |---|---:|---:|---:|---:|
 | PostgreSQL | yes | yes | yes | COPY |
+| CockroachDB | yes | yes | yes | COPY |
+| YugabyteDB | yes | yes | yes | COPY |
 | MySQL | yes | yes | no | multi-row INSERT |
+| TiDB | yes | yes | no | multi-row INSERT |
 | Picodata | yes | yes | no | multi-row INSERT |
 | YDB | yes | yes | BulkUpsert | BulkUpsert |
 | Noop | drain | drain | drain | drain |
 | CSV | no | no | no | files |
+| Recording | capture | capture | capture | capture |
 
 A workload-selected `driver.InsertRequest.Method` takes precedence over
 `defaultInsertMethod`. The driver default fills only an unset request.
@@ -188,9 +202,30 @@ does not use `LOAD DATA LOCAL INFILE`. Statement query timeouts also add a
 server-side `MAX_EXECUTION_TIME` hint where applicable, reducing the chance that
 a timed-out SELECT keeps work alive on a pooled connection.
 
+### CockroachDB, YugabyteDB, and TiDB
+
+```bash
+stroppy run tpcb/tx -d crdb --scale-factor 1
+stroppy run tpcc/tx -d yugabyte --scale-factor 1
+stroppy run tpcc/tx -d tidb --scale-factor 1
+```
+
+CockroachDB and YugabyteDB inherit PostgreSQL's insert methods and `postgres.*`
+pool fields; TiDB inherits MySQL's methods and `sql.*` fields. Workload SQL and
+isolation defaults can differ from their protocol family. CockroachDB defaults
+to `serializable` for TPC-B/C; TPC-C uses `read_committed` on YugabyteDB and
+`repeatable_read` on TiDB. TiDB implements snapshot isolation without MySQL's
+gap locking, so range contention can differ.
+
+`--pg-unlogged` is PostgreSQL-only and does not change durability on these
+engines. TPC-B/C procedure variants are documented for PostgreSQL/MySQL only.
+In v6.2.0, `tpcc/procs -d tidb` can panic instead of rejecting the unsupported
+combination; use `tpcc/tx -d tidb` ([#219](https://github.com/stroppy-io/stroppy/issues/219)).
+See [TPC-DS](./tests/tpcds) for its engine-name limitations and workarounds.
+
 ### Picodata
 
-Picodata uses its PostgreSQL wire endpoint through the shared SQL driver path.
+Picodata uses its PostgreSQL wire endpoint through pgxpool.
 It supports typed loads and SQL queries, subject to sbroad SQL limitations.
 
 Picodata `Begin()` always returns an error. Transactional workload variants use
@@ -216,13 +251,31 @@ stroppy run tpcc/tx -d ydb \
 ```
 
 Static credentials are also available through `authUser` and `authPassword`.
-TPC workloads normally use serializable isolation on YDB.
+For a Yandex Cloud service-account key, let the SDK manage IAM token renewal:
+
+```bash
+stroppy run tpcc/tx -d ydb \
+  -D url=grpcs://host:2135/database \
+  -D serviceAccountKeyFile=./service-account.json
+```
+
+This mode takes precedence over `authToken` and rejects `grpc://` or
+`tlsInsecureSkipVerify=true`; use `caCertFile` when a private CA is needed.
+Keep key files and tokens out of recordings and report metadata. TPC workloads
+normally use serializable isolation on YDB.
 
 ### Noop
 
 Noop drives generation, batching, query construction, metrics, and transaction
 bookkeeping, then discards I/O. Use `stroppy baseline` for a purpose-built
 framework-overhead measurement.
+
+### Recording
+
+The `recording` driver captures typed query arguments, transaction boundaries,
+and inserts without a database. It is intended for workload tests, not database
+performance measurement. Query replies must be configured explicitly; unknown
+reads return no rows. See [Custom Workloads](./custom-workloads) for test helpers.
 
 ### CSV
 

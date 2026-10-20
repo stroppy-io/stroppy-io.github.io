@@ -8,7 +8,8 @@ description: Native summaries, error reporting, OpenTelemetry export, and repeat
 
 Stroppy v6 records metrics with OpenTelemetry instruments inside the Go engine.
 Every run prints a terminal summary; optional OTLP export sends the same
-measurements to a collector.
+measurements to a collector. Constructed reports are saved locally by default.
+[Run reports](./run-reports) covers history, HTML, capture, and comparison.
 
 ## Terminal summary
 
@@ -56,6 +57,24 @@ Workloads add their own instruments. TPC-C, for example, records transaction
 counts, per-type duration histograms, mix decisions, remote selections, rollback
 checks, and retries. TPC-H records duration, run, error, and elapsed-total
 metrics for q1 through q22.
+
+## Throughput and measurement windows
+
+`tps` is successful logical transactions per second, not TPC-C tpmC. It counts
+operations marked by the workload, with retries inside one logical operation.
+`iterations_per_second` counts completed iterations, including failed ones;
+`queries_per_second` counts successful SDK queries. `measurement_seconds` and
+`successful_transactions_total` expose the underlying measurement.
+
+Rates use the repeated step's wall-clock window, shared by all VUs, including
+actual drain but excluding setup and teardown. While running they are cumulative
+averages; they freeze when the executor finishes. Warmup and workload retain
+separate `step` labels. Do not derive interval rates by reading successive
+cumulative averages as if each were a fresh interval sample.
+
+6.2 reduces contention in metric updates and repeated-query allocations. This
+raises the client's ceiling, not a promise that a database-bound run becomes
+faster. Use the same measurement scope and inspect errors before comparing.
 
 ## Completed-with-errors summary
 
@@ -142,8 +161,11 @@ is `/v1/metrics`.
 `OTEL_METRIC_EXPORT_INTERVAL` sets export cadence in milliseconds; default is
 10000.
 
-Resource attributes include `service.name=stroppy`, release version,
-`stroppy.run.id` when configured, and every entry from `global.metadata`.
+Resource attributes include `service.name=stroppy`, release version, a unique
+`service.instance.id` per invocation, `stroppy.run.id` when configured, and every
+entry from `global.metadata`. Run identity and explicit metadata also accompany
+exported metric points for Prometheus-compatible storage. Do not put credentials
+in metadata.
 Core metric attributes include:
 
 ```text
@@ -166,7 +188,7 @@ an overflow series.
 
 Stroppy ships a dashboard for the v6 metric model:
 
-- [dashboard.json at v6.0.0](https://github.com/stroppy-io/stroppy/blob/v6.0.0/docs/dashboard.json)
+- [dashboard.json at v6.2.0](https://github.com/stroppy-io/stroppy/blob/v6.2.0/docs/dashboard.json)
 
 Import it into Grafana and point panels at metrics received from your OTLP
 collector/export path. The collector exposes `service.name` as `job` in the
@@ -200,7 +222,7 @@ Save repeatable inputs in JSON:
 {
   "script": "tpcc/tx",
   "drivers": {
-    "0": {
+    "default": {
       "driverType": "postgres",
       "url": "postgres://db:5432/tpcc",
       "pool": {"maxConns": 64}
