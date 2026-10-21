@@ -187,7 +187,9 @@ docusaurus.config.ts     site metadata, plugins, navbar, footer, versions
 sidebars.ts               current navigation
 src/css/custom.css        site styling
 src/pages/index.tsx       landing page
-src/components/landing/   landing pieces: scroll-driven mark, charts from blog data, run replay
+src/components/landing/   landing pieces: scroll-driven mark, charts from blog data, run replay,
+                          leaderboard (hero top rows, Stroppy Cloud's full board in an iframe)
+plugins/cloud-rating.ts   copies Stroppy Cloud's public rating into the build for the hero board
 src/css/landing.css       landing styles
 src/prism-stroppy.ts      code highlighting on the kit's variables, both modes
 kit.json                  pinned UI kit release: version and archive sha256
