@@ -163,44 +163,68 @@ selection, and transaction defaults. A shared wire protocol is not a promise
 that every SQL feature works everywhere; the [workload pages](/docs/presets)
 describe the supported combinations.
 
-The new `banking` workload checks balance conservation and a permutation of
-unique account tokens. Its PostgreSQL `banking/inject` variant can inject commit
-faults through Macavity. These are conservation checks, not evidence that every
-intended transfer happened exactly once.
+Despite the name, `banking` is not another TPC-B. TPC-B measures a short
+transaction that updates an account, a teller, and a branch, then appends history.
+`banking` instead transfers money between two accounts and swaps their unique
+tokens. After the run, it checks that no money or tokens were lost or created.
 
-<figure style={{maxWidth: '480px', margin: '2rem auto'}}>
-<svg viewBox="0 0 440 450" role="img" aria-labelledby="banking-blog-title banking-blog-desc" style={{display: 'block', width: '100%', height: 'auto', fontFamily: 'var(--st-font-sans)'}}>
-  <title id="banking-blog-title">Banking transfers and fault injection</title>
-  <desc id="banking-blog-desc">A transfer moves money and swaps account tokens. The injecting variant can fail or crash the backend before commit. After the run, verification checks the total balance and token permutation.</desc>
+Its PostgreSQL `banking/inject` variant adds deliberate commit errors or backend
+crashes through Macavity: the question is whether those checks still hold after
+interruption. They are conservation checks, not proof that every intended
+transfer happened exactly once.
+
+<figure style={{maxWidth: '600px', margin: '2rem auto'}}>
+<svg viewBox="0 0 480 420" role="img" aria-labelledby="banking-blog-title banking-blog-desc" style={{display: 'block', width: '100%', height: 'auto', fontFamily: 'var(--st-font-sans)'}}>
+  <title id="banking-blog-title">TPC-B updates a hierarchy; banking transfers between peers</title>
+  <desc id="banking-blog-desc">Example TPC-B transaction: add 10 to an account, teller, and branch, and append one history row. Example banking transaction: subtract 10 from account A and add 10 to account B, while swapping their unique tokens. Banking then checks total balance and the token permutation after the run, optionally under commit fault injection.</desc>
   <defs>
-    <marker id="banking-blog-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M0 0 L10 5 L0 10" fill="var(--st-muted)"/>
+    <marker id="banking-blog-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10" fill="none" stroke="var(--st-muted)" strokeWidth="2"/>
     </marker>
   </defs>
+  <g fill="var(--st-text)" fontSize="21" fontWeight="500">
+    <text x="18" y="28">TPC-B</text>
+    <text x="18" y="268">banking</text>
+  </g>
   <g fill="var(--st-panel)" stroke="var(--st-line)">
-    <rect x="24" y="12" width="392" height="76" rx="8"/>
-    <rect x="24" y="124" width="392" height="86" rx="8" stroke="var(--st-mark)"/>
-    <rect x="24" y="246" width="392" height="56" rx="8"/>
-    <rect x="24" y="338" width="392" height="100" rx="8"/>
+    <rect x="18" y="50" width="136" height="76" rx="8"/>
+    <rect x="172" y="50" width="136" height="76" rx="8"/>
+    <rect x="326" y="50" width="136" height="76" rx="8"/>
+    <rect x="18" y="292" width="150" height="88" rx="8"/>
+    <rect x="312" y="292" width="150" height="88" rx="8"/>
   </g>
-  <g fill="none" stroke="var(--st-muted)" strokeWidth="1.5" markerEnd="url(#banking-blog-arrow)">
-    <path d="M220 90 V120"/>
-    <path d="M220 212 V242"/>
-    <path d="M220 304 V334"/>
+  <g fill="var(--st-muted)" fontSize="17" textAnchor="middle">
+    <text x="86" y="77">Account</text>
+    <text x="240" y="77">Teller</text>
+    <text x="394" y="77">Branch</text>
+    <text x="93" y="320">Account A</text>
+    <text x="387" y="320">Account B</text>
   </g>
-  <g textAnchor="middle" fill="var(--st-text)" fontSize="18" fontWeight="500">
-    <text x="220" y="42">Transfer between two accounts</text>
-    <text x="220" y="156">Optional fault: banking/inject</text>
-    <text x="220" y="281">COMMIT if the attempt succeeds</text>
-    <text x="220" y="369">Verify after the run</text>
+  <g fill="var(--st-text)" fontFamily="var(--st-font-mono)" fontSize="27" textAnchor="middle">
+    <text x="86" y="110">+10</text>
+    <text x="240" y="110">+10</text>
+    <text x="394" y="110">+10</text>
+    <text x="93" y="357">−10</text>
+    <text x="387" y="357">+10</text>
   </g>
-  <g textAnchor="middle" fill="var(--st-muted)" fontSize="16">
-    <text x="220" y="67">Move money and swap unique tokens</text>
-    <text x="220" y="184">Error or backend crash before commit</text>
-    <text x="220" y="395">Total balance unchanged</text>
-    <text x="220" y="420">Tokens remain a permutation</text>
+  <g fill="none" stroke="var(--st-muted)" strokeWidth="1.5">
+    <path d="M86 128 V145 H394 V128 M240 128 V165"/>
+    <rect x="155" y="168" width="30" height="38" rx="3"/>
+    <path d="M162 178 H178 M162 187 H178 M162 196 H173"/>
+    <path d="M182 335 H298" markerEnd="url(#banking-blog-arrow)"/>
+    <path d="M190 360 H290" markerEnd="url(#banking-blog-arrow)"/>
+    <path d="M290 378 H190" markerEnd="url(#banking-blog-arrow)"/>
   </g>
+  <g fill="var(--st-text)" fontSize="17">
+    <text x="202" y="193">History +1 row</text>
+    <text x="240" y="315" textAnchor="middle">transfer</text>
+  </g>
+  <g fill="var(--st-muted)" fontSize="16" textAnchor="middle">
+    <text x="240" y="405">swap tokens</text>
+  </g>
+  <path d="M18 232 H462" stroke="var(--st-line)"/>
 </svg>
+<figcaption>TPC-B: transaction throughput. Banking: conservation under faults.</figcaption>
 </figure>
 
 The [banking guide](/docs/tests/banking) describes the full transfer and retry
