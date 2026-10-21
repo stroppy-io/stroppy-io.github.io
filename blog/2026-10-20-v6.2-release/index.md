@@ -17,7 +17,7 @@ makes fewer details depend on what we remember after the terminal closes.
 
 {/* truncate */}
 
-## A small experiment, with something left to inspect
+## Saved reports, metrics, and logs
 
 Suppose we want to see how one workload behaves with four connections, then with
 eight. We could copy two TPS numbers into a note. The problem comes later: did
@@ -54,7 +54,7 @@ A missing value is not zero. Logs respect the chosen log level; recording does
 not quietly turn on debug output. If the recording drops data or stops early,
 that is visible too.
 
-## Comparing runs without hiding the differences
+## Run comparison and offline exports
 
 The comparison puts configuration differences beside the numbers. For
 histograms, average and p50/p90/p95/p99 estimates share a chart, with adjacent
@@ -90,13 +90,15 @@ For sharing the whole recording rather than a bounded preview, use
 The [reports guide](/docs/run-reports) walks through the complete workflow,
 including capture budgets and history cleanup.
 
-## A workload does not have to start with a Stroppy fork
+## Custom workloads and the Stroppy SDK
+
+Custom workloads are back. Earlier versions supported them through k6; we left
+that feature out of the initial native release to keep the engine migration
+manageable. In 6.2 they return as ordinary Go projects using the Stroppy SDK.
 
 Sometimes a standard workload is the right starting point. Sometimes the question
 is a single query, an application transaction, or two databases that should
-return the same answer.
-
-6.2 gives custom workloads a supported Go authoring surface and a normal project
+return the same answer. The Go authoring API and project tools support that
 workflow:
 
 ```bash
@@ -123,7 +125,7 @@ There is more detail in [Custom workloads](/docs/custom-workloads). The aim is n
 to invent another language for benchmarks. It is to make a small Go project
 sufficient, and keep the testing and distribution steps unsurprising.
 
-## More control over TPC-C traffic
+## TPC-C warmup and warehouse selection
 
 TPC-C now has an explicit warmup period. When reusing loaded data, a run can look
 like this:
@@ -162,19 +164,10 @@ unique account tokens. Its PostgreSQL `banking/inject` variant can inject commit
 faults through Macavity. These are conservation checks, not evidence that every
 intended transfer happened exactly once.
 
-There is an important known bug in 6.2.0: banking verification can retry away an
-observed invariant violation if a later read succeeds. Until
-[#217](https://github.com/stroppy-io/stroppy/issues/217) is fixed, a successful run
-is not conclusive corruption-test evidence. We have also documented incomplete
-TPC-DS engine mapping ([#218](https://github.com/stroppy-io/stroppy/issues/218)) and
-the unsupported TPC-C procedure path on TiDB
-([#219](https://github.com/stroppy-io/stroppy/issues/219)). They are patch work, not
-things the release notes should hide.
+## Upgrading to 6.2
 
-## Before upgrading
-
-We are calling this 6.2.0, but it contains some source and configuration changes
-that existing projects need to migrate:
+If you have a custom workload or configuration from 6.1, update these parts when
+moving to 6.2:
 
 - Go imports use `github.com/stroppy-io/stroppy/v6`, with Go 1.27 for source builds.
 - Custom Go workloads use `bench.Test` definitions and immediate steps instead of
@@ -188,7 +181,7 @@ that existing projects need to migrate:
 The [migration guide](/docs/migration-v6#upgrading-from-61x) covers those changes.
 Prebuilt binaries still need no local Go installation for built-in workloads.
 
-## Where to start
+## Try Stroppy 6.2
 
 [Download 6.2.0](https://github.com/stroppy-io/stroppy/releases/tag/v6.2.0), run a
 small experiment on disposable data, and open its report. If the built-in workload
