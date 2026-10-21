@@ -121,6 +121,10 @@ portable binary with the selected custom workloads. The build cache records whic
 SDK and source went into the result, rather than making the installed runtime a
 mystery.
 
+> **One SDK.** Built-in workloads use the same Stroppy SDK as custom workloads,
+> with no special or exclusive workload API. The difference is that they ship
+> with Stroppy rather than being added by the user.
+
 There is more detail in [Custom workloads](/docs/custom-workloads). The aim is not
 to invent another language for benchmarks. It is to make a small Go project
 sufficient, and keep the testing and distribution steps unsurprising.
@@ -163,6 +167,44 @@ The new `banking` workload checks balance conservation and a permutation of
 unique account tokens. Its PostgreSQL `banking/inject` variant can inject commit
 faults through Macavity. These are conservation checks, not evidence that every
 intended transfer happened exactly once.
+
+<figure style={{maxWidth: '480px', margin: '2rem auto'}}>
+<svg viewBox="0 0 440 450" role="img" aria-labelledby="banking-blog-title banking-blog-desc" style={{display: 'block', width: '100%', height: 'auto', fontFamily: 'var(--st-font-sans)'}}>
+  <title id="banking-blog-title">Banking transfers and fault injection</title>
+  <desc id="banking-blog-desc">A transfer moves money and swaps account tokens. The injecting variant can fail or crash the backend before commit. After the run, verification checks the total balance and token permutation.</desc>
+  <defs>
+    <marker id="banking-blog-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10" fill="var(--st-muted)"/>
+    </marker>
+  </defs>
+  <g fill="var(--st-panel)" stroke="var(--st-line)">
+    <rect x="24" y="12" width="392" height="76" rx="8"/>
+    <rect x="24" y="124" width="392" height="86" rx="8" stroke="var(--st-mark)"/>
+    <rect x="24" y="246" width="392" height="56" rx="8"/>
+    <rect x="24" y="338" width="392" height="100" rx="8"/>
+  </g>
+  <g fill="none" stroke="var(--st-muted)" strokeWidth="1.5" markerEnd="url(#banking-blog-arrow)">
+    <path d="M220 90 V120"/>
+    <path d="M220 212 V242"/>
+    <path d="M220 304 V334"/>
+  </g>
+  <g textAnchor="middle" fill="var(--st-text)" fontSize="18" fontWeight="500">
+    <text x="220" y="42">Transfer between two accounts</text>
+    <text x="220" y="156">Optional fault: banking/inject</text>
+    <text x="220" y="281">COMMIT if the attempt succeeds</text>
+    <text x="220" y="369">Verify after the run</text>
+  </g>
+  <g textAnchor="middle" fill="var(--st-muted)" fontSize="16">
+    <text x="220" y="67">Move money and swap unique tokens</text>
+    <text x="220" y="184">Error or backend crash before commit</text>
+    <text x="220" y="395">Total balance unchanged</text>
+    <text x="220" y="420">Tokens remain a permutation</text>
+  </g>
+</svg>
+</figure>
+
+The [banking guide](/docs/tests/banking) describes the full transfer and retry
+loop, with more detail on fault injection.
 
 ## Upgrading to 6.2
 
