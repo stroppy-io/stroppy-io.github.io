@@ -22,6 +22,7 @@
   bottom: 0;
   right: 4vw;
   /* One size on the first page and the last, set by the viewport. */
+  --mark-w: calc(clamp(18rem, 62dvh, 40rem) * 100 / 132);
   height: clamp(18rem, 62dvh, 40rem);
   aspect-ratio: 100 / 132;
   margin: auto 0;
@@ -123,12 +124,35 @@
 .intro__inner {
   position: relative;
   z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(21rem, 27rem);
+  align-items: center;
+  gap: 3rem 4rem;
+}
+
+/* On the first page and the last the mark sits behind the text, faint
+   enough to read through. */
+.intro .mark,
+.finale .mark {
+  right: auto;
+  left: max(0px, calc(50% - 30rem));
+  rotate: -16deg;
+  opacity: 0.22;
+  bottom: 22rem;
+}
+
+/* On the last page the right half is free: the mark stands there, bright. */
+.finale .mark {
+  left: auto;
+  right: max(2rem, calc(50% - 38rem));
+  bottom: 0;
+  opacity: 0.85;
 }
 
 .intro__title {
   max-width: 15em;
   margin: 0;
-  font-size: clamp(2.4rem, 1rem + 4vw, 4.6rem);
+  font-size: clamp(2.4rem, 0.8rem + 3.4vw, 4.2rem);
   font-weight: var(--st-font-weight-bold);
   line-height: 1.03;
   letter-spacing: -0.035em;
@@ -140,11 +164,163 @@
   margin: 1.75rem 0 0;
   font-size: clamp(1.0625rem, 0.9rem + 0.4vw, 1.25rem);
   line-height: 1.55;
-  color: var(--st-muted);
+  color: color-mix(in srgb, var(--st-text) 85%, var(--st-muted));
 }
 
 .intro__actions {
   margin-top: 2rem;
+}
+
+/* ---------- The top of the leaderboard (in the hero) ---------- */
+
+.board {
+  padding: 1.1rem 1.25rem 0.9rem;
+  background: color-mix(in srgb, var(--st-panel) 88%, transparent);
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-lg);
+  backdrop-filter: blur(6px);
+}
+
+.board__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.75rem;
+}
+
+.board__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: var(--st-font-size-sm);
+  font-weight: var(--st-font-weight-medium);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--st-muted);
+}
+
+.board__workload {
+  font-size: 0.9375rem;
+  color: var(--st-text);
+}
+
+.board__rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board__row {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0 0.75rem;
+  padding: 0.55rem 0.5rem 0.6rem;
+  margin: 0 -0.5rem;
+  color: inherit;
+  border-radius: var(--st-radius-md);
+  font-variant-numeric: tabular-nums;
+}
+
+.board__row:hover {
+  color: inherit;
+  text-decoration: none;
+  background: var(--st-raised);
+}
+
+.board__row:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 0;
+}
+
+.board__rank {
+  font-size: var(--st-font-size-sm);
+  color: var(--st-muted);
+}
+
+.board__who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.board__db {
+  font-weight: var(--st-font-weight-medium);
+}
+
+.board__setup {
+  overflow: hidden;
+  font-size: var(--st-font-size-sm);
+  color: var(--st-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.board__value {
+  font-family: var(--st-font-mono);
+  font-size: 1.0625rem;
+  font-weight: var(--st-font-weight-medium);
+}
+
+.board__unit {
+  font-family: var(--st-font-sans);
+  font-size: var(--st-font-size-sm);
+  font-weight: normal;
+  color: var(--st-muted);
+}
+
+/* Each bar against the best run, growing in one after another. */
+.board__bar {
+  grid-column: 2 / 4;
+  height: 3px;
+  margin-top: 0.45rem;
+  border-radius: 2px;
+  background: var(--st-line);
+  overflow: hidden;
+}
+
+.board__bar::after {
+  content: '';
+  display: block;
+  width: calc(var(--w) * 100%);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--st-mark);
+  transform-origin: left;
+  animation: board-grow 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) calc(0.25s + var(--i) * 0.09s) both;
+}
+
+.board__rows li:first-child .board__bar::after {
+  background: var(--st-primary);
+}
+
+@keyframes board-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.board__foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  margin-top: 0.6rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--st-line);
+  font-size: var(--st-font-size-sm);
+  color: var(--st-muted);
+}
+
+.board--empty p {
+  margin: 0.5rem 0 0;
+  color: var(--st-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board__bar::after {
+    animation: none;
+  }
 }
 
 /* ---------- Install (in the hero) ---------- */
@@ -185,7 +361,7 @@
 .install__more {
   margin: 0.75rem 0 0;
   font-size: 0.875rem;
-  color: var(--st-muted);
+  color: color-mix(in srgb, var(--st-text) 70%, var(--st-muted));
 }
 
 .shell {
@@ -274,6 +450,46 @@
 
 .story__head {
   margin-bottom: 2.5rem;
+}
+
+/* ---------- Results: Stroppy Cloud's leaderboard in a frame ---------- */
+
+.results {
+  position: relative;
+  min-height: 28rem;
+}
+
+.results--ready {
+  min-height: 0;
+}
+
+/* The embed pads its own content by 16px; the frame steps out by as much so
+   the board lines up with the heading. */
+.results__frame {
+  display: block;
+  width: calc(100% + 32px);
+  height: 28rem;
+  margin-inline: -16px;
+  border: 0;
+  /* The embed draws without a background (bg=transparent); a frame in another
+     colour scheme would otherwise get an opaque one from the browser. */
+  color-scheme: normal;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.results--ready .results__frame {
+  opacity: 1;
+}
+
+.results__wait {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--st-muted);
+  border: 1px dashed var(--st-line);
+  border-radius: var(--st-radius-lg);
 }
 
 /* ---------- How fast: measured pairs on one log axis ---------- */
@@ -762,23 +978,6 @@
   color: var(--st-muted);
 }
 
-/* Here nothing overlaps the mark, so it reads as the logo. */
-.finale .mark {
-  right: 0;
-}
-
-.mark--solid .mark__body {
-  opacity: calc(0.22 + 0.08 * var(--open));
-}
-
-.mark--solid .mark__band {
-  opacity: calc(0.75 + 0.2 * var(--open));
-}
-
-.mark--solid .mark__ray {
-  opacity: calc(0.85 + 0.15 * var(--open));
-}
-
 /* The footer continues the finale's surface on the landing. */
 html.landing-paged .footer {
   background: var(--st-panel);
@@ -797,6 +996,34 @@ html.landing-paged .footer .container {
     padding: 4rem 0 3.5rem;
   }
 
+  /* One column: the board comes right after the button, install after it. */
+  .intro__inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .intro__text {
+    display: contents;
+  }
+
+  .intro .board {
+    order: 1;
+    margin-top: 2.5rem;
+  }
+
+  .install {
+    order: 2;
+  }
+
+  .intro .mark {
+    left: auto;
+    rotate: 16deg;
+    bottom: auto;
+    top: -2rem;
+    height: min(90vw, 28rem);
+    opacity: 0.3;
+  }
+
   /* Behind the headline on a narrow screen: quiet enough to read through. */
   .mark {
     right: -18vw;
@@ -810,8 +1037,10 @@ html.landing-paged .footer .container {
   }
 
   .finale .mark {
-    right: -20vw;
-    opacity: 0.35;
+    left: auto;
+    right: -18vw;
+    rotate: 16deg;
+    opacity: 0.3;
   }
 
   .anatomy {
