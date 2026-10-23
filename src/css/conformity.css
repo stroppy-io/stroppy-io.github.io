@@ -428,42 +428,70 @@ html.cf-drawer-open {
 
 /* ---------- About this data ---------- */
 
-.about {
-  margin: 3.5rem 0 6rem;
-  border-top: 1px solid var(--st-line);
-  scroll-margin-top: calc(var(--ifm-navbar-height) + var(--cf-bar));
-}
-
-.about summary {
-  display: flex;
+.about-button {
+  display: inline-flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.25rem 1rem;
-  padding: 1.25rem 0;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  align-self: flex-start;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--st-line-strong);
+  border-radius: var(--st-radius-pill);
+  background: var(--st-panel);
+  color: var(--st-text);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: var(--st-font-weight-medium);
+  text-align: left;
   cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
 }
 
-.about summary span {
-  font-size: 1.25rem;
+.about-button:hover {
+  border-color: var(--st-primary);
+  background: var(--st-raised);
+}
+
+.about-button small {
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+  font-weight: var(--st-font-weight-regular);
+}
+
+.about-button__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  color: var(--st-primary-text);
+  font-family: var(--st-font-mono);
+  font-size: 0.75rem;
   font-weight: var(--st-font-weight-bold);
 }
 
-.about summary small {
-  color: var(--st-muted);
-  font-size: 0.875rem;
+.about-button__arrow {
+  color: var(--st-primary-text);
+  transition: transform 0.15s;
+}
+
+.about-button:hover .about-button__arrow {
+  transform: translateX(2px);
+}
+
+/* Inside the panel the legend reads as one column. */
+.drawer__panel.about {
+  width: min(44rem, 100vw);
 }
 
 .about__body {
   display: grid;
-  gap: 2rem 4rem;
-  padding-bottom: 1rem;
+  gap: 2rem;
   font-size: 0.9375rem;
-}
-
-@media (min-width: 997px) {
-  .about__body {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
 }
 
 .about h3 {
@@ -653,23 +681,8 @@ html.cf-drawer-open {
     text-overflow: ellipsis;
   }
 
-  .cf .about {
+  .cf .about-button {
     flex: none;
-    margin: 0.25rem 0 0;
-    border-top: 0;
-  }
-
-  .cf .about summary {
-    padding: 0.35rem 0 0.75rem;
-  }
-
-  .cf .about summary span {
-    font-size: 1rem;
-  }
-
-  /* Opened, "About this data" takes the screen's height and scrolls itself. */
-  .cf .about[open] {
-    max-height: 45vh;
-    overflow: auto;
+    margin-bottom: 1rem;
   }
 }

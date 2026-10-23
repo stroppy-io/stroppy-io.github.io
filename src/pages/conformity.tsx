@@ -6,7 +6,7 @@ import useBrokenLinks from '@docusaurus/useBrokenLinks';
 import compatJson from '@site/static/data/conformity/compat.json';
 import CompatMap from '@site/src/components/conformity/CompatMap';
 import Drawer from '@site/src/components/conformity/Drawer';
-import About from '@site/src/components/conformity/About';
+import About, {AboutButton} from '@site/src/components/conformity/About';
 import {day, protocolName, protocolShort, protocolsOf} from '@site/src/components/conformity/data';
 import {StatesLegend} from '@site/src/components/conformity/Cell';
 import type {Compat} from '@site/src/components/conformity/types';
@@ -36,6 +36,7 @@ function ConformityPage() {
 
   const [protocol, setProtocol] = useState(DEFAULT);
   const [open, setOpen] = useState<string | null>(null);
+  const [about, setAbout] = useState(false);
 
   // The hash picks the protocol, or an engine and its protocol, or opens
   // "About". A protocol's or an engine's hash names a tab or a row, not a
@@ -58,11 +59,9 @@ function ConformityPage() {
       return;
     }
     if (h === 'about') {
-      const el = document.getElementById('about') as HTMLDetailsElement | null;
-      if (el) {
-        el.open = true;
-        el.scrollIntoView({block: 'start'});
-      }
+      setOpen(null);
+      setAbout(true);
+      stay();
     }
   }, []);
 
@@ -81,6 +80,10 @@ function ConformityPage() {
     setOpen(id);
     setHash(id);
   };
+  const closeAbout = useCallback(() => {
+    setAbout(false);
+    if (window.location.hash === '#about') setHash(protocol);
+  }, [protocol]);
   const closeRow = useCallback(() => {
     setOpen(null);
     setHash(protocol);
@@ -157,10 +160,11 @@ function ConformityPage() {
           </span>{' '}
           <a href="#about">All caveats and how scores are counted</a>
         </p>
-        <About data={data} />
+        <AboutButton onOpen={() => setAbout(true)} />
       </div>
 
       {row && <Drawer data={data} row={row} onClose={closeRow} />}
+      {about && <About data={data} onClose={closeAbout} />}
     </main>
   );
 }
