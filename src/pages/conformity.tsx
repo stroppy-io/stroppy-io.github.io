@@ -113,10 +113,10 @@ function ConformityPage() {
           </p>
           <p className="cf-prov">
             Dataset <code>{data.dataset.id}</code>
-            {data.dataset.audited_at && <>, audited {day(data.dataset.audited_at)}</>}.{' '}
-            <a href="#about">About this data</a>
+            {data.dataset.audited_at && <>, audited {day(data.dataset.audited_at)}</>}.
           </p>
         </div>
+        <AboutButton onOpen={() => setAbout(true)} />
       </header>
 
       <div className="cbar">
@@ -160,7 +160,6 @@ function ConformityPage() {
           </span>{' '}
           <a href="#about">All caveats and how scores are counted</a>
         </p>
-        <AboutButton onOpen={() => setAbout(true)} />
       </div>
 
       {row && <Drawer data={data} row={row} onClose={closeRow} />}

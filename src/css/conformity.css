@@ -36,8 +36,17 @@
    screen; the tabs below are the navigation ---------- */
 
 .cf-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 2rem;
   padding-top: 2rem;
   padding-bottom: 1.25rem;
+}
+
+.cf-hero__title {
+  flex-basis: 100%;
 }
 
 .cf-hero__title {
@@ -430,12 +439,10 @@ html.cf-drawer-open {
 
 .about-button {
   display: inline-flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem 0.6rem;
-  align-self: flex-start;
-  margin-top: 0.75rem;
-  padding: 0.5rem 0.9rem;
+  gap: 0.75rem;
+  flex: none;
+  padding: 0.6rem 1rem;
   border: 1px solid var(--st-line-strong);
   border-radius: var(--st-radius-pill);
   background: var(--st-panel);
@@ -453,6 +460,11 @@ html.cf-drawer-open {
 .about-button:hover {
   border-color: var(--st-primary);
   background: var(--st-raised);
+}
+
+.about-button__text {
+  display: grid;
+  line-height: 1.3;
 }
 
 .about-button small {
@@ -681,8 +693,7 @@ html.cf-drawer-open {
     text-overflow: ellipsis;
   }
 
-  .cf .about-button {
-    flex: none;
+  .cf-caveat {
     margin-bottom: 1rem;
   }
 }

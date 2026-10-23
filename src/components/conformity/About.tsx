@@ -2,7 +2,7 @@ import {useEffect, useRef} from 'react';
 import {DATA_BASE, day} from './data';
 import type {Compat} from './types';
 
-// "About this data" on /conformity: a button under the map that opens a side
+// "About this data" on /conformity: a button in the page's header that opens a side
 // panel, like an engine's, with the export's own legend (scoring, weights,
 // baselines, every caveat, every outcome, roles, layers) and the dataset's
 // provenance. Nothing here is written again by the site; it is the legend in
@@ -15,8 +15,10 @@ export function AboutButton({onOpen}: {onOpen: () => void}) {
       <span className="about-button__icon" aria-hidden="true">
         i
       </span>
-      About this data
-      <small>how scores are counted, every caveat and outcome, where the data comes from</small>
+      <span className="about-button__text">
+        About this data
+        <small>How scores are counted, caveats, where the data comes from</small>
+      </span>
       <span className="about-button__arrow" aria-hidden="true">
         →
       </span>
