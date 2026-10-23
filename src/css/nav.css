@@ -356,22 +356,41 @@ html.plugin-docs .navbar__inner {
 }
 
 .navbar__item.navbar-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   margin-left: 0.5rem;
-  padding: 0.4rem 1rem;
-  border: 1px solid var(--st-text);
+  padding: 0.45rem 1.05rem;
   border-radius: var(--st-radius-pill);
-  color: var(--st-text);
+  background: var(--st-primary);
+  /* The kit has no colour for text on primary; white, as on Stroppy Cloud. */
+  color: #fff;
   font-size: 0.9375rem;
   font-weight: var(--st-font-weight-medium);
+  box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--st-primary) 80%, transparent);
   transition:
     background-color 0.15s,
-    color 0.15s;
+    box-shadow 0.15s,
+    transform 0.15s;
 }
 
 .navbar__item.navbar-cta:hover {
-  background: var(--st-text);
-  color: var(--st-canvas);
+  background: color-mix(in srgb, var(--st-primary) 86%, var(--st-text));
+  color: #fff;
   text-decoration: none;
+  box-shadow: 0 8px 22px -8px var(--st-primary);
+}
+
+.navbar__item.navbar-cta:active {
+  transform: translateY(1px);
+}
+
+.navbar-cta__arrow {
+  transition: transform 0.15s;
+}
+
+.navbar-cta:hover .navbar-cta__arrow {
+  transform: translateX(2px);
 }
 
 /* ---------- Mobile drawer ---------- */

@@ -54,6 +54,11 @@ export default function Account({mobile}: {mobile?: boolean}): ReactNode {
       {links.map((l) => (
         <a key={l.label} className={l.cta ? 'navbar__item navbar-cta' : 'navbar__item navbar-signin'} href={l.href}>
           {l.label}
+          {signedIn && (
+            <span className="navbar-cta__arrow" aria-hidden="true">
+              →
+            </span>
+          )}
         </a>
       ))}
     </>
