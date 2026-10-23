@@ -588,7 +588,12 @@ html.cf-drawer-open {
     flex-direction: column;
     width: 100%;
     min-height: 0;
+    padding-top: 0.75rem;
+  }
+
+  .cf-hero {
     padding-top: 1.25rem;
+    padding-bottom: 0.75rem;
   }
 
   .cf .panel:not([hidden]) {
@@ -596,11 +601,18 @@ html.cf-drawer-open {
     flex: 1;
     flex-direction: column;
     min-height: 0;
+    padding-top: 0.25rem;
   }
 
+  /* The tab already names the protocol: its title shrinks to a hint. */
   .cf .panel__title {
     flex: none;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .cf .panel__title span {
+    font-size: 0.875rem;
   }
 
   .cf .cmap {
@@ -625,9 +637,20 @@ html.cf-drawer-open {
     box-shadow: 0 0 0 4px var(--st-canvas);
   }
 
+  /* One line: the caveat cut short, the link to all of them kept. */
   .cf-caveat {
+    display: flex;
     flex: none;
-    margin-top: 0.75rem;
+    gap: 0.5rem;
+    max-width: none;
+    margin-top: 0.6rem;
+    white-space: nowrap;
+  }
+
+  .cf-caveat__text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .cf .about {
@@ -637,7 +660,11 @@ html.cf-drawer-open {
   }
 
   .cf .about summary {
-    padding: 0.5rem 0 1rem;
+    padding: 0.35rem 0 0.75rem;
+  }
+
+  .cf .about summary span {
+    font-size: 1rem;
   }
 
   /* Opened, "About this data" takes the screen's height and scrolls itself. */

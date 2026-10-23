@@ -37,18 +37,24 @@ function ConformityPage() {
   const [protocol, setProtocol] = useState(DEFAULT);
   const [open, setOpen] = useState<string | null>(null);
 
-  // The hash picks the protocol, or an engine and its protocol, or opens "About".
+  // The hash picks the protocol, or an engine and its protocol, or opens
+  // "About". A protocol's or an engine's hash names a tab or a row, not a
+  // place to scroll to: the browser's jump to it is undone, so the page
+  // stays whole on one screen.
   const fromHash = useCallback(() => {
     const h = decodeURIComponent(window.location.hash.slice(1));
+    const stay = () => window.requestAnimationFrame(() => window.scrollTo({top: 0}));
     if (PROTOCOLS.includes(h)) {
       setProtocol(h);
       setOpen(null);
+      stay();
       return;
     }
     const row = data.rows.find((r) => r.id === h);
     if (row) {
       setProtocol(row.protocol);
       setOpen(row.role === 'reference' ? null : row.id);
+      stay();
       return;
     }
     if (h === 'about') {
@@ -146,7 +152,10 @@ function ConformityPage() {
           </section>
         ))}
         <p className="cf-caveat">
-          {data.legend.caveats[0]} <a href="#about">All caveats and how scores are counted</a>
+          <span className="cf-caveat__text" title={data.legend.caveats[0]}>
+            {data.legend.caveats[0]}
+          </span>{' '}
+          <a href="#about">All caveats and how scores are counted</a>
         </p>
         <About data={data} />
       </div>
