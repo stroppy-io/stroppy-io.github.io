@@ -94,6 +94,17 @@ html[data-theme] {
   --ifm-color-secondary-contrast-foreground: var(--st-text);
 }
 
+/* Nothing scrolls the page sideways (the landing's sliding strip of
+   engines, the skip link). On <html> the value goes to the viewport, so
+   sticky elements keep working; <body> clips, which makes no scroller. */
+html {
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: clip;
+}
+
 body {
   -webkit-font-smoothing: antialiased;
 }

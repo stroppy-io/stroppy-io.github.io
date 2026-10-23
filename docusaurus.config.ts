@@ -1,6 +1,16 @@
 import prismStroppy from './src/prism-stroppy';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import {normalizeUrl, simpleHash} from '@docusaurus/utils';
+import {addTrailingSlash} from '@docusaurus/utils-common';
+
+const url = 'https://stroppy.io';
+const baseUrl = '/';
+
+// Where Docusaurus keeps the colour mode: its storage key carries a namespace
+// hashed from the site's address (future.v4), computed here the way
+// @docusaurus/core's server/storage.js does.
+const themeStorageKey = `theme-${simpleHash(addTrailingSlash(normalizeUrl([url, baseUrl])), 3)}`;
 
 const config: Config = {
   title: 'Stroppy',
@@ -12,8 +22,8 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://stroppy.io',
-  baseUrl: '/',
+  url,
+  baseUrl,
 
   organizationName: 'stroppy-io',
   projectName: 'stroppy-io.github.io',
@@ -35,7 +45,19 @@ const config: Config = {
     }],
   ],
 
-  plugins: ['docusaurus-plugin-llms', './plugins/cloud-rating.ts'],
+  plugins: ['docusaurus-plugin-llms', './plugins/cloud-rating.ts', './plugins/conformity.ts'],
+
+  // The theme the visitor picked on stroppy.io or in Stroppy Cloud, from the
+  // shared cookie, before Docusaurus reads its storage (src/client/theme-cookie.ts).
+  headTags: [
+    {
+      tagName: 'script',
+      attributes: {},
+      innerHTML:
+        `try{var m=document.cookie.match(/(?:^|; )stroppy-theme=(dark|light)/);if(m)localStorage.setItem('${themeStorageKey}',m[1])}catch(e){}`,
+    },
+  ],
+  clientModules: ['./src/client/theme-cookie.ts'],
 
   presets: [
     [
@@ -63,6 +85,8 @@ const config: Config = {
             './src/kit/fonts.css',
             './src/kit/base.css',
             './src/css/custom.css',
+            './src/css/nav.css',
+            './src/css/footer.css',
           ],
         },
       } satisfies Preset.Options,
@@ -84,102 +108,20 @@ const config: Config = {
         srcDark: 'kit/mark-dark.svg',
       },
       items: [
-        {
-          to: '/docs/tests/tpcb',
-          label: 'Tests',
-          position: 'left',
-          activeBaseRegex: '/docs/tests/.*',
-        },
-        {
-          type: 'docSidebar',
-          sidebarId: 'docsSidebar',
-          position: 'left',
-          label: 'Docs',
-        },
-        {
-          to: '/blog',
-          label: 'Blog',
-          position: 'left',
-        },
-        {
-          type: 'docSidebar',
-          sidebarId: 'legacySidebar',
-          position: 'left',
-          label: 'Legacy',
-        },
-        {
-          // Plain link to the full changelog (Next = all releases + Unreleased).
-          // Not a version-aware `type: doc` item — older versions have no
-          // changelog page and onBrokenLinks: 'throw' would fail the build.
-          to: '/docs/next/changelog',
-          label: 'Changelog',
-          position: 'right',
-          activeBaseRegex: '/docs/.*/changelog',
-        },
-        {
-          href: 'https://cloud.stroppy.io',
-          label: 'Cloud',
-          position: 'right',
-        },
-        {
-          type: 'docsVersionDropdown',
-          position: 'right',
-          dropdownActiveClassDisabled: true,
-        },
-        {
-          href: 'https://github.com/stroppy-io/stroppy',
-          position: 'right',
-          className: 'header-github-link',
-          'aria-label': 'GitHub repository',
-        },
-        {
-          href: 'https://discord.gg/2mSSrkBkHm',
-          position: 'right',
-          className: 'header-discord-link',
-          'aria-label': 'Discord server',
-        },
+        // Mega menus: src/components/nav/menu.ts.
+        {type: 'custom-mega', section: 'benchmarks', position: 'left'},
+        {type: 'custom-mega', section: 'how', position: 'left'},
+        {type: 'custom-mega', section: 'docs', position: 'left'},
+        // Sign in and Try Stroppy Cloud, or Open console: src/components/nav/Account.tsx.
+        // The docs version switch is in the docs sidebar (src/theme/DocSidebar),
+        // the theme switch, GitHub and Discord in the footer.
+        {type: 'custom-account', position: 'right'},
       ],
     },
+    // The footer is the site's own (src/theme/Footer): a site map built from
+    // the top menu (src/components/nav/menu.ts) and the copyright below.
     footer: {
-      style: 'light',
-      links: [
-        {
-          title: 'Documentation',
-          items: [
-            {label: 'Introduction', to: '/docs/introduction'},
-            {label: 'Migrating to v6', to: '/docs/migration-v6'},
-            {label: 'Built-in Workloads', to: '/docs/presets'},
-            {label: 'Machine Baseline', to: '/docs/baseline'},
-            {label: 'Reports & Workflow', to: '/docs/reports-workflow'},
-          ],
-        },
-        {
-          title: 'Community',
-          items: [
-            {
-              label: 'Discord',
-              href: 'https://discord.gg/2mSSrkBkHm',
-            },
-            {
-              label: 'GitHub',
-              href: 'https://github.com/stroppy-io/stroppy',
-            },
-            {
-              label: 'Releases',
-              href: 'https://github.com/stroppy-io/stroppy/releases',
-            },
-          ],
-        },
-        {
-          title: 'Legacy',
-          items: [
-            {label: 'Historical Overview', to: '/docs/legacy/overview'},
-            {label: 'FoundationDB Report', to: '/docs/legacy/fdb-report'},
-            {label: 'MongoDB Report', to: '/docs/legacy/mongodb-report'},
-          ],
-        },
-      ],
-      copyright: `Copyright ${new Date().getFullYear()} Stroppy Authors. Apache 2.0 License.`,
+      copyright: `© ${new Date().getFullYear()} Stroppy Authors · Apache 2.0 License`,
     },
     prism: {
       theme: prismStroppy,

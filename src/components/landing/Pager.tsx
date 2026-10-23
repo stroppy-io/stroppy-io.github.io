@@ -3,8 +3,8 @@ import clsx from 'clsx';
 import {HtmlClassNameProvider} from '@docusaurus/theme-common';
 
 // The landing scrolls a page at a time: CSS scroll snapping (landing.css,
-// under PAGED_QUERY) stops every gesture at the next page, and the page keeps
-// native scrolling, keyboard and anchors. This adds the map on the right edge
+// under PAGED_QUERY, while every page fits the screen) stops every gesture at
+// the next page, and the page keeps native scrolling, keyboard and anchors. This adds the map on the right edge
 // and the cue to the next page.
 
 export const PAGED_QUERY = '(min-width: 997px) and (min-height: 700px)';
@@ -23,9 +23,37 @@ function useMedia(query: string): boolean {
   return match;
 }
 
-/** The page in view. Snapping itself is `<PagerSnap>`, a class on <html>. */
+/**
+ * Whether every page fits the screen under the navbar. A page taller than
+ * that could not be read to its end with snapping on (each gesture would jump
+ * to the next page), so then the landing scrolls freely.
+ */
+function useAllFit(pages: readonly Page[], root: RefObject<HTMLElement | null>, enabled: boolean): boolean {
+  const [fit, setFit] = useState(false);
+  useEffect(() => {
+    const el = root.current;
+    if (!el || !enabled) return undefined;
+    const nodes = pages.map((p) => el.querySelector<HTMLElement>(`#${p.id}`)).filter(Boolean) as HTMLElement[];
+    const check = () => {
+      const navbar = document.querySelector<HTMLElement>('.navbar')?.offsetHeight ?? 0;
+      const room = window.innerHeight - navbar + 1;
+      setFit(nodes.every((n) => n.offsetHeight <= room));
+    };
+    const ro = new ResizeObserver(check);
+    nodes.forEach((n) => ro.observe(n));
+    window.addEventListener('resize', check);
+    check();
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', check);
+    };
+  }, [pages, root, enabled]);
+  return enabled && fit;
+}
+
+/** The page in view, and whether the landing pages (`<PagerSnap on>`). */
 export function usePager(pages: readonly Page[], root: RefObject<HTMLElement | null>) {
-  const paged = useMedia(PAGED_QUERY);
+  const paged = useAllFit(pages, root, useMedia(PAGED_QUERY));
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
@@ -106,7 +134,7 @@ export function PagerCue({pages, current, go}: {pages: readonly Page[]; current:
   );
 }
 
-/** Turns snapping on for the document while the landing is mounted (merged with the theme's classes). */
-export function PagerSnap({children}: {children: ReactNode}) {
-  return <HtmlClassNameProvider className="landing-paged">{children}</HtmlClassNameProvider>;
+/** Turns snapping on for the document while `on` (merged with the theme's classes). */
+export function PagerSnap({on, children}: {on: boolean; children: ReactNode}) {
+  return <HtmlClassNameProvider className={on ? 'landing-paged' : undefined}>{children}</HtmlClassNameProvider>;
 }

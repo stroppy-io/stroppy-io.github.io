@@ -1,0 +1,648 @@
+/* /conformity: which databases really speak the protocol they claim
+   (src/pages/conformity.tsx, components under src/components/conformity).
+   Kit colours only. Five states, each a tone and a glyph:
+   same ✓, differs ≠, refused ∅, breaks ✕, not measured ·. */
+
+.cf {
+  --cf-pad: 2rem;
+  --cf-max: calc(1320px + 2 * var(--cf-pad));
+  --cf-bar: 3.5rem;
+}
+
+.cf-wrap,
+.cf-hero,
+.cbar__inner {
+  max-width: var(--cf-max);
+  margin: 0 auto;
+  padding-inline: var(--cf-pad);
+}
+
+.cf a:focus-visible,
+.cf button:focus-visible,
+.cf summary:focus-visible,
+.cf [tabindex]:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 2px;
+}
+
+.cf code {
+  padding: 0 0.25em;
+  border: 0;
+  background: var(--st-raised);
+  font-size: 0.85em;
+}
+
+/* ---------- Hero: three short lines, so the map starts on the first
+   screen; the tabs below are the navigation ---------- */
+
+.cf-hero {
+  padding-top: 2rem;
+  padding-bottom: 1.25rem;
+}
+
+.cf-hero__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 1.2rem + 1.2vw, 2.375rem);
+  font-weight: var(--st-font-weight-bold);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.cf-lead {
+  margin: 0.5rem 0 0;
+  color: color-mix(in srgb, var(--st-text) 78%, var(--st-muted));
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.cf-prov {
+  margin: 0.35rem 0 0;
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+}
+
+.cf-prov a {
+  margin-left: 0.25rem;
+}
+
+/* ---------- The bar: protocol tabs and the legend, pinned ---------- */
+
+.cbar {
+  position: sticky;
+  top: var(--ifm-navbar-height);
+  z-index: 10;
+  border-bottom: 1px solid var(--st-line);
+  background: var(--st-canvas);
+}
+
+.cbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2.5rem;
+  min-height: var(--cf-bar);
+}
+
+.tabs {
+  display: flex;
+  gap: 2rem;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs button {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 1rem 0 0.9rem;
+  border: 0;
+  background: none;
+  color: var(--st-muted);
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: var(--st-font-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tabs button:hover {
+  color: var(--st-text);
+}
+
+.tabs button[aria-selected='true'] {
+  color: var(--st-text);
+}
+
+.tabs button[aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  border-radius: 2px 2px 0 0;
+  background: var(--st-primary);
+}
+
+.tabs button:focus-visible {
+  outline-offset: -2px;
+}
+
+.tabs__n {
+  color: var(--st-muted);
+  font-size: 0.875rem;
+  font-weight: var(--st-font-weight-regular);
+  font-variant-numeric: tabular-nums;
+}
+
+.states--inline {
+  display: none;
+}
+
+@media (max-width: 1199px) {
+  .states--bar {
+    display: none;
+  }
+
+  .states--inline {
+    display: flex;
+    margin-top: 1.25rem;
+  }
+}
+
+/* ---------- A protocol's panel ---------- */
+
+.panel {
+  padding-top: 1.75rem;
+  scroll-margin-top: calc(var(--ifm-navbar-height) + var(--cf-bar));
+}
+
+.panel__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  margin: 0 0 1rem;
+  font-size: 1.375rem;
+  font-weight: var(--st-font-weight-bold);
+  letter-spacing: -0.02em;
+}
+
+.panel__title span {
+  color: var(--st-muted);
+  font-size: 0.9375rem;
+  font-weight: var(--st-font-weight-regular);
+  letter-spacing: 0;
+}
+
+.cf-caveat {
+  max-width: 60rem;
+  margin: 1.5rem 0 0;
+  color: var(--st-muted);
+  font-size: 0.875rem;
+}
+
+/* ---------- The drawer ---------- */
+
+html.cf-drawer-open {
+  overflow: hidden;
+}
+
+.drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+}
+
+.drawer__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--st-canvas) 65%, transparent);
+  cursor: default;
+}
+
+.drawer__panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(36rem, 100vw);
+  border-left: 1px solid var(--st-line-strong);
+  background: var(--st-panel);
+}
+
+.drawer__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--st-line);
+}
+
+.drawer__head h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: var(--st-font-weight-bold);
+  letter-spacing: -0.03em;
+}
+
+.drawer__head p {
+  margin: 0.35rem 0 0;
+  color: var(--st-muted);
+  font-size: 0.875rem;
+}
+
+.drawer__head b {
+  color: var(--st-text);
+  font-weight: var(--st-font-weight-medium);
+}
+
+.drawer__close {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-md);
+  background: none;
+  color: var(--st-text);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.drawer__close:hover {
+  border-color: var(--st-line-strong);
+}
+
+.drawer__body {
+  flex: 1;
+  padding: 1.25rem 1.5rem 2.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.drawer__body h3 {
+  margin: 1.75rem 0 0.6rem;
+  font-size: 1.0625rem;
+  font-weight: var(--st-font-weight-bold);
+}
+
+.roles {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.roles > div {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+}
+
+.roles dt {
+  color: var(--st-muted);
+  font-size: 0.875rem;
+}
+
+.roles dd {
+  margin: 0;
+}
+
+.roles__overall {
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--st-line);
+}
+
+.roles__overall dt {
+  color: var(--st-text);
+  font-weight: var(--st-font-weight-medium);
+}
+
+.drawer__note,
+.drawer__loading,
+.drawer__count,
+.drawer__hint {
+  margin: 0.75rem 0 0;
+  color: var(--st-muted);
+  font-size: 0.875rem;
+}
+
+.drawer__error {
+  color: var(--st-error);
+}
+
+.findings {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.finding {
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--st-line);
+}
+
+.finding__head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.finding__n {
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+}
+
+.finding__text {
+  margin: 0.4rem 0 0;
+  font-size: 0.9375rem;
+  overflow-wrap: anywhere;
+}
+
+.finding__more summary {
+  margin-top: 0.4rem;
+  color: var(--st-primary-text);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.finding__title {
+  margin: 0.5rem 0;
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+}
+
+.finding__more h4 {
+  margin: 0.75rem 0 0.3rem;
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+  font-weight: var(--st-font-weight-regular);
+}
+
+.tag {
+  --tone: var(--st-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.5rem 0 0.4rem;
+  border-left: 3px solid var(--tone);
+  background: color-mix(in srgb, var(--tone) 14%, transparent);
+  font-size: 0.8125rem;
+  font-weight: var(--st-font-weight-medium);
+  line-height: 1.6rem;
+  white-space: nowrap;
+}
+
+.tag--same {
+  --tone: var(--st-success);
+}
+
+.tag--differs {
+  --tone: var(--st-warning);
+}
+
+.tag--refused {
+  --tone: var(--st-series-4);
+}
+
+.tag--breaks {
+  --tone: var(--st-error);
+}
+
+.code {
+  max-height: 14rem;
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  overflow: auto;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-md);
+  background: var(--st-canvas);
+  color: var(--st-text);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.code--diff {
+  border-left: 3px solid var(--st-warning);
+}
+
+.drawer__all {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--st-line-strong);
+  border-radius: var(--st-radius-md);
+  background: none;
+  color: var(--st-text);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+/* ---------- About this data ---------- */
+
+.about {
+  margin: 3.5rem 0 6rem;
+  border-top: 1px solid var(--st-line);
+  scroll-margin-top: calc(var(--ifm-navbar-height) + var(--cf-bar));
+}
+
+.about summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  padding: 1.25rem 0;
+  cursor: pointer;
+}
+
+.about summary span {
+  font-size: 1.25rem;
+  font-weight: var(--st-font-weight-bold);
+}
+
+.about summary small {
+  color: var(--st-muted);
+  font-size: 0.875rem;
+}
+
+.about__body {
+  display: grid;
+  gap: 2rem 4rem;
+  padding-bottom: 1rem;
+  font-size: 0.9375rem;
+}
+
+@media (min-width: 997px) {
+  .about__body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.about h3 {
+  margin: 1.5rem 0 0.6rem;
+  font-size: 1rem;
+  font-weight: var(--st-font-weight-bold);
+}
+
+.about section > h3:first-child {
+  margin-top: 0;
+}
+
+.about p {
+  margin: 0;
+  color: color-mix(in srgb, var(--st-text) 82%, var(--st-muted));
+}
+
+.about__caveats {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.about__caveats li {
+  margin-bottom: 0.6rem;
+}
+
+.about__list {
+  margin: 0;
+}
+
+.about__list > div {
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--st-line);
+}
+
+.about__list dt {
+  font-weight: var(--st-font-weight-medium);
+}
+
+.about__list dd {
+  display: flex;
+  flex-direction: column;
+  margin: 0.2rem 0 0;
+  color: color-mix(in srgb, var(--st-text) 82%, var(--st-muted));
+}
+
+.about__list small {
+  margin-top: 0.15rem;
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+}
+
+.about__weights {
+  display: table;
+  margin: 0.75rem 0 0;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.about__weights caption {
+  padding-bottom: 0.3rem;
+  color: var(--st-muted);
+  text-align: left;
+}
+
+.about__weights tr,
+.about__weights tr:nth-child(n) {
+  border: 0;
+  border-top: 1px solid var(--st-line);
+  background: none;
+}
+
+.about__weights th,
+.about__weights td {
+  padding: 0.3rem 1.5rem 0.3rem 0;
+  border: 0;
+  background: none;
+  font-weight: var(--st-font-weight-regular);
+  text-align: left;
+}
+
+/* ---------- Narrow screens ---------- */
+
+@media (max-width: 996px) {
+  .cf {
+    --cf-pad: 1rem;
+  }
+
+  .tabs {
+    gap: 1.5rem;
+  }
+
+  .tabs button {
+    font-size: 1rem;
+  }
+
+  .drawer__head,
+  .drawer__body {
+    padding-inline: 1rem;
+  }
+}
+
+/* ---------- One screen: on a wide, tall enough screen the page (without
+   the footer) is exactly the room under the navbar, and only the map's
+   list scrolls, under its own header ---------- */
+
+@media (min-width: 997px) and (min-height: 700px) {
+  .cf {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - var(--ifm-navbar-height));
+  }
+
+  .cf-hero,
+  .cbar {
+    flex: none;
+  }
+
+  .cf-wrap {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    width: 100%;
+    min-height: 0;
+    padding-top: 1.25rem;
+  }
+
+  .cf .panel:not([hidden]) {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .cf .panel__title {
+    flex: none;
+    margin-bottom: 0.75rem;
+  }
+
+  .cf .cmap {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border-bottom: 1px solid var(--st-line);
+  }
+
+  /* The header rows stay while the engines scroll under them; their cells
+     and the spacing between them are painted, so nothing shows through. */
+  .cf .cmap__table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .cf .cmap__table thead th,
+  .cf .cmap__table thead td {
+    background: var(--st-canvas);
+    box-shadow: 0 0 0 4px var(--st-canvas);
+  }
+
+  .cf-caveat {
+    flex: none;
+    margin-top: 0.75rem;
+  }
+
+  .cf .about {
+    flex: none;
+    margin: 0.25rem 0 0;
+    border-top: 0;
+  }
+
+  .cf .about summary {
+    padding: 0.5rem 0 1rem;
+  }
+
+  /* Opened, "About this data" takes the screen's height and scrolls itself. */
+  .cf .about[open] {
+    max-height: 45vh;
+    overflow: auto;
+  }
+}

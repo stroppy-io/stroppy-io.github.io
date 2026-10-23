@@ -67,3 +67,38 @@ export async function fetchRating(signal?: AbortSignal): Promise<Rating> {
   if (!res.ok) throw new Error(`${RATING_URL}: HTTP ${res.status}`);
   return (await res.json()) as Rating;
 }
+
+// The catalog of what Stroppy Cloud deploys (GET /api/v1/public/catalog), for
+// the hero's line of engines, versions and topologies.
+
+export const CATALOG_URL = `${CLOUD}/api/v1/public/catalog`;
+
+export type Catalog = {
+  databases: {kind: string; title: string; versions: string[]; topologies: string[]}[];
+};
+
+// Kinds that are not an engine Stroppy Cloud brings up: test doubles, a
+// database you point it at, your own image, a managed service.
+const NOT_ENGINES = new Set(['noop', 'pg_noop', 'external', 'custom', 'ydb_managed']);
+
+/** Engines, their versions and topologies, counted over what Stroppy Cloud deploys. */
+export function reach(catalog: Catalog): {
+  dbs: {kind: string; title: string}[];
+  engines: number;
+  versions: number;
+  topologies: number;
+} {
+  const dbs = catalog.databases.filter((d) => !NOT_ENGINES.has(d.kind));
+  return {
+    dbs: dbs.map(({kind, title}) => ({kind, title})),
+    engines: dbs.length,
+    versions: dbs.reduce((n, d) => n + d.versions.length, 0),
+    topologies: dbs.reduce((n, d) => n + d.topologies.length, 0),
+  };
+}
+
+export async function fetchCatalog(signal?: AbortSignal): Promise<Catalog> {
+  const res = await fetch(CATALOG_URL, {signal, headers: {accept: 'application/json'}});
+  if (!res.ok) throw new Error(`${CATALOG_URL}: HTTP ${res.status}`);
+  return (await res.json()) as Catalog;
+}

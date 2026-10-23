@@ -1,0 +1,1624 @@
+/* /how: how Stroppy Cloud works (src/pages/how.tsx), told along one run's
+   clock, which runs as the page scrolls: the run strip
+   (components/how/RunStrip.tsx), the pinned clock (Clock.tsx), chapters on
+   a time axis with the diagrams' stories beside them, the tuning chart
+   (TuneChart.tsx), and the diagrams themselves (Diagram.tsx, the .dg part
+   at the end). Kit colours only. */
+
+.how {
+  --how-gutter: 8.5rem;
+  --how-gap: 3rem;
+  --how-max: calc(1320px + 2 * var(--how-pad));
+  --how-pad: 2rem;
+  --how-bar: 3.25rem;
+}
+
+.how-hero,
+.how-end {
+  max-width: var(--how-max);
+  margin: 0 auto;
+  padding-inline: var(--how-pad);
+}
+
+.how h1,
+.how h2 {
+  margin: 0;
+  font-weight: var(--st-font-weight-bold);
+  letter-spacing: -0.035em;
+}
+
+.how h2 {
+  text-wrap: balance;
+  font-size: clamp(1.75rem, 1rem + 1.5vw, 2.6rem);
+  line-height: 1.08;
+}
+
+.how-lead {
+  max-width: 42rem;
+  margin: 1rem 0 0;
+  color: color-mix(in srgb, var(--st-text) 80%, var(--st-muted));
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+.how-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.how a:focus-visible,
+.how button:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 3px;
+}
+
+/* ---------- Hero: the title, and a run drawn to scale ---------- */
+
+.how-hero {
+  padding-top: clamp(3rem, 7vh, 5.5rem);
+  padding-bottom: 2rem;
+}
+
+.how-hero__title {
+  max-width: 11ch;
+  font-size: clamp(2.75rem, 1rem + 5vw, 6rem);
+  line-height: 0.95;
+  letter-spacing: -0.05em !important;
+}
+
+.how-hero__intro .how-lead {
+  max-width: 38rem;
+  margin-top: 0;
+}
+
+@media (min-width: 997px) {
+  .how-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 38rem);
+    column-gap: 4rem;
+    align-items: end;
+  }
+
+  .how-hero .strip,
+  .how-hero__note {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 996px) {
+  .how-hero__intro {
+    margin-top: 1.5rem;
+  }
+}
+
+.how-hero__note {
+  margin: 0;
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+}
+
+/* ---------- The run strip: stages as wide as their minutes ---------- */
+
+.strip {
+  position: relative;
+  margin-top: clamp(3rem, 8vh, 5rem);
+  padding-bottom: 6.25rem;
+}
+
+.strip--compact {
+  margin: 0;
+  padding: 0;
+}
+
+.strip__ruler {
+  position: relative;
+  height: 1.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.strip__tick {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 5px;
+  background: var(--st-line-strong);
+}
+
+.strip__tick--major {
+  height: 10px;
+  background: var(--st-muted);
+}
+
+.strip__tick b {
+  position: absolute;
+  bottom: 14px;
+  left: 0;
+  transform: translateX(-50%);
+  color: var(--st-muted);
+  font-family: var(--st-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--st-font-weight-regular);
+  white-space: nowrap;
+}
+
+.strip__tick:last-child b {
+  transform: translateX(-100%);
+}
+
+.strip__bar {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.strip__stage {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+}
+
+.strip__seg {
+  position: relative;
+  display: block;
+  height: 3.5rem;
+  color: var(--st-text);
+  text-decoration: none;
+}
+
+.strip--compact .strip__seg {
+  height: 0.5rem;
+}
+
+.strip--pins .strip__seg {
+  height: 0.875rem;
+}
+
+.strip__seg:hover {
+  color: var(--st-text);
+  text-decoration: none;
+}
+
+.strip__fill {
+  position: absolute;
+  inset: 0 2px 0 0;
+  border-radius: var(--st-radius-sm);
+  background: color-mix(in srgb, var(--c) 72%, var(--st-canvas));
+  transition: background-color 0.15s;
+}
+
+.strip__stage:first-child .strip__fill {
+  border-radius: var(--st-radius-lg) var(--st-radius-sm) var(--st-radius-sm) var(--st-radius-lg);
+}
+
+.strip__stage:last-child .strip__fill {
+  right: 0;
+  border-radius: var(--st-radius-sm) var(--st-radius-lg) var(--st-radius-lg) var(--st-radius-sm);
+}
+
+.strip--compact .strip__fill {
+  border-radius: 1px;
+}
+
+.strip__seg:hover .strip__fill,
+.strip__seg:focus-visible .strip__fill {
+  background: var(--c);
+}
+
+/* A flag hangs from the stage's edge: two rows, so narrow stages fit. */
+.strip__flag {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 0 0 0.6rem;
+  border-left: 1px solid var(--c);
+  white-space: nowrap;
+}
+
+.strip__stage--row2 .strip__flag {
+  padding-top: 3.25rem;
+}
+
+.strip__stage--end .strip__flag {
+  right: 2px;
+  left: auto;
+  align-items: flex-end;
+  padding-right: 0.6rem;
+  padding-left: 0;
+  border-right: 1px solid var(--c);
+  border-left: 0;
+}
+
+.strip__stage--end:last-child .strip__flag {
+  right: 0;
+}
+
+.strip__name {
+  font-size: 1rem;
+  font-weight: var(--st-font-weight-medium);
+  line-height: 1.3;
+}
+
+.strip__min {
+  color: var(--st-muted);
+  font-family: var(--st-font-mono);
+  font-size: 0.75rem;
+}
+
+/* Webhook events above a compact strip, at the minutes they fire. */
+.strip__pins {
+  position: relative;
+  height: 4.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.strip__pin {
+  position: absolute;
+  bottom: 0;
+  height: 100%;
+  margin: 0;
+}
+
+.strip__pin--row2 {
+  height: 2.6rem;
+}
+
+.strip__pin code {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--st-text);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.strip__pin--end code {
+  right: 0;
+  left: auto;
+}
+
+/* Several minutes: a bracket joins their stems under the label. */
+.strip__pin--row2::before {
+  content: '';
+  position: absolute;
+  top: 1.45rem;
+  right: 0;
+  left: 0;
+  border-top: 1px solid var(--st-muted);
+}
+
+.strip__stem {
+  position: absolute;
+  top: 1.45rem;
+  bottom: 0;
+  width: 1px;
+  background: var(--st-muted);
+}
+
+.strip__stem::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--st-text);
+}
+
+
+/* ---------- The run clock, pinned under the navbar ---------- */
+
+/* It takes no room in the flow (the negative margin), shows once it sticks
+   under the navbar (.is-on, set by the page), and lets go where the
+   chapters end. `--t` is the minute of the run, set on .how from the scroll. */
+.how-clock {
+  position: sticky;
+  top: var(--ifm-navbar-height);
+  z-index: 20;
+  height: var(--how-bar);
+  margin-bottom: calc(-1 * var(--how-bar));
+  border-bottom: 1px solid var(--st-line);
+  background: var(--st-canvas);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-0.5rem);
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+
+.how-clock.is-on,
+.how-clock:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+.how-clock__inner {
+  display: grid;
+  grid-template-columns: 4.5rem 9rem minmax(0, 1fr) 13rem;
+  column-gap: 1.25rem;
+  align-items: center;
+  max-width: var(--how-max);
+  height: 100%;
+  margin: 0 auto;
+  padding-inline: var(--how-pad);
+}
+
+.how-clock__time {
+  color: var(--st-text);
+  font-family: var(--st-font-mono);
+  font-size: 1.375rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.how-clock__stage {
+  overflow: hidden;
+  color: var(--c);
+  font-size: 0.875rem;
+  font-weight: var(--st-font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.how-clock__track {
+  position: relative;
+  display: flex;
+  height: 100%;
+}
+
+.how-clock__seg {
+  position: relative;
+  display: block;
+  min-width: 0;
+  height: 100%;
+}
+
+/* The stage, dim; its fill grows with the clock. */
+.how-clock__seg::before,
+.how-clock__fill {
+  content: '';
+  position: absolute;
+  top: calc(50% - 3px);
+  right: 2px;
+  left: 0;
+  height: 6px;
+  border-radius: 1px;
+}
+
+.how-clock__seg:last-of-type::before,
+.how-clock__seg:last-of-type .how-clock__fill {
+  right: 0;
+}
+
+.how-clock__seg::before {
+  background: color-mix(in srgb, var(--c) 22%, var(--st-canvas));
+}
+
+.how-clock__fill {
+  background: var(--c);
+  transform: scaleX(clamp(0, calc((var(--t, 0) - var(--at)) / var(--min)), 1));
+  transform-origin: left center;
+}
+
+.how-clock__seg:hover::before {
+  background: color-mix(in srgb, var(--c) 45%, var(--st-canvas));
+}
+
+.how-clock__seg:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: -2px;
+}
+
+.how-clock__head {
+  position: absolute;
+  top: 25%;
+  bottom: 25%;
+  left: calc(var(--t, 0) / 19 * 100%);
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--st-text);
+  pointer-events: none;
+}
+
+/* A webhook: a dot over the track that fills once the run has sent it. */
+.how-clock__hook {
+  position: absolute;
+  top: calc(50% - 13px);
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border: 1px solid var(--st-muted);
+  border-radius: 50%;
+  background: var(--st-canvas);
+  pointer-events: none;
+}
+
+.how-clock__hook.is-sent {
+  border-color: var(--st-text);
+  background: var(--st-text);
+}
+
+.how-clock__event {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.how-clock__event span {
+  color: var(--st-muted);
+  font-size: 0.75rem;
+}
+
+.how-clock__event code {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--st-text);
+  font-size: 0.8125rem;
+}
+
+/* ---------- Chapters on the run's time axis ---------- */
+
+.how-run__chapters {
+  max-width: var(--how-max);
+  margin: 0 auto;
+  padding-inline: var(--how-pad);
+}
+
+.ch {
+  display: grid;
+  grid-template-columns: var(--how-gutter) minmax(0, 1fr);
+  column-gap: var(--how-gap);
+  scroll-margin-top: calc(var(--ifm-navbar-height) + var(--how-bar));
+}
+
+.ch__rail {
+  position: relative;
+  padding-top: 4.5rem;
+}
+
+/* The axis: a stage's stretch fills in its colour as the clock runs
+   through it (`--p`, set by the page; full without script). Dashed before
+   and after the run. */
+.ch__track,
+.ch__fill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 3px;
+}
+
+.ch__track {
+  background: color-mix(in srgb, var(--c) 22%, var(--st-canvas));
+}
+
+.ch__fill {
+  background: var(--c);
+  transform: scaleY(var(--p, 1));
+  transform-origin: top center;
+}
+
+.ch--off .ch__rail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 1px;
+  bottom: 0;
+  width: 1px;
+  background: repeating-linear-gradient(to bottom, var(--st-line-strong) 0 6px, transparent 6px 12px);
+}
+
+.ch__when {
+  position: sticky;
+  top: calc(var(--ifm-navbar-height) + var(--how-bar) + 2rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-right: 1.5rem;
+  text-align: right;
+}
+
+.ch__when::after {
+  content: '';
+  position: absolute;
+  top: 0.45rem;
+  right: -5px;
+  width: 13px;
+  height: 13px;
+  border: 3px solid var(--c, var(--st-line-strong));
+  border-radius: 50%;
+  background: var(--st-canvas);
+}
+
+.ch__time {
+  color: var(--st-text);
+  font-family: var(--st-font-mono);
+  font-size: 1.625rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.ch__label {
+  margin-top: 0.3rem;
+  color: var(--c, var(--st-muted));
+  font-size: 0.875rem;
+  font-weight: var(--st-font-weight-medium);
+}
+
+.ch--off .ch__label {
+  margin-top: 0.15rem;
+  color: var(--st-muted);
+  font-size: 1rem;
+}
+
+.ch__body {
+  min-width: 0;
+  padding-block: 4.5rem;
+}
+
+/* The longest stage is a long scroll: its text stays put while the clock
+   runs twelve minutes past it. */
+.ch--load .ch__body {
+  min-height: 170vh;
+  padding-bottom: 3rem;
+}
+
+.load-pin {
+  position: sticky;
+  top: calc(var(--ifm-navbar-height) + var(--how-bar) + 4.5rem);
+}
+
+.load-clock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1.25rem;
+  margin: 2rem 0 0;
+}
+
+.load-clock [data-load-clock] {
+  min-width: 4.2ch;
+  color: var(--c);
+  font-family: var(--st-font-mono);
+  font-size: clamp(3.5rem, 2rem + 6vw, 8rem);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.load-clock__of {
+  color: var(--st-muted);
+  font-size: 1rem;
+}
+
+.ch--load .ch__rail::after {
+  content: '';
+  position: absolute;
+  top: 6.5rem;
+  right: 3px;
+  bottom: 2rem;
+  width: 9px;
+  background: repeating-linear-gradient(to bottom, var(--c) 0 1px, transparent 1px 1.5rem);
+  opacity: 0.6;
+}
+
+.ch--short .ch__body {
+  padding-bottom: 3rem;
+}
+
+.ch__head {
+  display: grid;
+  gap: 1.5rem 4rem;
+}
+
+.ch__head > :only-child {
+  max-width: 46rem;
+}
+
+@media (min-width: 1200px) {
+  .ch__head:has(> :nth-child(2)) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.ch__figure {
+  margin-top: 2.5rem;
+}
+
+/* The load: one sentence, set large. */
+.how-statement {
+  max-width: 34em;
+  margin: 1.5rem 0 0;
+  color: var(--st-text);
+  font-size: clamp(1.25rem, 0.9rem + 0.9vw, 1.75rem);
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+}
+
+.how-aside {
+  margin: 1.25rem 0 0;
+  color: var(--st-muted);
+}
+
+.how-points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.how-points li {
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--st-line);
+  color: color-mix(in srgb, var(--st-text) 85%, var(--st-muted));
+}
+
+.how-points li:last-child {
+  border-bottom: 1px solid var(--st-line);
+}
+
+/* ---------- Story chips and the caption of the chosen step ---------- */
+
+.how-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.how-chips__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 1.9rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-pill);
+  background: none;
+  color: var(--st-muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background-color 0.15s;
+}
+
+.how-chips__chip:hover {
+  border-color: var(--st-muted);
+  color: var(--st-text);
+}
+
+.how-chips__chip[aria-selected='true'] {
+  border-color: var(--st-primary);
+  background: var(--st-raised);
+  color: var(--st-text);
+}
+
+.how-chips__num {
+  color: var(--st-primary-text);
+  font-family: var(--st-font-mono);
+}
+
+.how-caption {
+  min-height: 7.5rem;
+  margin-top: 1rem;
+}
+
+.how-caption h3 {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: var(--st-font-weight-medium);
+}
+
+.how-caption p {
+  margin: 0.35rem 0 0;
+  color: var(--st-muted);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+/* ---------- Tuning: how far each setting moved from stock ---------- */
+
+.tune {
+  margin: 0;
+}
+
+.tune__table {
+  display: table;
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+}
+
+.tune__table tr,
+.tune__table thead,
+.tune__table thead tr {
+  border: 0;
+  background: none;
+}
+
+.tune__table th,
+.tune__table td {
+  padding: 0.6rem 0.75rem;
+  border: 0;
+  background: none;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.tune__table thead th {
+  padding-block: 0 0.6rem;
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+  font-weight: var(--st-font-weight-regular);
+}
+
+.tune__table tbody tr {
+  border-top: 1px solid var(--st-line);
+}
+
+.tune__table th:first-child {
+  padding-left: 0;
+  font-weight: var(--st-font-weight-regular);
+}
+
+.tune__table code {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 0.875rem;
+}
+
+.tune__table caption {
+  padding-top: 1rem;
+  caption-side: bottom;
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+  text-align: left;
+}
+
+.tune__stock,
+.tune__tuned {
+  font-family: var(--st-font-mono);
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.tune__stock {
+  color: var(--st-muted);
+  text-align: right !important;
+}
+
+.tune__tuned {
+  color: var(--st-text);
+}
+
+.tune__table th:nth-child(2) {
+  text-align: right;
+}
+
+.tune__table .tune__track {
+  position: relative;
+  width: 52%;
+  height: 2.75rem;
+  padding: 0;
+}
+
+.tune__track::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: calc(var(--zero) * 100%);
+  width: 1px;
+  background: var(--st-line-strong);
+}
+
+.tune__axis {
+  position: relative;
+  display: block;
+  height: 1.2rem;
+}
+
+.tune__axis span {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+}
+
+.tune__axis span:first-child {
+  right: calc((1 - var(--zero)) * 100%);
+  padding-right: 0.5rem;
+}
+
+.tune__axis span:last-child {
+  left: calc(var(--zero) * 100%);
+  padding-left: 0.5rem;
+}
+
+.tune__bar {
+  position: absolute;
+  top: 50%;
+  height: 1.375rem;
+  border-radius: var(--st-radius-sm);
+  background: var(--st-series-4);
+  transform: translateY(-50%);
+}
+
+/* With script and motion, a bar grows from the stock line as its row
+   comes into view. */
+.tune--armed .tune__bar {
+  transform: translateY(-50%) scaleX(0);
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.tune--armed .tune__bar:not(.tune__bar--down) {
+  transform-origin: left center;
+}
+
+.tune--armed .tune__bar--down {
+  transform-origin: right center;
+}
+
+.tune--armed .tune__factor {
+  opacity: 0;
+  transition: opacity 0.3s 0.5s;
+}
+
+.tune--armed tr.is-in .tune__bar {
+  transform: translateY(-50%);
+}
+
+.tune--armed tr.is-in .tune__factor {
+  opacity: 1;
+}
+
+.tune__bar--down {
+  border: 1px solid var(--st-series-4);
+  background: color-mix(in srgb, var(--st-series-4) 18%, transparent);
+}
+
+.tune__factor {
+  position: absolute;
+  top: 50%;
+  padding: 0 0.45rem;
+  color: var(--st-canvas);
+  font-family: var(--st-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--st-font-weight-bold);
+  transform: translate(-100%, -50%);
+  white-space: nowrap;
+}
+
+.tune__factor--down {
+  color: var(--st-text);
+  transform: translate(0, -50%);
+}
+
+/* ---------- Collect: share, compare, publish ---------- */
+
+.share {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 2.5rem 5rem;
+  margin-top: 2.5rem;
+  align-items: start;
+}
+
+.share__url {
+  display: block;
+  padding-bottom: 0.9rem;
+  border-bottom: 3px solid var(--c);
+  color: var(--st-text);
+  font-family: var(--st-font-mono);
+  font-size: clamp(1.3rem, 0.5rem + 2.1vw, 2.5rem);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.share__url span {
+  color: var(--c);
+}
+
+.share__link p {
+  margin: 1rem 0 0;
+  color: color-mix(in srgb, var(--st-text) 80%, var(--st-muted));
+  font-size: 1.0625rem;
+}
+
+.share__list {
+  margin: 0;
+}
+
+.share__list > div {
+  padding: 0.9rem 0;
+  border-top: 1px solid var(--st-line);
+}
+
+.share__list > div:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.share__list dt {
+  font-weight: var(--st-font-weight-medium);
+}
+
+.share__list dd {
+  margin: 0.25rem 0 0;
+  color: var(--st-muted);
+}
+
+.share__link .share__embed-note {
+  margin-top: 2rem;
+  color: var(--st-muted);
+  font-size: 0.9375rem;
+}
+
+.share__embed {
+  display: block;
+  margin-top: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--st-line);
+  background: var(--st-panel);
+  color: var(--st-text);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- And again: suites and schedules ---------- */
+
+.again {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  margin-top: 2.5rem;
+}
+
+.again__part {
+  min-width: 0;
+  padding-right: 3.5rem;
+}
+
+.again__part + .again__part {
+  padding-right: 0;
+  padding-left: 3.5rem;
+  border-left: 1px solid var(--st-line);
+}
+
+.again h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: var(--st-font-weight-bold);
+  letter-spacing: -0.02em;
+}
+
+.again p {
+  margin: 0.5rem 0 0;
+  color: var(--st-muted);
+}
+
+.suite {
+  display: grid;
+  grid-template-columns: auto repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1.25rem;
+  align-items: center;
+  margin-top: 1.75rem;
+}
+
+.suite__row {
+  display: contents;
+}
+
+.suite__head {
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+}
+
+.suite__head--row {
+  color: var(--st-text);
+  font-size: 0.875rem;
+}
+
+.again__cron {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--st-text);
+  font-size: 1.5rem;
+  letter-spacing: 0.04em;
+}
+
+.history {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  margin-top: 1rem;
+}
+
+.history__axis {
+  stroke: var(--st-line);
+}
+
+.history__line {
+  fill: none;
+  stroke: var(--st-line-strong);
+  stroke-width: 1.5;
+}
+
+.history__dot {
+  fill: var(--st-text);
+}
+
+.history__dot--bad {
+  fill: var(--st-error);
+}
+
+/* ---------- API and CI ---------- */
+
+.how-api {
+  margin: 2rem 0 0;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-lg);
+  background: var(--st-panel);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.how-api code {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.how-api__verb {
+  color: var(--st-primary-text);
+  font-weight: var(--st-font-weight-bold);
+}
+
+.how-api__key {
+  color: var(--st-muted);
+}
+
+.hooks {
+  margin-top: 3rem;
+}
+
+.hooks__other {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 3.5rem;
+  margin: 2rem 0 0;
+}
+
+.hooks__other dt {
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+  font-weight: var(--st-font-weight-regular);
+}
+
+.hooks__other dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.4rem 0 0;
+}
+
+.hooks__other code {
+  font-size: 0.8125rem;
+}
+
+/* ---------- The end ---------- */
+
+.how-end {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* With the footer, exactly a screen under the navbar (--how-footer-h is
+     set by the page), so at the bottom nothing above it shows through. */
+  min-height: calc(100dvh - var(--ifm-navbar-height) - var(--how-footer-h, 0px));
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+  border-top: 1px solid var(--st-line);
+}
+
+@media (min-width: 997px) {
+  .how-end {
+    padding-left: calc(var(--how-pad) + var(--how-gutter) + var(--how-gap));
+  }
+}
+
+.how-end h2 {
+  font-size: clamp(2rem, 1rem + 2.5vw, 3.5rem);
+}
+
+/* ---------- Narrow screens: the axis runs down the left edge ---------- */
+
+@media (max-width: 1199px) {
+  .how {
+    --how-gutter: 6.5rem;
+    --how-gap: 2rem;
+  }
+}
+
+@media (max-width: 996px) {
+  .how {
+    --how-pad: 1rem;
+    --how-bar: 2.75rem;
+  }
+
+  /* The clock: time, stage and track; the webhook readout goes. */
+  .how-clock__inner {
+    grid-template-columns: auto auto minmax(0, 1fr);
+    column-gap: 0.75rem;
+  }
+
+  .how-clock__time {
+    font-size: 1.125rem;
+  }
+
+  .how-clock__stage {
+    max-width: 7rem;
+    font-size: 0.8125rem;
+  }
+
+  .how-clock__event {
+    display: none;
+  }
+
+  .ch {
+    position: relative;
+    grid-template-columns: minmax(0, 1fr);
+    padding-left: 1.25rem;
+  }
+
+  .ch--off {
+    padding-left: calc(1.25rem + 2px);
+    border-left: 1px dashed var(--st-line-strong);
+  }
+
+  /* The axis along the left edge of the chapter. */
+  .ch__rail {
+    position: static;
+    padding-top: 3rem;
+  }
+
+  .ch__track,
+  .ch__fill {
+    right: auto;
+    left: 0;
+  }
+
+  .ch__rail::before,
+  .ch__rail::after,
+  .ch__when::after {
+    display: none;
+  }
+
+  .ch--load .ch__body {
+    min-height: 0;
+  }
+
+  .load-pin {
+    position: static;
+  }
+
+  .ch__when {
+    position: static;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0;
+    text-align: left;
+  }
+
+  .ch__time {
+    font-size: 1.25rem;
+  }
+
+  .ch__body {
+    padding-block: 1rem 3rem;
+  }
+
+  .ch--load .ch__body {
+    padding-block: 1rem 5rem;
+  }
+
+  .share,
+  .again {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .again__part {
+    padding-right: 0;
+  }
+
+  .again__part + .again__part {
+    margin-top: 2.5rem;
+    padding-top: 2.5rem;
+    padding-left: 0;
+    border-top: 1px solid var(--st-line);
+    border-left: 0;
+  }
+
+  /* The tuning table: the bar takes a line of its own under each setting. */
+  .tune__table thead {
+    display: none;
+  }
+
+  .tune__table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    column-gap: 0.75rem;
+    padding: 0.6rem 0;
+  }
+
+  .tune__table th,
+  .tune__table td {
+    padding: 0;
+  }
+
+  .tune__table .tune__track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: auto;
+    height: 2rem;
+    margin-top: 0.35rem;
+  }
+
+  .tune__stock::after {
+    content: ' →';
+  }
+}
+
+@media (max-width: 600px) {
+  .strip__about {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .how-chips__chip,
+  .strip__fill,
+  .how-clock {
+    transition: none;
+  }
+
+  .how-clock {
+    transform: none;
+  }
+}
+
+/* ---------- Diagram: framed groups of blocks with drawn links ---------- */
+
+.dg {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 3rem;
+}
+
+.dg__group {
+  position: relative;
+  padding: 2.5rem 1.25rem 1.25rem;
+  border: 1px solid var(--st-line);
+  border-radius: 12px;
+}
+
+.dg__group--dashed {
+  border-style: dashed;
+  border-color: var(--st-line-strong);
+}
+
+.dg__label {
+  position: absolute;
+  top: 0.75rem;
+  left: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+}
+
+.dg__label-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.dg__grid {
+  display: grid;
+  column-gap: 4rem;
+  row-gap: 1.5rem;
+  align-items: center;
+}
+
+.dg__node {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--st-line);
+  border-radius: 8px;
+  background: var(--st-panel);
+  color: var(--st-text);
+  font: inherit;
+  text-align: left;
+  cursor: default;
+  transition:
+    border-color 0.15s,
+    opacity 0.15s;
+}
+
+.dg__node:focus-visible,
+.dg__dep:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 2px;
+}
+
+.dg__node--client {
+  border-style: dashed;
+  border-color: var(--st-primary);
+  background: color-mix(in srgb, var(--st-primary) 10%, var(--st-panel));
+}
+
+.dg__node.is-active,
+.dg__dep.is-active {
+  border-color: var(--st-primary);
+}
+
+.dg__node.is-dim,
+.dg__dep.is-dim {
+  opacity: 0.4;
+}
+
+.dg__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: var(--st-font-weight-medium);
+}
+
+.dg__icon {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: var(--st-primary-text);
+}
+
+.dg__body {
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.dg__sample {
+  color: var(--st-primary-text);
+  font-family: var(--st-font-mono);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+
+.dg__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.dg__chips span {
+  padding: 0 0.4rem;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-pill);
+  color: var(--st-muted);
+  font-size: 0.75rem;
+}
+
+.dg__deps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--st-line);
+}
+
+.dg__deps-label {
+  margin-right: 0.25rem;
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+}
+
+.dg__dep {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2rem;
+  padding: 0 0.6rem;
+  border: 1px dashed var(--st-line-strong);
+  border-radius: var(--st-radius-pill);
+  background: none;
+  color: var(--st-text);
+  font: inherit;
+  cursor: default;
+  transition:
+    border-color 0.15s,
+    opacity 0.15s;
+}
+
+.dg__dep-title {
+  font-size: 0.8125rem;
+  font-weight: var(--st-font-weight-medium);
+}
+
+.dg__dep-tech {
+  color: var(--st-primary-text);
+  font-family: var(--st-font-mono);
+  font-size: 0.75rem;
+}
+
+/* Links: drawn under the blocks, their labels over them. */
+.dg__edges {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.dg__edges--labels {
+  z-index: 3;
+}
+
+.dg__edge {
+  fill: none;
+  stroke: var(--st-line-strong);
+  stroke-width: 1.25;
+  transition:
+    opacity 0.15s,
+    stroke 0.15s;
+}
+
+.dg__edge.is-on {
+  stroke: var(--st-primary);
+  stroke-width: 2;
+}
+
+.dg__edge.is-faded,
+.dg__edge-label.is-faded {
+  opacity: 0.2;
+}
+
+.dg__edge-label {
+  transition: opacity 0.15s;
+}
+
+.dg__edge-label rect {
+  fill: var(--st-canvas);
+}
+
+.dg__edge-label text {
+  fill: var(--st-muted);
+  font-family: var(--st-font-sans);
+  font-size: 11px;
+}
+
+/* The card beside a hovered block. */
+.dg__card {
+  position: absolute;
+  z-index: 5;
+  width: 340px;
+  padding: 1rem;
+  border: 1px solid var(--st-line-strong);
+  border-radius: 10px;
+  background: var(--st-raised);
+  box-shadow: 0 16px 40px -16px color-mix(in srgb, var(--st-canvas) 80%, transparent);
+  pointer-events: none;
+}
+
+.dg__card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: var(--st-font-weight-medium);
+}
+
+.dg__card p {
+  margin: 0.5rem 0 0;
+  color: var(--st-muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.dg__facts {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.dg__fact-label {
+  margin-bottom: 0.25rem;
+  color: var(--st-muted);
+  font-size: 0.75rem;
+}
+
+.dg__fact-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.dg__fact-items span {
+  padding: 0 0.4rem;
+  border: 1px solid var(--st-line-strong);
+  border-radius: var(--st-radius-pill);
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.dg__foot {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--st-line);
+  color: var(--st-muted);
+  font-size: 0.75rem;
+}
+
+/* Phones: blocks stack, the links and the card go. */
+@media (max-width: 996px) {
+  .dg__group {
+    padding-top: 1rem;
+  }
+
+  .dg__label {
+    position: static;
+    margin-bottom: 0.75rem;
+  }
+
+  .dg__grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas: none !important;
+    row-gap: 0.75rem;
+  }
+
+  .dg__node {
+    grid-area: auto !important;
+  }
+
+  .dg__edges,
+  .dg__card {
+    display: none;
+  }
+}

@@ -85,14 +85,33 @@ no diff. Never edit generated `docs/changelog.md` or a frozen changelog by hand.
 docusaurus.config.ts     site metadata, plugins, navbar, footer, versions
 sidebars.ts               current navigation
 src/css/custom.css        site styling
+src/css/nav.css           the top menu: mega panels, Sign in and Create account
+src/components/nav/       the top bar: mega menu content (menu.ts) and panels, icons, account links
+src/theme/NavbarItem/     registers `custom-mega` and `custom-account` next to Docusaurus's navbar items
+src/theme/DocSidebar/     the docs version switch, on top of the docs sidebar
+src/theme/Footer/         the site footer: a site map built from the top menu, copyright, theme switch
+src/css/footer.css        the footer's styles
+src/client/theme-cookie.ts  the theme shared with Stroppy Cloud through the stroppy-theme cookie
 src/pages/index.tsx       landing page
+src/pages/how.tsx         how Stroppy Cloud works, a screen at a time (src/css/how.css); the menu
+                          links to its screens and opens the product diagram on a story (#suites, #share)
+src/components/how/       the /how diagrams: Diagram.tsx and their data (product model, architecture)
+src/pages/conformity.tsx  which databases really speak the protocol they claim: per-protocol tabs, a
+                          compatibility map of engines × feature groups, an engine's findings in a
+                          drawer, "About this data" folded at the bottom (src/css/conformity.css);
+                          reads static/data/conformity/compat.json at build, fetches details on open
+src/components/conformity/ CompatMap, Drawer, About, and data.ts (the five states, groups, protocols)
+static/data/conformity/   the dataset as exported: compat.json and details/<row id>.json
 src/components/landing/   landing pieces: scroll-driven mark, charts from blog data, run replay,
                           leaderboard (hero top rows, Stroppy Cloud's full board in an iframe)
-plugins/cloud-rating.ts   copies Stroppy Cloud's public rating into the build for the hero board
+plugins/cloud-rating.ts   copies Stroppy Cloud's public rating and catalog into the build for the hero
+plugins/conformity.ts     a summary of the conformity dataset for the landing's teaser
 src/css/landing.css       landing styles
+plans/                    agreed plans of work, not published
 src/prism-stroppy.ts      code highlighting on the kit's variables, both modes
 kit.json                  pinned UI kit release: version and archive sha256
-scripts/                  changelog and UI kit synchronization, changelog slicing
+scripts/                  changelog and UI kit synchronization, changelog slicing; extract-conformity.mjs
+                          re-extracts the conformity dataset from a report.html (interim)
 ```
 
 ## UI kit

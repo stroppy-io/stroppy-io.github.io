@@ -1,10 +1,13 @@
 import {useEffect, useRef, useState, type CSSProperties, type ReactNode} from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
+import useBrokenLinks from '@docusaurus/useBrokenLinks';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
 import {PairsPlot, type Group} from '@site/src/components/landing/Charts';
 import HeroMark from '@site/src/components/landing/HeroMark';
+import ConformityTeaser from '@site/src/components/landing/Conformity';
+import Engines from '@site/src/components/landing/Engines';
 import {ResultsFrame, TopBoard} from '@site/src/components/landing/Leaderboard';
 import {PagerCue, PagerNav, PagerSnap, usePager, type Page as PageInfo} from '@site/src/components/landing/Pager';
 import RunReplay, {type RunPart} from '@site/src/components/landing/RunReplay';
@@ -12,17 +15,21 @@ import useScrollProgress from '@site/src/components/landing/useScrollProgress';
 import '../css/landing.css';
 
 const RELEASES = 'https://github.com/stroppy-io/stroppy/releases/latest';
+const REGISTER = 'https://cloud.stroppy.io/register';
 
 const PAGES: readonly PageInfo[] = [
   {id: 'start', label: 'Start'},
   {id: 'results', label: 'Results'},
-  {id: 'run', label: 'A run'},
+  {id: 'conformity', label: 'Conformity'},
+  {id: 'cli', label: 'CLI'},
   {id: 'evidence', label: 'How fast'},
   {id: 'cloud', label: 'Stroppy Cloud'},
 ];
 
 /** One page of the landing; its content arrives with the scroll that brings it in. */
 function Page({id, className, children}: {id: string; className?: string; children: ReactNode}) {
+  // The menu links to pages by their ids.
+  useBrokenLinks().collectAnchor(id);
   const ref = useRef<HTMLElement>(null);
   const p = useScrollProgress(ref, {start: 1, end: 0.25});
   return (
@@ -113,22 +120,29 @@ function Hero() {
       <div className="container intro__inner">
         <div className="intro__text">
           <Heading as="h1" className="intro__title">
-            Stress-test your database, not your load generator.
+            <span className="intro__line">Load-test your database</span>{' '}
+            <span className="intro__line">without building or tuning the bench</span>
           </Heading>
           <p className="intro__lede">
-            Stroppy is a single Go binary for database workloads, including TPC-B, TPC-C, TPC-H, TPC-DS and banking checks.
-            Drivers cover PostgreSQL, MySQL, CockroachDB, YugabyteDB, TiDB, Picodata and YDB, with support varying by workload.
-            We kept catching benchmarks that were really measuring the client, so Stroppy can tell you where its own
-            limit is before you start blaming the database.
+            Point Stroppy at your database, or let Stroppy Cloud bring up a fresh one, tune it, run the test and hand
+            you a report you can share.
           </p>
           <div className="intro__actions">
-            <Link className="button button--primary button--lg" to="/docs/introduction">
-              Read the docs
-            </Link>
+            <a className="button button--primary button--lg" href={REGISTER}>
+              Create account
+            </a>
+            <a className="button button--secondary button--outline button--lg" href="#results">
+              See results
+            </a>
           </div>
-          <Install />
+          <a className="intro__local" href="#cli">
+            or run it locally →
+          </a>
         </div>
         <TopBoard />
+      </div>
+      <div className="intro__strip">
+        <Engines />
       </div>
     </header>
   );
@@ -146,6 +160,20 @@ function Results() {
           </p>
         </div>
         <ResultsFrame />
+      </div>
+    </Page>
+  );
+}
+
+function Conformity() {
+  return (
+    <Page id="conformity" className="story">
+      <div className="container">
+        <div className="story__head">
+          <Heading as="h2">Which databases really speak the protocol they claim</Heading>
+          <p>Each one measured check by check against the original: PostgreSQL, MySQL, MongoDB, Elasticsearch.</p>
+        </div>
+        <ConformityTeaser />
       </div>
     </Page>
   );
@@ -286,14 +314,17 @@ function Anatomy() {
     return () => io.disconnect();
   }, []);
   return (
-    <Page id="run" className="story story--panel">
+    <Page id="cli" className="story story--panel">
       <div className="container">
-        <div className="story__head">
-          <Heading as="h2">One command in, a summary out</Heading>
-          <p>
-            All of it ships in the one binary, since version 6 dropped k6 and TypeScript and there’s nothing left to
-            install next to it. Hover a note to see which part of the run it’s about.
-          </p>
+        <div className="story__head story__head--split">
+          <div>
+            <Heading as="h2">Prefer the terminal?</Heading>
+            <p>
+              Stroppy CLI is open source and runs against any database it has a driver for: one Go binary with the
+              workloads, the drivers and the report inside. Hover a note to see which part of the run it’s about.
+            </p>
+          </div>
+          <Install />
         </div>
         <div className="anatomy">
           <div ref={ref} className="anatomy__run">
@@ -319,13 +350,18 @@ function Cloud() {
         <div className="finale__text">
           <Heading as="h2">Don’t feel like setting up the machines?</Heading>
           <p>
-            Stroppy Cloud does that part. You pick a database and a workload; it brings up the stand in your cloud, runs
-            the test and gives you a report with queries per second, latency and the moment errors began. Run it again
-            next week and the two sit side by side.
+            Stroppy Cloud does that part. You pick a database and a workload; it brings up the stand, tunes it, runs the
+            test and gives you a report with queries per second, latency and the moment errors began. Run it again next
+            week and the two sit side by side.
           </p>
-          <a className="button button--primary button--lg" href="https://cloud.stroppy.io">
-            Open Stroppy Cloud
-          </a>
+          <div className="finale__actions">
+            <a className="button button--primary button--lg" href={REGISTER}>
+              Create account
+            </a>
+            <Link className="button button--secondary button--outline button--lg" to="/how">
+              How it works
+            </Link>
+          </div>
         </div>
       </div>
     </Page>
@@ -336,11 +372,12 @@ function Landing() {
   const root = useRef<HTMLDivElement>(null);
   const pager = usePager(PAGES, root);
   return (
-    <PagerSnap>
+    <PagerSnap on={pager.paged}>
       <div ref={root}>
         <Hero />
         <main>
           <Results />
+          <Conformity />
           <Anatomy />
           <Evidence />
           <Cloud />
@@ -359,8 +396,8 @@ function Landing() {
 export default function Home(): ReactNode {
   return (
     <Layout
-      title="Go-Native Database Stress Testing"
-      description="Stroppy is a database stress tester in a single Go binary: TPC-B, TPC-C, TPC-H and TPC-DS against PostgreSQL, MySQL, Picodata and YDB, with a baseline that measures the tool's own limit.">
+      title="Load-test your database"
+      description="Load-test your database without building or tuning the bench: point Stroppy at it, or let Stroppy Cloud bring up a fresh one, tune it, run TPC-B, TPC-C, TPC-H or TPC-DS and hand you a report you can share.">
       <Landing />
     </Layout>
   );

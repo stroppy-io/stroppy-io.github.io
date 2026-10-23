@@ -1,0 +1,412 @@
+/* The top bar: logo on the left, the sections in the middle, the account
+   on the right (src/components/nav). A section opens a panel under the bar
+   that spans the page, with icons, a promo card and the page dimmed behind
+   it. Kit colours only. */
+
+:root {
+  --ifm-navbar-height: 4rem;
+  --ifm-navbar-padding-horizontal: 1.5rem;
+}
+
+/* The bar's content lines up with the page's, as wide as the widest container. */
+.navbar__inner {
+  max-width: var(--ifm-container-width-xl);
+  margin: 0 auto;
+}
+
+/* The docs are laid out edge to edge, sidebar on the left: so is the bar. */
+html.plugin-docs .navbar__inner {
+  max-width: none;
+}
+
+.navbar__logo {
+  height: 2rem;
+}
+
+.navbar__title {
+  font-size: 1.125rem;
+  font-weight: var(--st-font-weight-bold);
+  letter-spacing: -0.01em;
+}
+
+/* The sections sit in the middle of the space between the logo and the
+   account links. */
+.navbar__items:not(.navbar__items--right) {
+  flex: 1;
+}
+
+.navbar__items > .mega:first-of-type {
+  margin-left: auto;
+}
+
+.navbar__items > .mega:last-of-type {
+  margin-right: auto;
+}
+
+/* Search first on the right, compact: the account links end the bar. */
+.navbar__items--right > :has(.navbar__search) {
+  order: -1;
+  margin-right: 0.75rem;
+}
+
+.navbar__items--right .navbar__search-input {
+  width: 9.5rem;
+}
+
+.navbar__items--right [class*='searchHintContainer'] {
+  display: none;
+}
+
+/* The theme switch is in the footer (src/theme/Footer/Copyright). */
+.navbar__items--right [class*='colorModeToggle'] {
+  display: none;
+}
+
+/* ---------- Sections ---------- */
+
+.mega {
+  position: static;
+  padding: 0 0.15rem;
+}
+
+.mega__trigger {
+  display: inline-block;
+  padding: 0.4rem 0.85rem;
+  border: none;
+  border-radius: var(--st-radius-pill);
+  background: none;
+  color: var(--st-muted);
+  font: inherit;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background-color 0.15s;
+}
+
+.mega__trigger:hover,
+.mega__trigger:focus-visible,
+.mega--open .mega__trigger {
+  text-decoration: none;
+  color: var(--st-text);
+}
+
+.mega--open .mega__trigger {
+  background: var(--st-raised);
+}
+
+/* A small chevron says the name opens a menu; it turns up while open. */
+.mega__trigger::after {
+  content: '';
+  display: inline-block;
+  width: 0.36em;
+  height: 0.36em;
+  margin-left: 0.45em;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  opacity: 0.7;
+  transform: translateY(-0.22em) rotate(45deg);
+  transition: transform 0.15s;
+}
+
+.mega--open .mega__trigger::after {
+  transform: translateY(0.05em) rotate(-135deg);
+}
+
+/* The panel spans the page under the bar. Only the open section's panel is
+   shown; moving along the bar cross-fades one into the next. */
+.mega__panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 0.18s ease,
+    visibility 0s linear 0.18s;
+  border-bottom: 1px solid var(--st-line);
+  border-radius: 0 0 1.5rem 1.5rem;
+  background: var(--st-panel);
+  box-shadow: 0 24px 48px -24px color-mix(in srgb, var(--st-text) 35%, transparent);
+}
+
+.mega__panel--shown {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.18s ease;
+}
+
+.mega__inner {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 17rem)) minmax(0, 1fr);
+  gap: 2.5rem;
+  padding-top: 2rem;
+  padding-bottom: 2.25rem;
+}
+
+.mega__title {
+  margin-bottom: 0.75rem;
+  color: var(--st-muted);
+  font-size: 0.75rem;
+  font-weight: var(--st-font-weight-medium);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mega__list {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mega__link {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+  margin: 0 -0.65rem;
+  padding: 0.6rem 0.65rem;
+  border-radius: var(--st-radius-lg);
+  color: var(--st-text);
+  transition: background-color 0.12s;
+}
+
+.mega__link:hover {
+  background: var(--st-raised);
+  color: var(--st-text);
+  text-decoration: none;
+}
+
+.mega__icon {
+  box-sizing: content-box;
+  width: 1.15rem;
+  height: 1.15rem;
+  padding: 0.55rem;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-md);
+  background: var(--st-canvas);
+  color: var(--st-primary-text);
+}
+
+.mega__text {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.mega__label {
+  font-size: 0.9375rem;
+  font-weight: var(--st-font-weight-medium);
+  line-height: 1.3;
+}
+
+.mega__desc {
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+/* ---------- Promo card ---------- */
+
+.mega__promo {
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+  justify-self: end;
+  width: 100%;
+  max-width: 21rem;
+  padding: 0.75rem 0.75rem 1.1rem;
+  border-radius: 1.1rem;
+  background: var(--st-raised);
+  color: var(--st-text);
+}
+
+.mega__promo:hover {
+  color: var(--st-text);
+  text-decoration: none;
+}
+
+.mega__promo:hover .mega__promo-cta {
+  gap: 0.5rem;
+}
+
+.mega__art {
+  display: grid;
+  place-items: center;
+  height: 8.5rem;
+  margin-bottom: 0.9rem;
+  overflow: hidden;
+  border-radius: 0.8rem;
+  background:
+    radial-gradient(circle at 70% 20%, color-mix(in srgb, var(--st-mark) 45%, transparent), transparent 60%),
+    linear-gradient(135deg, color-mix(in srgb, var(--st-primary) 35%, var(--st-canvas)), var(--st-canvas));
+}
+
+.mega__art img {
+  height: 5.5rem;
+  rotate: -12deg;
+  filter: drop-shadow(0 12px 18px color-mix(in srgb, var(--st-canvas) 60%, transparent));
+}
+
+.mega__promo-title,
+.mega__promo-body,
+.mega__promo-cta {
+  padding: 0 0.4rem;
+}
+
+.mega__promo-title {
+  font-size: 1rem;
+  font-weight: var(--st-font-weight-medium);
+}
+
+.mega__promo-body {
+  margin-top: 0.3rem;
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.mega__promo-cta {
+  display: inline-flex;
+  gap: 0.3rem;
+  margin-top: 0.75rem;
+  color: var(--st-primary-text);
+  font-size: 0.8125rem;
+  font-weight: var(--st-font-weight-medium);
+  transition: gap 0.15s;
+}
+
+/* The leaderboard's top three, in place of a picture. */
+.mega__board {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 0 0.9rem;
+  padding: 0.75rem;
+  border-radius: 0.8rem;
+  background: var(--st-panel);
+  list-style: none;
+}
+
+.mega__board li {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0.5rem;
+  overflow: hidden;
+  border-radius: var(--st-radius-sm);
+  font-size: 0.8125rem;
+}
+
+.mega__board li::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--w) * 100%);
+  background: color-mix(in srgb, var(--st-primary) 14%, transparent);
+}
+
+.mega__board-db,
+.mega__board-value {
+  position: relative;
+}
+
+.mega__board small {
+  display: block;
+  color: var(--st-muted);
+  font-size: 0.6875rem;
+}
+
+.mega__board-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--st-font-weight-medium);
+  white-space: nowrap;
+}
+
+.mega__board-value small {
+  display: inline;
+}
+
+/* ---------- The page under an open panel ---------- */
+
+@media (min-width: 997px) {
+  html.mega-active body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--ifm-z-index-fixed) - 1);
+    background: color-mix(in srgb, var(--st-canvas) 55%, transparent);
+    backdrop-filter: blur(3px);
+  }
+}
+
+/* ---------- Account ---------- */
+
+.navbar__item.navbar-signin {
+  color: var(--st-muted);
+  font-size: 0.9375rem;
+}
+
+.navbar__item.navbar-signin:hover {
+  color: var(--st-text);
+  text-decoration: none;
+}
+
+.navbar__item.navbar-cta {
+  margin-left: 0.5rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--st-text);
+  border-radius: var(--st-radius-pill);
+  color: var(--st-text);
+  font-size: 0.9375rem;
+  font-weight: var(--st-font-weight-medium);
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.navbar__item.navbar-cta:hover {
+  background: var(--st-text);
+  color: var(--st-canvas);
+  text-decoration: none;
+}
+
+/* ---------- Mobile drawer ---------- */
+
+.mega__mobile-trigger {
+  width: 100%;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* ---------- Docs sidebar: the version switch ---------- */
+
+.sidebar-version {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.75rem 0.75rem 0;
+  padding: 0.35rem 0.25rem 0.35rem 0.75rem;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-md);
+}
+
+.sidebar-version__label {
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+}
+
+.sidebar-version .navbar__item {
+  padding: 0;
+}
+
+.sidebar-version .navbar__link {
+  font-size: 0.8125rem;
+  font-weight: var(--st-font-weight-medium);
+}

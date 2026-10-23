@@ -117,7 +117,7 @@
 .intro {
   position: relative;
   overflow: clip;
-  padding: 6rem 0 5rem;
+  padding: 3.5rem 0 4rem;
   border-bottom: 1px solid var(--st-line);
 }
 
@@ -150,25 +150,130 @@
 }
 
 .intro__title {
-  max-width: 15em;
   margin: 0;
-  font-size: clamp(2.4rem, 0.8rem + 3.4vw, 4.2rem);
+  font-size: clamp(1.75rem, 0.45rem + 2.05vw, 3rem);
   font-weight: var(--st-font-weight-bold);
   line-height: 1.03;
   letter-spacing: -0.035em;
   text-wrap: balance;
 }
 
+/* Two lines on a wide screen, whatever the width of the column. */
+@media (min-width: 997px) {
+  .intro__line {
+    display: block;
+    white-space: nowrap;
+  }
+}
+
 .intro__lede {
-  max-width: 36em;
-  margin: 1.75rem 0 0;
+  max-width: 38em;
+  margin: 1.25rem 0 0;
   font-size: clamp(1.0625rem, 0.9rem + 0.4vw, 1.25rem);
   line-height: 1.55;
   color: color-mix(in srgb, var(--st-text) 85%, var(--st-muted));
 }
 
+.intro__actions,
+.finale__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .intro__actions {
-  margin-top: 2rem;
+  margin-top: 1.75rem;
+}
+
+.intro__local {
+  display: inline-block;
+  margin-top: 0.9rem;
+  color: var(--st-muted);
+  font-size: 0.9375rem;
+}
+
+.intro__local:hover {
+  color: var(--st-text);
+}
+
+/* What Stroppy Cloud deploys (components/landing/Engines.tsx): the engines'
+   marks along the bottom of the hero, edge to edge, sliding slowly sideways
+   and fading out at both ends. */
+.intro__strip {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin-top: 4.5rem;
+}
+
+.engines__caption {
+  margin: 0 0 1.25rem;
+  text-align: center;
+  color: var(--st-muted);
+  font-size: 0.875rem;
+}
+
+.engines__track {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, var(--st-text) 15%, var(--st-text) 85%, transparent);
+}
+
+.engines__slide {
+  display: flex;
+  width: max-content;
+  animation: engines-slide calc(var(--n) * 5s) linear infinite;
+}
+
+.engines__track:hover .engines__slide {
+  animation-play-state: paused;
+}
+
+@keyframes engines-slide {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.engines__row {
+  display: flex;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.engines__item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0 2.75rem;
+  color: color-mix(in srgb, var(--st-text) 62%, var(--st-muted));
+  font-size: 1.5rem;
+  font-weight: var(--st-font-weight-bold);
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+}
+
+.engines__mark {
+  width: auto;
+  height: 2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .engines__slide {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: auto;
+    animation: none;
+  }
+
+  .engines__row[aria-hidden] {
+    display: none;
+  }
+
+  .engines__track {
+    mask-image: none;
+  }
 }
 
 /* ---------- The top of the leaderboard (in the hero) ---------- */
@@ -323,11 +428,11 @@
   }
 }
 
-/* ---------- Install (in the hero) ---------- */
+/* ---------- Install (on the CLI page) ---------- */
 
 .install {
   max-width: 44rem;
-  margin-top: 3rem;
+  margin-top: 1.75rem;
 }
 
 .install__tabs {
@@ -450,6 +555,32 @@
 
 .story__head {
   margin-bottom: 2.5rem;
+}
+
+/* A heading with something next to it (the CLI page: the install snippet). */
+.story__head--split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.5rem 3rem;
+  align-items: center;
+}
+
+.story__head--split {
+  margin-bottom: 1.75rem;
+}
+
+.story__head--split .install {
+  margin-top: 0;
+}
+
+.story__head--split .install__more {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 996px) {
+  .story__head--split {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* ---------- Results: Stroppy Cloud's leaderboard in a frame ---------- */
@@ -938,6 +1069,105 @@
   }
 }
 
+/* ---------- Conformity: a preview of /conformity's map (components/landing/Conformity.tsx);
+   its cells and table are src/css/compat-map.css ---------- */
+
+.conf__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 2rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--st-line);
+}
+
+.conf__tabs {
+  display: flex;
+  gap: 1.75rem;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.conf__tabs button {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.6rem 0 0.7rem;
+  border: 0;
+  background: none;
+  color: var(--st-muted);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: var(--st-font-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.conf__tabs button span {
+  font-size: 0.8125rem;
+  font-weight: var(--st-font-weight-regular);
+}
+
+.conf__tabs button:hover,
+.conf__tabs button[aria-selected='true'] {
+  color: var(--st-text);
+}
+
+.conf__tabs button[aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 3px;
+  border-radius: 2px 2px 0 0;
+  background: var(--st-primary);
+}
+
+.conf__tabs button:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: -2px;
+}
+
+.conf__legend {
+  font-size: 0.8125rem;
+}
+
+.conf__legend .states__swatch {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+}
+
+/* The preview: shorter cells than the full map. */
+.cmap--mini .cmap__table .c {
+  height: 2.1rem;
+}
+
+.cmap--mini thead tr:last-child th a {
+  color: var(--st-text);
+  font-weight: var(--st-font-weight-medium);
+}
+
+.cmap--mini .cmap__name {
+  display: inline-block;
+}
+
+.conf__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.conf__provenance {
+  color: var(--st-muted);
+  font-size: 0.8125rem;
+}
+
 /* ---------- Finale: Stroppy Cloud, running into the footer ---------- */
 
 .finale {
@@ -978,25 +1208,15 @@
   color: var(--st-muted);
 }
 
-/* The footer continues the finale's surface on the landing. */
-html.landing-paged .footer {
-  background: var(--st-panel);
-  border-top: 0;
-}
-
-html.landing-paged .footer .container {
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--st-line);
-}
 
 /* ---------- Narrow screens ---------- */
 
 @media (max-width: 996px) {
   .intro {
-    padding: 4rem 0 3.5rem;
+    padding: 2.5rem 0 3rem;
   }
 
-  /* One column: the board comes right after the button, install after it. */
+  /* One column: the board comes after the buttons and the line under them. */
   .intro__inner {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
@@ -1009,10 +1229,6 @@ html.landing-paged .footer .container {
   .intro .board {
     order: 1;
     margin-top: 2.5rem;
-  }
-
-  .install {
-    order: 2;
   }
 
   .intro .mark {
@@ -1118,9 +1334,23 @@ html.landing-paged .footer .container {
     display: flex;
     align-items: center;
     min-height: calc(100dvh - var(--ifm-navbar-height));
-    padding-block: 3rem 4.5rem;
+    padding-block: 2.5rem 4.25rem;
     scroll-snap-align: start;
     scroll-snap-stop: always;
+  }
+
+  /* The first page fills the screen like the others: the headline and the
+     board, then the strip of engines, with the free height shared evenly
+     above, between and below them (the bottom keeps room for the cue). */
+  .page.intro {
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: stretch;
+    padding-block: 1rem 4.5rem;
+  }
+
+  .page.intro .intro__strip {
+    margin-top: 0;
   }
 
   .page__inner {
@@ -1137,6 +1367,13 @@ html.landing-paged .footer .container {
   html.landing-paged .footer {
     scroll-snap-align: end;
   }
+}
+
+/* A link to a page (#cli, #results) lands it under the navbar. When the
+   landing pages, scroll-padding does that already; a margin on top of it
+   would stop every page a navbar's height too high. */
+html:not(.landing-paged) .page {
+  scroll-margin-top: var(--ifm-navbar-height);
 }
 
 /* A page's content arrives with the scroll that brings the page in. */
