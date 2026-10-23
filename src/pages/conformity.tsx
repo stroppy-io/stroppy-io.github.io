@@ -71,6 +71,24 @@ function ConformityPage() {
     return () => window.removeEventListener('hashchange', fromHash);
   }, [fromHash]);
 
+  // The page opens at its top: the browser does not put back where an
+  // earlier visit had scrolled to (Chrome does on reload), since the page
+  // is one screen and only the map scrolls.
+  useEffect(() => {
+    const before = window.history.scrollRestoration;
+    window.history.scrollRestoration = 'manual';
+    const top = () => {
+      window.scrollTo({top: 0});
+    };
+    top();
+    // A restore the browser does after load would undo the one above.
+    window.addEventListener('load', top, {once: true});
+    return () => {
+      window.removeEventListener('load', top);
+      window.history.scrollRestoration = before;
+    };
+  }, []);
+
   const pick = (p: string) => {
     setProtocol(p);
     setOpen(null);
