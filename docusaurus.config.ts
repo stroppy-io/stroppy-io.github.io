@@ -35,7 +35,7 @@ const config: Config = {
     }],
   ],
 
-  plugins: ['docusaurus-plugin-llms'],
+  plugins: ['docusaurus-plugin-llms', './plugins/cloud-rating.ts'],
 
   presets: [
     [

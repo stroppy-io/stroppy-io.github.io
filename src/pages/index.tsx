@@ -5,6 +5,7 @@ import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
 import {PairsPlot, type Group} from '@site/src/components/landing/Charts';
 import HeroMark from '@site/src/components/landing/HeroMark';
+import {ResultsFrame, TopBoard} from '@site/src/components/landing/Leaderboard';
 import {PagerCue, PagerNav, PagerSnap, usePager, type Page as PageInfo} from '@site/src/components/landing/Pager';
 import RunReplay, {type RunPart} from '@site/src/components/landing/RunReplay';
 import useScrollProgress from '@site/src/components/landing/useScrollProgress';
@@ -14,6 +15,7 @@ const RELEASES = 'https://github.com/stroppy-io/stroppy/releases/latest';
 
 const PAGES: readonly PageInfo[] = [
   {id: 'start', label: 'Start'},
+  {id: 'results', label: 'Results'},
   {id: 'run', label: 'A run'},
   {id: 'evidence', label: 'How fast'},
   {id: 'cloud', label: 'Stroppy Cloud'},
@@ -109,22 +111,43 @@ function Hero() {
     <header ref={ref} id="start" className="intro page">
       <HeroMark open={open} />
       <div className="container intro__inner">
-        <Heading as="h1" className="intro__title">
-          Stress-test your database, not your load generator.
-        </Heading>
-        <p className="intro__lede">
-          Stroppy is a single Go binary for database workloads, including TPC-B, TPC-C, TPC-H, TPC-DS and banking checks.
-          Drivers cover PostgreSQL, MySQL, CockroachDB, YugabyteDB, TiDB, Picodata and YDB, with support varying by workload. We kept catching benchmarks that were really measuring the client, so Stroppy can tell you where its own
-          limit is before you start blaming the database.
-        </p>
-        <div className="intro__actions">
-          <Link className="button button--primary button--lg" to="/docs/introduction">
-            Read the docs
-          </Link>
+        <div className="intro__text">
+          <Heading as="h1" className="intro__title">
+            Stress-test your database, not your load generator.
+          </Heading>
+          <p className="intro__lede">
+            Stroppy is a single Go binary for database workloads, including TPC-B, TPC-C, TPC-H, TPC-DS and banking checks.
+            Drivers cover PostgreSQL, MySQL, CockroachDB, YugabyteDB, TiDB, Picodata and YDB, with support varying by workload.
+            We kept catching benchmarks that were really measuring the client, so Stroppy can tell you where its own
+            limit is before you start blaming the database.
+          </p>
+          <div className="intro__actions">
+            <Link className="button button--primary button--lg" to="/docs/introduction">
+              Read the docs
+            </Link>
+          </div>
+          <Install />
         </div>
-        <Install />
+        <TopBoard />
       </div>
     </header>
+  );
+}
+
+function Results() {
+  return (
+    <Page id="results" className="story">
+      <div className="container">
+        <div className="story__head">
+          <Heading as="h2">Runs other people can check</Heading>
+          <p>
+            Each row is a run published from Stroppy Cloud, with the workload, the database and its version, and the
+            machines it ran on. Filter by any of them; a row opens the full report with every metric of that run.
+          </p>
+        </div>
+        <ResultsFrame />
+      </div>
+    </Page>
   );
 }
 
@@ -289,13 +312,10 @@ function Anatomy() {
 }
 
 function Cloud() {
-  // The closing mark opens as this last page arrives, answering the one that
-  // opened as the headline left.
-  const ref = useRef<HTMLDivElement>(null);
-  const open = useScrollProgress(ref, {start: 1, end: 0.3, settled: 1});
   return (
     <Page id="cloud" className="finale page--end">
-      <div ref={ref} className="container finale__inner">
+      <HeroMark open={0.6} />
+      <div className="container finale__inner">
         <div className="finale__text">
           <Heading as="h2">Don’t feel like setting up the machines?</Heading>
           <p>
@@ -307,7 +327,6 @@ function Cloud() {
             Open Stroppy Cloud
           </a>
         </div>
-        <HeroMark open={open} className="mark--solid" />
       </div>
     </Page>
   );
@@ -321,6 +340,7 @@ function Landing() {
       <div ref={root}>
         <Hero />
         <main>
+          <Results />
           <Anatomy />
           <Evidence />
           <Cloud />
