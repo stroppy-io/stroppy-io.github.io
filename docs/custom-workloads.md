@@ -27,9 +27,9 @@ them against each project's pinned SDK on every change and against Stroppy `main
 on a schedule — so the samples are checked, not just documented.
 
 :::note
-The author tooling (`init`, `build`, `eject`, `list`, `remove`, `export`) ships
-with the next v6 release. A binary built from `main` has it today; released
-binaries before it do not.
+The author tooling (`init`, `build`, `eject`, `list`, `remove`, `export`) is
+available in Stroppy 6.2.0. Use the `/v6` SDK module and the same release when
+reproducing these examples.
 :::
 
 ## Requirements
@@ -245,7 +245,7 @@ Run `build` from inside the project — this is the documented flow:
 
 ```bash
 $ stroppy build .
-runtime c1c165709e3b: sdk module github.com/stroppy-io/stroppy/v6 v6.1.1-55-g1bafc12
+runtime <digest>: sdk module github.com/stroppy-io/stroppy/v6 v6.2.0
 select1	1b788224feee…	c1c165709e3b…	true
 ```
 
@@ -497,6 +497,25 @@ stroppy export select1 -o ./stroppy-select1   # portable binary
 stroppy cache inspect DIGEST                  # build provenance, including which SDK it used
 stroppy remove select1                        # unregister
 ```
+
+## Choosing the SDK source
+
+By default each project compiles against the SDK module/version pinned by its
+`go.mod`. The installed binary does not infer an SDK source tree from the current
+directory. To test SDK changes, pass an explicit Stroppy checkout:
+
+```bash
+stroppy build --replace . --source-root /path/to/stroppy
+```
+
+`--source-root` (or `STROPPY_SOURCE_ROOT`) also applies to `remove` and `export`.
+The path must declare `github.com/stroppy-io/stroppy/v6`, not your workload module.
+Every build reports the active SDK origin, and `cache inspect` records it.
+
+Build artifacts are content-addressed. Repeated builds reuse unchanged inputs;
+`--offline` restricts dependency/tool resolution to cached data. `cache clean`
+removes reusable artifacts and private Go caches but preserves the active local
+runtime. Do not assume a cleaned cache makes an installed workload disappear.
 
 `Test.Source` is what makes `stroppy eject select1 ./copy` able to restore your
 project — code, SQL, and tests — somewhere else, with imports rewritten to the

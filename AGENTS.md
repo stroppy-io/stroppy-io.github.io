@@ -5,19 +5,9 @@ Go-native database stress-testing CLI. Docusaurus 3.10.2, React 19, TypeScript.
 
 ## Commands
 
-**Run every npm command inside `firecode`, never on the host.** The site's
-dependencies are build tooling; installing them on a developer machine is what
-this avoids. The VM is over the current directory and never writes the host
-project:
-
-```bash
-firecode exec npm ci          # one-shot, result copied out to a sibling dir
-firecode up                   # or: a persistent VM for a dev server
-firecode in npm run build     # …run commands in that VM
-firecode down                 # …and stop it
-```
-
-Inside the VM (or in CI, where it is a normal `npm ci`):
+Use the Node/npm versions declared by `package.json` and the deploy workflow.
+Isolation in a container or VM is recommended for build dependencies, but is not
+required. Local npm works with the same commands:
 
 ```bash
 npm ci
@@ -33,97 +23,6 @@ npm run serve
 `prestart` and `prebuild` fetch the UI kit (skipped when `src/kit` already has
 the pinned version) and refresh `docs/changelog.md` from Stroppy main.
 Search and `llms.txt`/`llms-full.txt` are generated only by production builds.
-
-See [The firecode VM](#the-firecode-vm) for the base image, what persists
-between runs, and how to preview the site from a browser.
-
-## The firecode VM
-
-npm work for this site runs inside a
-[firecode](https://github.com/deadtrickster/firecode) Firecracker microVM over
-the current directory. The host project is never
-written to: the VM mirrors it, and copies its result out to a sibling directory
-as it stops, which is where build output and `node_modules` land.
-
-### The base image
-
-The image already carries the toolchain, so a run never waits for a Node
-install. Currently baked in:
-
-| Tool | Version |
-|---|---|
-| node | 24.21.0 (installed with `mise`, on `PATH` at `/opt/mise/shims`) |
-| npm | 11.19.0 |
-
-The node version must stay inside the range this repository declares
-(`engines.node` in `package.json`, which mirrors what the pinned `tinypool`
-allows, and the `node-version` the deploy workflow pins). Check that rather than
-assuming it:
-
-```bash
-firecode in npm run check-toolchain
-```
-
-Rebuild the image when the required toolchain moves — `prepare` builds from
-scratch and keeps the image it replaced as `agent-firecode.ext4.previous`:
-
-```bash
-firecode prepare --in-vm --with "node@24"     # no docker needed on macOS
-```
-
-### What persists between runs, and what does not
-
-- **The base image persists**, so node and npm are there every run.
-- **`$HOME` does not.** `~/.npm` is writable during a run and empty again next
-time, so npm's cache does not carry over. The image ships a populated
-`~/.npm/_cacache`, which is why `npm ci` is quick, but it is not a cache you can
-grow.
-- **`node_modules` does not, by default.** Gitignored files are left out of the
-  mirror, so a run starts without them and `npm ci` reinstalls. `--all-files`
-  includes them, and the flag is worth it only for a *persistent* VM — see below.
-- **`/var/lib/firecode`** is the VM's state mount and is not writable by the
-unprivileged user, so it is not a place to put a cache.
-
-### The fast loop: `up --all-files`
-
-Measured on this repository, with `node_modules` (790 packages) present on the
-host. `in` reuses the VM's established mirror, so the cost is paid once:
-
-| | wall time |
-|---|---|
-| `exec` default (no `node_modules`; `npm ci` inside) | 5.1s + install |
-| `exec --all-files` (copies the tree each run) | 24.5s, then 27.3s — not cached across `exec` runs |
-| `up --all-files`, once | ~25s |
-| then `in 'ls node_modules \| wc -l'` | 0.53s → 790 packages |
-| then `in 'npm run build'` | 5.9s, no install |
-
-So for one-shot work the flag is a wash, and for iterative work it is the
-difference between a six-second loop and one that reinstalls every time:
-
-```bash
-firecode up --all-files       # pay the mirror once
-firecode in npm run build     # seconds, with the tree already there
-firecode down
-```
-
-### Preview the site in a browser
-
-A dev server started in the VM is reachable from the host at the guest's
-address. It must bind all interfaces — the host is not on the guest's loopback:
-
-```bash
-firecode up                                          # persistent VM
-firecode in sh -c 'npm ci && npm run start -- --host 0.0.0.0' &
-firecode in sh -c 'hostname -I'                      # the address to open
-# → http://<guest-ip>:3000/
-firecode down
-```
-
-Open the URL **with the `http://` scheme**. The server speaks plain HTTP, and
-Chrome's HTTPS-first behaviour will otherwise attempt TLS on that port and fail.
-The guest address is DHCP-assigned on macOS, so read it from `hostname -I` rather
-than bookmarking it; it is host-local, so it is not reachable from a phone or
-another machine.
 
 ## Deployment
 

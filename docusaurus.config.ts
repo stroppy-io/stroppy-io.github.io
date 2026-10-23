@@ -44,7 +44,7 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           editUrl: 'https://github.com/stroppy-io/stroppy-io.github.io/edit/next/',
-          lastVersion: '6.0.0',
+          lastVersion: '6.2.0',
           versions: {
             current: {
               label: 'Next',

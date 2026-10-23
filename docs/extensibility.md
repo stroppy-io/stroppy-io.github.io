@@ -80,8 +80,8 @@ than an injected registry.
 
 ## Steps and policies
 
-Steps are explicit and immediate: options precede the action, and a step without
-a policy runs once.
+Steps are explicit and immediate: the action follows the name, options follow
+the action, and a step without a policy runs once.
 
 ```go
 work := &accountWork{rows: rows}
@@ -147,7 +147,7 @@ stateful or variable-cardinality algorithms, and `gen.Root`, `Domain`, `Field`,
 `Draw`, `Permute`, and `SplitMix64` remain available for scalar generation.
 
 See [SQL & Generators](./sql-and-generators) and the [parallelism
-contract](https://github.com/stroppy-io/stroppy/blob/main/docs/parallelism.md).
+contract](https://github.com/stroppy-io/stroppy/blob/v6.2.0/docs/parallelism.md).
 
 ## Transactions
 
@@ -317,10 +317,10 @@ behavior depends on a real database.
 
 | Area | Source |
 |---|---|
-| Minimal workload | [`workloads/simple`](https://github.com/stroppy-io/stroppy/tree/main/workloads/simple) |
-| Transactional workload | [`workloads/tpcb`](https://github.com/stroppy-io/stroppy/tree/main/workloads/tpcb) |
-| Stateful generator adapter | [`pkg/datagen/tpchgen`](https://github.com/stroppy-io/stroppy/tree/main/pkg/datagen/tpchgen) |
-| PostgreSQL driver | [`pkg/driver/postgres`](https://github.com/stroppy-io/stroppy/tree/main/pkg/driver/postgres) |
-| Shared SQL driver | [`pkg/driver/sqldriver`](https://github.com/stroppy-io/stroppy/tree/main/pkg/driver/sqldriver) |
-| Sink driver | [`pkg/driver/csv`](https://github.com/stroppy-io/stroppy/tree/main/pkg/driver/csv) |
-| Driver registry | [`pkg/driver/dispatcher.go`](https://github.com/stroppy-io/stroppy/blob/main/pkg/driver/dispatcher.go) |
+| Minimal workload | [`workloads/simple`](https://github.com/stroppy-io/stroppy/tree/v6.2.0/workloads/simple) |
+| Transactional workload | [`workloads/tpcb`](https://github.com/stroppy-io/stroppy/tree/v6.2.0/workloads/tpcb) |
+| Stateful generator adapter | [`workloads/tpch/tpchgen`](https://github.com/stroppy-io/stroppy/tree/v6.2.0/workloads/tpch/tpchgen) |
+| PostgreSQL driver | [`pkg/driver/postgres`](https://github.com/stroppy-io/stroppy/tree/v6.2.0/pkg/driver/postgres) |
+| Shared SQL driver | [`pkg/driver/sqldriver`](https://github.com/stroppy-io/stroppy/tree/v6.2.0/pkg/driver/sqldriver) |
+| Sink driver | [`pkg/driver/csv`](https://github.com/stroppy-io/stroppy/tree/v6.2.0/pkg/driver/csv) |
+| Driver registry | [`pkg/driver/dispatcher.go`](https://github.com/stroppy-io/stroppy/blob/v6.2.0/pkg/driver/dispatcher.go) |

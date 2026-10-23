@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: Migrating to v6
-description: Breaking changes and migration paths from Stroppy v5 to v6
+description: Migration from Stroppy v5 and 6.1.x to the 6.2 CLI and workload SDK
 ---
 
 # Migrating to v6
@@ -13,6 +13,19 @@ workspace.
 
 This is a major-version migration. Existing v5 documentation remains available
 from the version selector.
+
+## Upgrading from 6.1.x
+
+6.2.0 includes source and configuration incompatibilities within the v6 series:
+
+- Import the SDK as `github.com/stroppy-io/stroppy/v6` and use Go 1.27 or newer.
+- Replace the `bench.Workload` lifecycle with `bench.Test` and immediate `d.Execution.Step` calls. Existing custom Go workloads need source migration; see [Custom workloads](./custom-workloads) and [Extensibility](./extensibility).
+- Replace `-e key=value` and config `env` with typed flags, process environment, or `run`/`params` config fields.
+- Rename driver key `"0"` to `"default"`. Replace additional numeric keys/flags with names declared by the workload, such as `primary` and `-dprimary` / `-Dprimary`.
+- Select timed execution explicitly with `--executor constant-vus`. `DURATION` alone no longer infers the executor; `--drain-timeout` bounds completion of in-flight actions.
+- Reports use envelope schema 4. Keep older JSON for inspection; custom report consumers must check the schema rather than assume all versions have identical structure.
+
+The sections below cover migration from v5 to the current release.
 
 ## Removed runtime surfaces
 
@@ -54,8 +67,8 @@ stroppy run "select count(*) from orders" -d pg
 stroppy run tpcc/tx ./custom-tpcc.sql -d pg
 ```
 
-Custom executable workloads now implement `bench.Workload`, register with
-`bench.Register`, and ship in a source build. See [Extensibility](./extensibility).
+Custom executable workloads now publish a `bench.Test` descriptor, register with
+`bench.Register`, and run standalone or through `stroppy build`. See [Extensibility](./extensibility).
 
 ## Scenario migration
 
@@ -77,12 +90,11 @@ Compatibility environment names remain accepted:
 |---|---|---|
 | `--executor` | `EXECUTOR` | — |
 | `--vus` | `VUS` | — |
-| `--iterations` | `ITERATIONS` | `ITER` |
+| `--iterations` | `ITERATIONS` | — |
 | `--duration` | `DURATION` | — |
 | `--query-timeout` | `QUERY_TIMEOUT` | — |
 
-Legacy `DURATION` without an explicit executor still infers `constant-vus` and
-prints a warning. New commands should select an executor explicitly.
+`DURATION` without an explicit executor does not infer `constant-vus`. Select the executor explicitly.
 
 `MAX_DURATION` is gone. Shared iterations run until completion or cancellation.
 
@@ -95,12 +107,11 @@ stroppy run tpcc/tx --help
 stroppy run tpcc/tx --scale-factor 10 --load-workers 8 --pacing=false
 ```
 
-Process environment and `-e` still work as lower-precedence compatibility
-inputs:
+Process environment remains a lower-precedence input. `-e` was removed:
 
 ```bash
 SCALE_FACTOR=10 stroppy run tpcc/tx
-stroppy run tpcc/tx -e warehouses=10
+stroppy run tpcc/tx --scale-factor 10
 ```
 
 Prefer direct flags or typed config fields. `probe -o json` exposes every
@@ -116,7 +127,7 @@ V6 keeps the top-level file envelope but adds typed `run` and `params` objects:
   "version": "1",
   "script": "tpcc/tx",
   "drivers": {
-    "0": {
+    "default": {
       "driverType": "postgres",
       "url": "postgres://db:5432/bench",
       "pool": {"maxConns": 100, "minConns": 20}
@@ -141,6 +152,7 @@ Delete these removed fields before loading a v5 config:
 ```text
 k6Args
 k6Config
+env
 drivers.*.errorMode
 drivers.*.defaultTxIsolation
 ```
@@ -159,7 +171,7 @@ See [Configuration Files](./config-file) for the complete envelope.
 
 V6 workloads stream `gen.BatchSource` values through `driver.InsertRequest` and
 `Bench.Insert`. Reusable primitives live in `pkg/gen`; canonical TPC-H and
-TPC-DS adapters live in `pkg/datagen/tpchgen` and `pkg/datagen/tpcdsgen`.
+TPC-DS adapters live in `workloads/tpch/tpchgen` and `workloads/tpcds/tpcdsgen`.
 
 Driver insert method strings remain:
 
@@ -212,6 +224,7 @@ have direct compatibility shims. Use:
 - the native terminal summary;
 - OTLP plus the shipped Grafana dashboard;
 - workload-specific reports such as TPC-C compliance output;
+- saved JSON/HTML reports, optional metric/log capture, and local comparison via `stroppy reports`;
 - `stroppy baseline` JSON history for Stroppy overhead comparisons.
 
 See [Reports & Workflow](./reports-workflow).
@@ -225,5 +238,4 @@ stroppy run tpcc/tx --help
 stroppy run tpcc/tx -f stroppy-config.json --steps create_schema,load_data
 ```
 
-`probe` is now catalog-only and takes no workload positional. Use dynamic
-workload help to inspect one selected schema.
+`probe` can inspect the whole catalog or a selected workload. Use `stroppy probe tpcc/tx --resolved -d pg -o json` to validate effective inputs without executing setup or connecting to a database.

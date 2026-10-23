@@ -30,10 +30,33 @@ workload step:
 stroppy run tpcds -d pico --scale-factor 0.1 --no-steps workload
 ```
 
+### Additional engines in 6.2.0
+
+CockroachDB is rejected during definition because it lacks the ROLLUP/CUBE/
+GROUPING SETS features used by the query suite. No data is loaded by that run.
+
+YugabyteDB uses the PostgreSQL baked assets. TiDB/YugabyteDB generated streams
+currently fail on their engine names, and `-d tidb` incorrectly chooses PostgreSQL
+baked assets ([#218](https://github.com/stroppy-io/stroppy/issues/218)). Until fixed,
+use their protocol driver names with an explicit target URL:
+
+```bash
+stroppy run tpcds -d mysql \
+  -D 'url=root:@tcp(tidb:4000)/test?parseTime=true&multiStatements=true' \
+  --scale-factor 0.01
+
+stroppy run tpcds -d pg \
+  -D 'url=postgres://yugabyte@yugabyte:5433/yugabyte?sslmode=disable' \
+  --scale-factor 0.01
+```
+
+These are compatibility paths, not a claim that every server version has been
+validated. Keep scale and driver differences visible in the report.
+
 ## Canonical data generation
 
 Rows come from the retained dsdgen implementation through
-`pkg/datagen/tpcdsgen`. The typed batch adapter preserves canonical text output,
+`workloads/tpcds/tpcdsgen`. The typed batch adapter preserves canonical text output,
 null semantics, ticket fan-out, and deterministic partition seeking.
 
 ```bash
@@ -195,5 +218,5 @@ Explicit local paths use current working directory first.
 
 ## Reference source
 
-- [`workloads/tpcds` at v6.0.0](https://github.com/stroppy-io/stroppy/tree/v6.0.0/workloads/tpcds)
-- [`pkg/datagen/tpcdsgen` at v6.0.0](https://github.com/stroppy-io/stroppy/tree/v6.0.0/pkg/datagen/tpcdsgen)
+- [`workloads/tpcds` at v6.2.0](https://github.com/stroppy-io/stroppy/tree/v6.2.0/workloads/tpcds)
+- [`workloads/tpcds/tpcdsgen` at v6.2.0](https://github.com/stroppy-io/stroppy/tree/v6.2.0/workloads/tpcds/tpcdsgen)

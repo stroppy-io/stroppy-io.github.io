@@ -9,7 +9,7 @@
 import {writeFileSync, readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname, resolve} from 'node:path';
-import {loadSource, parseSections, isUnreleased, cmpVersion, FRONTMATTER, DEFAULT_SOURCE}
+import {loadSource, parseSections, renderSection, isUnreleased, cmpVersion, FRONTMATTER, DEFAULT_SOURCE}
   from './lib-changelog.mjs';
 
 const version = process.argv[2];
@@ -38,7 +38,7 @@ const intro = prev
   ? `Changes in ${version}, since the previous documented release (${prev}).\n`
   : `Changes up to and including ${version}.\n`;
 const body = inRange.length
-  ? inRange.map((s) => s.raw).join('\n')
+  ? inRange.map(renderSection).join('\n')
   : '_No recorded changes for this version._\n';
 
 const OUT = resolve(root, `versioned_docs/version-${version}/changelog.md`);

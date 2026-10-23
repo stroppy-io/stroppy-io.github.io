@@ -18,6 +18,15 @@ stroppy run banking -d pg \
   --executor constant-vus --vus 8 --duration 2m --accounts 1000
 ```
 
+:::warning Banking verification in 6.2.0
+
+Verification retries all check errors, including an observed wrong balance or token
+permutation. If a later check succeeds, the run can report success. Until
+[#217](https://github.com/stroppy-io/stroppy/issues/217) is fixed, do not treat a
+successful run as conclusive corruption-test evidence. Persistent mismatches still
+fail. The witness limitations below apply independently of this bug.
+:::
+
 ## A second witness
 
 Every transfer swaps a `UNIQUE` token between the two rows it touches, as well as
@@ -183,4 +192,4 @@ the server's ABI. `make macavity` and `make macavity-install` do it locally.
 
 Reference implementation:
 
-- [`workloads/banking`](https://github.com/stroppy-io/stroppy/tree/main/workloads/banking)
+- [`workloads/banking`](https://github.com/stroppy-io/stroppy/tree/v6.2.0/workloads/banking)

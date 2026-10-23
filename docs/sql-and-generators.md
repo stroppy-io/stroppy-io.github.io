@@ -179,7 +179,7 @@ A workload:
 
 1. builds a typed schema;
 2. fills reusable batches from a row function or canonical generator;
-3. hands the source and insert method to `Bench.Insert`;
+3. passes table, source, and options to `Bench.Insert`;
 4. lets the driver split deterministic entity ranges among workers.
 
 Condensed indexed-source shape:
@@ -207,12 +207,10 @@ source := gen.NewIndexedSource(
     },
 )
 
-_, err := b.Insert(ctx, &driver.InsertRequest{
-    Table:   "accounts",
-    Method:  driver.InsertPlainBulk,
-    Workers: loadWorkers,
-    Source:  source,
-})
+_, err := b.Insert(ctx, "accounts", source,
+    bench.InsertMethod(bench.InsertPlainBulk),
+    bench.LoadWorkers(loadWorkers),
+)
 ```
 
 Reusable primitives live in `pkg/gen`. Values derive from run seed, versioned
@@ -221,8 +219,8 @@ counts, batch sizes, and partition boundaries.
 
 Canonical adapters preserve upstream algorithms and seeds:
 
-- `pkg/datagen/tpchgen` wraps the retained dbgen implementation;
-- `pkg/datagen/tpcdsgen` wraps the retained dsdgen implementation;
+- `workloads/tpch/tpchgen` wraps the retained dbgen implementation;
+- `workloads/tpcds/tpcdsgen` wraps the retained dsdgen implementation;
 - `pkg/datagen/source` defines the row-source seam used by drivers.
 
 ## Parallel loading
@@ -239,7 +237,7 @@ Stateful TPC adapters seek directly to partition starts, preserving generated
 rows without replaying earlier entities.
 
 See the pinned
-[v6 parallelism contract](https://github.com/stroppy-io/stroppy/blob/v6.0.0/docs/parallelism.md)
+[v6 parallelism contract](https://github.com/stroppy-io/stroppy/blob/v6.2.0/docs/parallelism.md)
 for authoring and tuning details.
 
 ## Insert methods
@@ -269,6 +267,8 @@ loads keep recoverable shards without presenting partial output as complete.
 
 ## Adding generation logic
 
-V6 does not execute workload source files dynamically. Add a custom generator
-inside a Go workload package, register its `bench.Workload` factory, and rebuild
-the binary. See [Extensibility](./extensibility).
+V6 does not interpret workload source dynamically. Add a custom generator inside
+a Go workload package and expose a `bench.Test` descriptor. Run the project
+standalone or register it with `stroppy build`; no Stroppy source rebuild is
+needed for a custom workload. See [Custom workloads](./custom-workloads) and
+[Extensibility](./extensibility).

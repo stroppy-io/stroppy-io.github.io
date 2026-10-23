@@ -86,8 +86,7 @@ for (const check of checks) {
 
 if (failed > 0) {
     console.error(`\n${failed} mismatch(es): the installed toolchain is not one this repository supports.`);
-    console.error('Rebuild the VM base image with a matching toolchain, e.g.');
-    console.error('  firecode prepare --in-vm --with "node@' + String(pinned ?? 22) + '"');
+    console.error('Select Node ' + String(pinned ?? 22) + ' locally or in your container/VM, then rerun this check.');
     process.exit(1);
 }
 

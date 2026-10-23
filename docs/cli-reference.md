@@ -12,11 +12,11 @@ own:
 ```text
 stroppy run          stroppy init       stroppy build      stroppy export
 stroppy baseline     stroppy eject      stroppy list       stroppy cache
-stroppy probe        stroppy remove     stroppy version    stroppy help
+stroppy probe        stroppy reports    stroppy remove     stroppy version    stroppy help
 ```
 
 The authoring commands (`init`, `eject`, `build`, `list`, `remove`, `cache`,
-`export`) ship with the next v6 release. See [Custom workloads](./custom-workloads)
+`export`) are available in 6.2.0. See [Custom workloads](./custom-workloads)
 for the workflow they support.
 
 Run `stroppy <command> --help` for terminal help. Registered workloads add
@@ -32,7 +32,7 @@ Run a registered workload, SQL file, or inline SQL:
 
 ```text
 stroppy run [<workload>] [sql_file] \
-  [-f config.json] [-d driver] [-D key=value] [-e KEY=VALUE] \
+  [-f config.json] [-d driver] [-D key=value] \
   [--steps step1,step2] [typed flags]
 ```
 
@@ -63,7 +63,8 @@ Arguments after `--` are unsupported.
 | `--executor` | string | `shared-iterations` | `shared-iterations` or `constant-vus`. |
 | `--vus` | integer | `1` | Number of virtual users. |
 | `--iterations` | integer | `1` | Total iterations shared across VUs. |
-| `--duration` | duration | `0s` | Duration for `constant-vus`; positive value required there. |
+| `--duration` | duration | `1m` | Duration for `constant-vus`; positive value required there. |
+| `--drain-timeout` | string | `30s` | Grace for in-flight timed work; `none` waits without a timeout. |
 | `--query-timeout` | duration | `0s` | Deadline per SQL statement; zero disables it. |
 
 Examples:
@@ -93,17 +94,16 @@ stroppy run tpcds --help
 
 | Flag | Meaning |
 |---|---|
-| `-d NAME`, `--driver NAME` | Select preset or raw JSON for driver 0. |
-| `-D key=value`, `--driver-opt key=value` | Override driver 0 field. |
-| `-d1`, `-d2`, ... | Select additional indexed drivers. |
-| `-D1`, `-D2`, ... | Override fields on indexed drivers. |
+| `-d NAME`, `--driver NAME` | Select preset or raw JSON for the default database. |
+| `-D key=value`, `--driver-opt key=value` | Override a field on the default database. |
+| `-dprimary`, `-dsecondary`, ... | Configure a named database declared by the workload. |
+| `-Dprimary key=value` | Override a field on a named database. |
 
-Presets: `pg`, `mysql`, `pico`, `ydb`, `noop`. CSV has no short preset.
+Presets: `pg`, `mysql`, `crdb`, `yugabyte`, `tidb`, `pico`, `ydb`, `noop`. CSV has no short preset.
 
 ```bash
 stroppy run tpcc/tx -d pg
 stroppy run tpcc/tx -d pg -D url=postgres://prod:5432/bench
-stroppy run tpcc/tx -d pg -d1 mysql
 stroppy run tpcb/tx \
   -D driverType=csv \
   -D url='/tmp/tpcb-csv?merge=true&workload=tpcb' \
@@ -112,12 +112,11 @@ stroppy run tpcb/tx \
 
 See [Drivers & Configuration](./drivers) for fields and capabilities.
 
-### Config and compatibility flags
+### Config and logging flags
 
 | Flag | Meaning |
 |---|---|
 | `-f PATH`, `--file PATH` | Load JSON config. Default is `stroppy-config.json` when present. |
-| `-e KEY=VALUE`, `--env KEY=VALUE` | Set a compatibility environment input; keys are uppercased. |
 | `--log-level VALUE` | `debug`, `info`, `warn`, `error`, or `fatal`. |
 | `--log-mode VALUE` | `development` or `production`. |
 
@@ -138,7 +137,7 @@ stroppy run tpcc/tx --steps=create_schema,load_data
 stroppy run tpcc/tx --no-steps workload
 ```
 
-Unknown step names simply do not match a workload step.
+Unknown step names simply do not match a workload step. Use `stroppy probe WORKLOAD --resolved -o json` to inspect declared steps before running.
 
 ### Signals and exit status
 
@@ -151,6 +150,40 @@ Unknown step names simply do not match a workload step.
 
 Automation that treats any terminal benchmark error as failure should inspect
 `terminal_errors_total` or the `bench completed with errors` summary marker.
+
+## Run report and capture flags
+
+| Flag | Purpose |
+|---|---|
+| `--report-format json` | Write final JSON to stdout; diagnostics remain on stderr. |
+| `--report-file PATH` | Write final JSON to a file. |
+| `--report-html PATH` | Write self-contained HTML with static chart fallbacks. |
+| `--no-save-report` | Disable automatic history saving, retaining requested output. |
+| `--no-report` | Disable report construction and output; incompatible with capture. |
+| `--capture-metrics` | Record timestamped cumulative metrics and gauges. |
+| `--capture-logs` | Record structured logs at the effective log level. |
+| `--capture-interval D` | Metric sampling interval; default `1s`. |
+| `--capture-dir PATH` | Persistent capture root, with a UUID directory per run. |
+| `--capture-max-bytes N` | Per-stream byte budget; default `67108864` (64 MiB). |
+
+## `stroppy reports`
+
+```text
+stroppy reports list [filters] [-o human|json]
+stroppy reports get ID
+stroppy reports remove ID...
+stroppy reports prune --older-than 720h [filters]
+stroppy reports status [-o human|json]
+stroppy reports serve --listen 127.0.0.1:8080
+stroppy reports export ID --file report.html
+stroppy reports artifact ID logs.jsonl
+stroppy reports bundle ID --file report.zip
+stroppy reports compare ID1 ID2 [--reference ID] [-o human|json|html]
+```
+
+History IDs come from `reports list`, not the run UUID inside JSON. Removal and
+pruning preview their selection unless confirmed with `--yes`. Full command
+examples, filter syntax, and capture limits are in [Run reports](./run-reports).
 
 ## `stroppy baseline`
 
@@ -187,18 +220,19 @@ List compiled-in workload and driver metadata without running a workload or
 connecting to a database:
 
 ```text
-stroppy probe [-o human|json]
+stroppy probe [WORKLOAD] [--resolved] [run inputs] [-o human|json]
 ```
 
 | Flag | Default | Description |
 |---|---|---|
 | `-o`, `--output` | `human` | `human` or `json`. |
 
-Probe takes no positional arguments.
+`WORKLOAD` selects one schema. `--resolved` also shows effective inputs, their sources, declared steps, named drivers, and metric schemas without executing actions.
 
 ```bash
 stroppy probe
 stroppy probe -o json
+stroppy probe tpcc/tx --resolved -d pg --scale-factor 10 -o json
 ```
 
 See [Probe & Parameters](./probe).
@@ -325,7 +359,7 @@ stroppy version [--json]
 Text output:
 
 ```text
-stroppy  v6.0.0
+stroppy  v6.2.0
 pgx      v5.10.0
 ```
 
@@ -334,7 +368,7 @@ JSON output:
 ```json
 {
   "pgx": "v5.10.0",
-  "stroppy": "v6.0.0"
+  "stroppy": "v6.2.0"
 }
 ```
 
@@ -357,17 +391,17 @@ stroppy help baseline
 
 These topics are compiled into the binary and match its release.
 
-## Environment compatibility
+## Process environment
 
 Every typed parameter projects to an uppercase environment name. Some preserve
 legacy aliases. Source precedence is:
 
 1. typed CLI flag;
 2. process environment;
-3. `-e` compatibility override;
-4. matching typed `run` or `params` config value;
-5. config `env` map;
-6. declared default.
+3. matching typed `run` or `params` config value;
+4. declared default.
+
+`-e` and config `env` are removed. `DURATION` does not select an executor; set `EXECUTOR=constant-vus` or use the explicit flag.
 
 Common names:
 
@@ -375,8 +409,9 @@ Common names:
 |---|---|
 | `EXECUTOR` | `--executor` |
 | `VUS` | `--vus` |
-| `ITERATIONS` (`ITER`) | `--iterations` |
+| `ITERATIONS` | `--iterations` |
 | `DURATION` | `--duration` |
+| `DRAIN_TIMEOUT` | `--drain-timeout` |
 | `QUERY_TIMEOUT` | `--query-timeout` |
 | `SCALE_FACTOR` | `--scale-factor` |
 | `LOAD_WORKERS` | `--load-workers` |

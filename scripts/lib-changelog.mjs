@@ -32,6 +32,11 @@ export function parseSections(text) {
 
 export const isUnreleased = (v) => /^unreleased$/i.test(v.trim());
 
+export const renderSection = (section) => section.raw.replace(
+  /\]\((docs\/[^)]+)\)/g,
+  `](https://github.com/stroppy-io/stroppy/blob/${isUnreleased(section.version) ? 'main' : `v${section.version}`}/$1)`,
+);
+
 /** Numeric semver-ish compare. Non-numeric suffixes are ignored. */
 export function cmpVersion(a, b) {
   const pa = a.split('.').map((n) => parseInt(n, 10) || 0);
