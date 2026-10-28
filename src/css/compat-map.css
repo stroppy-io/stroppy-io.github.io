@@ -62,7 +62,11 @@
 
 /* ---------- The map ---------- */
 
+/* Positioned, so the cells' absolutely placed screen-reader text (.sr)
+   belongs to this scroller and is clipped by it. Otherwise it overflows the
+   page, and a phone zooms the whole page out to fit the map's width. */
 .cmap {
+  position: relative;
   overflow-x: auto;
 }
 
