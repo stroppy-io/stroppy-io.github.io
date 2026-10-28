@@ -76,6 +76,65 @@ html.plugin-docs .navbar__inner {
   .navbar__items--right .navbar__search-input:not(:focus) {
     width: 2.5rem;
   }
+
+  /* A phone has no room for the open field beside the menu, the logo and the
+     account button: while searching, the field and its close button
+     (src/theme/SearchBar) take the whole bar. */
+  .navbar__inner:has(.navbar-search:focus-within) .navbar__items:not(.navbar__items--right),
+  .navbar__inner:has(.navbar-search:focus-within) .navbar-cta {
+    display: none;
+  }
+
+  .navbar__inner:has(.navbar-search:focus-within) .navbar__items--right,
+  .navbar__items--right > :has(.navbar-search:focus-within),
+  .navbar-search:focus-within .navbar__search {
+    flex: 1;
+    margin-right: 0;
+  }
+
+  .navbar-search:focus-within {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .navbar-search:focus-within .navbar__search {
+    margin: 0;
+  }
+
+  /* The plugin's autocomplete wrapper is inline-block (an inline style), as
+     wide as the field: stretched, it puts the plugin's clear button inside
+     the field and the results under all of it. */
+  .navbar-search:focus-within .navbar__search > span {
+    width: 100%;
+  }
+
+  .navbar-search:focus-within .navbar__search-input {
+    width: 100%;
+  }
+
+  .navbar-search:focus-within .navbar-search__close {
+    display: inline-flex;
+  }
+
+  /* The results line up with the field instead of the plugin's 340px. */
+  .navbar-search .navbar__search {
+    --search-local-modal-width-sm: 100%;
+  }
+}
+
+.navbar-search__close {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--st-radius-md);
+  color: var(--st-text);
+}
+
+.navbar-search__close:active {
+  background: var(--st-raised);
 }
 
 .navbar__items--right [class*='searchHintContainer'] {

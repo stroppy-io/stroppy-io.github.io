@@ -91,6 +91,7 @@ src/theme/NavbarItem/     registers `custom-mega` and `custom-account` next to D
 src/theme/DocSidebar/     the docs version switch (src/components/nav/VersionSwitch.tsx) on top of the
                           docs sidebar, desktop and the mobile drawer
 src/theme/Navbar/MobileSidebar/  the mobile drawer, closed by Escape
+src/theme/SearchBar/      the local search with a close button: on a phone the open field takes the bar
 src/theme/Footer/         the site footer: a site map built from the top menu, copyright, theme switch
 src/css/footer.css        the footer's styles
 src/client/theme-cookie.ts  the theme shared with Stroppy Cloud through the stroppy-theme cookie
