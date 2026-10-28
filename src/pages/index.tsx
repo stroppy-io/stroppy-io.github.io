@@ -7,7 +7,6 @@ import Heading from '@theme/Heading';
 import {PairsPlot, type Group} from '@site/src/components/landing/Charts';
 import HeroMark from '@site/src/components/landing/HeroMark';
 import ConformityTeaser from '@site/src/components/landing/Conformity';
-import Engines from '@site/src/components/landing/Engines';
 import {ResultsFrame, TopBoard} from '@site/src/components/landing/Leaderboard';
 import {PagerCue, PagerNav, PagerSnap, usePager, type Page as PageInfo} from '@site/src/components/landing/Pager';
 import RunReplay, {type RunPart} from '@site/src/components/landing/RunReplay';
@@ -140,9 +139,6 @@ function Hero() {
           </a>
         </div>
         <TopBoard />
-      </div>
-      <div className="intro__strip">
-        <Engines />
       </div>
     </header>
   );

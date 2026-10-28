@@ -1,12 +1,12 @@
 import type {LoadContext, Plugin} from '@docusaurus/types';
-import {fetchCatalog, fetchRating, type Catalog, type Rating} from '../src/components/landing/rating';
+import {fetchRating, type Rating} from '../src/components/landing/rating';
 
-// Takes a copy of Stroppy Cloud's public rating and catalog when the site is
-// built (and when the dev server starts), so the landing's board and its
-// line of engines are in the HTML. The page refreshes the rating in the
-// browser. If the cloud does not answer, the build goes on without them.
+// Takes a copy of Stroppy Cloud's public rating when the site is built (and
+// when the dev server starts), so the landing's board is in the HTML. The
+// page refreshes it in the browser. If the cloud does not answer, the build
+// goes on without it.
 
-type Content = {rating: Rating | null; catalog: Catalog | null};
+type Content = {rating: Rating | null};
 
 async function load<T>(what: string, get: (s: AbortSignal) => Promise<T>): Promise<T | null> {
   try {
@@ -21,8 +21,7 @@ export default function cloudRating(_context: LoadContext): Plugin<Content> {
   return {
     name: 'cloud-rating',
     async loadContent() {
-      const [rating, catalog] = await Promise.all([load('rating', fetchRating), load('catalog', fetchCatalog)]);
-      return {rating, catalog};
+      return {rating: await load('rating', fetchRating)};
     },
     async contentLoaded({content, actions}) {
       actions.setGlobalData(content);

@@ -196,86 +196,6 @@
   color: var(--st-text);
 }
 
-/* What Stroppy Cloud deploys (components/landing/Engines.tsx): the engines'
-   marks along the bottom of the hero, edge to edge, sliding slowly sideways
-   and fading out at both ends. */
-.intro__strip {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  margin-top: 4.5rem;
-}
-
-.engines__caption {
-  margin: 0 0 1.25rem;
-  text-align: center;
-  color: var(--st-muted);
-  font-size: 0.875rem;
-}
-
-.engines__track {
-  overflow: hidden;
-  mask-image: linear-gradient(90deg, transparent, var(--st-text) 15%, var(--st-text) 85%, transparent);
-}
-
-.engines__slide {
-  display: flex;
-  width: max-content;
-  animation: engines-slide calc(var(--n) * 5s) linear infinite;
-}
-
-.engines__track:hover .engines__slide {
-  animation-play-state: paused;
-}
-
-@keyframes engines-slide {
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-.engines__row {
-  display: flex;
-  flex-shrink: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.engines__item {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  padding: 0 2.75rem;
-  color: color-mix(in srgb, var(--st-text) 62%, var(--st-muted));
-  font-size: 1.5rem;
-  font-weight: var(--st-font-weight-bold);
-  letter-spacing: -0.025em;
-  white-space: nowrap;
-}
-
-.engines__mark {
-  width: auto;
-  height: 2rem;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .engines__slide {
-    flex-wrap: wrap;
-    justify-content: center;
-    width: auto;
-    animation: none;
-  }
-
-  .engines__row[aria-hidden] {
-    display: none;
-  }
-
-  .engines__track {
-    mask-image: none;
-  }
-}
-
 /* ---------- The top of the leaderboard (in the hero) ---------- */
 
 .board {
@@ -1339,19 +1259,6 @@
     scroll-snap-stop: always;
   }
 
-  /* The first page fills the screen like the others: the headline and the
-     board, then the strip of engines, with the free height shared evenly
-     above, between and below them (the bottom keeps room for the cue). */
-  .page.intro {
-    flex-direction: column;
-    justify-content: space-evenly;
-    align-items: stretch;
-    padding-block: 1rem 4.5rem;
-  }
-
-  .page.intro .intro__strip {
-    margin-top: 0;
-  }
 
   .page__inner {
     width: 100%;
