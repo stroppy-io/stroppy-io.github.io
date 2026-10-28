@@ -129,7 +129,11 @@ scripts/                  changelog and UI kit synchronization, changelog slicin
 - The tap highlight, `touch-action` and `user-select` baseline is in
   `src/css/custom.css`.
 - Nothing scrolls the page sideways at any width: a wide thing (a table, a
-  terminal) scrolls in its own box.
+  terminal) scrolls in its own box. Such a box is positioned when it holds
+  absolutely placed children (the `.sr` screen-reader text): otherwise they
+  escape its clip, and phones zoom the whole page out. Desktop Firefox and
+  `html { overflow-x: hidden }` hide this, so measure absolute elements
+  past the right edge, not `scrollWidth`.
 - Check 360, 390, 768, 996 and 997 wide (the Docusaurus breakpoint), and a
   tablet both ways, in both themes.
 
