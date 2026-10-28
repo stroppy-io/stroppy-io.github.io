@@ -53,6 +53,31 @@ html.plugin-docs .navbar__inner {
   width: 9.5rem;
 }
 
+/* Below 997px Docusaurus pins the search absolutely to the bar's right edge,
+   on top of the account button; back in the flow it sits before it. On a
+   phone it stays the plugin's icon until focused. */
+@media (max-width: 996px) {
+  .navbar__items--right > :has(.navbar__search) {
+    position: static;
+  }
+
+  /* The search box is positioned and comes later in the bar, so without
+     these it would be painted over the open drawer and its backdrop. */
+  .navbar-sidebar__backdrop {
+    z-index: 1;
+  }
+
+  .navbar-sidebar {
+    z-index: 2;
+  }
+}
+
+@media (max-width: 576px) {
+  .navbar__items--right .navbar__search-input:not(:focus) {
+    width: 2.5rem;
+  }
+}
+
 .navbar__items--right [class*='searchHintContainer'] {
   display: none;
 }
@@ -84,11 +109,19 @@ html.plugin-docs .navbar__inner {
     background-color 0.15s;
 }
 
-.mega__trigger:hover,
+.mega__trigger:hover {
+  text-decoration: none;
+}
+
 .mega__trigger:focus-visible,
 .mega--open .mega__trigger {
-  text-decoration: none;
   color: var(--st-text);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mega__trigger:hover {
+    color: var(--st-text);
+  }
 }
 
 .mega--open .mega__trigger {
@@ -176,9 +209,14 @@ html.plugin-docs .navbar__inner {
 }
 
 .mega__link:hover {
-  background: var(--st-raised);
   color: var(--st-text);
   text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mega__link:hover {
+    background: var(--st-raised);
+  }
 }
 
 .mega__icon {
@@ -229,8 +267,10 @@ html.plugin-docs .navbar__inner {
   text-decoration: none;
 }
 
-.mega__promo:hover .mega__promo-cta {
-  gap: 0.5rem;
+@media (hover: hover) and (pointer: fine) {
+  .mega__promo:hover .mega__promo-cta {
+    gap: 0.5rem;
+  }
 }
 
 .mega__art {
@@ -351,8 +391,13 @@ html.plugin-docs .navbar__inner {
 }
 
 .navbar__item.navbar-signin:hover {
-  color: var(--st-text);
   text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .navbar__item.navbar-signin:hover {
+    color: var(--st-text);
+  }
 }
 
 .navbar__item.navbar-cta {
@@ -375,10 +420,8 @@ html.plugin-docs .navbar__inner {
 }
 
 .navbar__item.navbar-cta:hover {
-  background: color-mix(in srgb, var(--st-primary) 86%, var(--st-text));
   color: #fff;
   text-decoration: none;
-  box-shadow: 0 8px 22px -8px var(--st-primary);
 }
 
 .navbar__item.navbar-cta:active {
@@ -389,8 +432,47 @@ html.plugin-docs .navbar__inner {
   transition: transform 0.15s;
 }
 
-.navbar-cta:hover .navbar-cta__arrow {
-  transform: translateX(2px);
+@media (hover: hover) and (pointer: fine) {
+  .navbar__item.navbar-cta:hover {
+    background: color-mix(in srgb, var(--st-primary) 86%, var(--st-text));
+    box-shadow: 0 8px 22px -8px var(--st-primary);
+  }
+
+  .navbar-cta:hover .navbar-cta__arrow {
+    transform: translateX(2px);
+  }
+}
+
+/* A finger needs 40px: the account button, the menu toggle and the rows
+   and close button of the mobile drawer. */
+@media (pointer: coarse) {
+  .navbar__item.navbar-cta {
+    min-height: 2.5rem;
+  }
+
+  .navbar__toggle {
+    display: inline-grid;
+    place-items: center;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+  }
+
+  .navbar-sidebar .menu__link,
+  .navbar-sidebar .menu__caret {
+    min-height: 2.5rem;
+  }
+
+  .navbar-sidebar .menu__link {
+    display: flex;
+    align-items: center;
+  }
+
+  .navbar-sidebar__close {
+    display: inline-grid;
+    place-items: center;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+  }
 }
 
 /* ---------- Mobile drawer ---------- */

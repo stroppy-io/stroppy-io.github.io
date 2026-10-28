@@ -57,7 +57,7 @@ const config: Config = {
         `try{var m=document.cookie.match(/(?:^|; )stroppy-theme=(dark|light)/);if(m)localStorage.setItem('${themeStorageKey}',m[1])}catch(e){}`,
     },
   ],
-  clientModules: ['./src/client/theme-cookie.ts'],
+  clientModules: ['./src/client/theme-cookie.ts', './src/client/theme-color.ts'],
 
   presets: [
     [

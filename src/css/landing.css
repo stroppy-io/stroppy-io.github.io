@@ -192,8 +192,10 @@
   font-size: 0.9375rem;
 }
 
-.intro__local:hover {
-  color: var(--st-text);
+@media (hover: hover) and (pointer: fine) {
+  .intro__local:hover {
+    color: var(--st-text);
+  }
 }
 
 /* ---------- The top of the leaderboard (in the hero) ---------- */
@@ -250,7 +252,12 @@
 .board__row:hover {
   color: inherit;
   text-decoration: none;
-  background: var(--st-raised);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .board__row:hover {
+    background: var(--st-raised);
+  }
 }
 
 .board__row:focus-visible {
@@ -373,8 +380,10 @@
   cursor: pointer;
 }
 
-.install__tab:hover {
-  color: var(--st-text);
+@media (hover: hover) and (pointer: fine) {
+  .install__tab:hover {
+    color: var(--st-text);
+  }
 }
 
 .install__tab[aria-selected='true'] {
@@ -426,8 +435,10 @@
   cursor: pointer;
 }
 
-.copy:hover {
-  color: var(--st-text);
+@media (hover: hover) and (pointer: fine) {
+  .copy:hover {
+    color: var(--st-text);
+  }
 }
 
 .copy:focus-visible,
@@ -514,13 +525,15 @@
   min-height: 0;
 }
 
-/* The embed pads its own content by 16px; the frame steps out by as much so
-   the board lines up with the heading. */
+/* The embed pads its own content by 16px; the frame steps out into the
+   container's padding so the board lines up with the heading. No further:
+   the padding is 1rem (15px here), and a pixel more scrolls a phone
+   sideways. */
 .results__frame {
   display: block;
-  width: calc(100% + 32px);
+  width: calc(100% + 2 * var(--ifm-spacing-horizontal));
   height: 28rem;
-  margin-inline: -16px;
+  margin-inline: calc(-1 * var(--ifm-spacing-horizontal));
   border: 0;
   /* The embed draws without a background (bg=transparent); a frame in another
      colour scheme would otherwise get an opaque one from the browser. */
@@ -740,6 +753,21 @@
   line-height: 1.7;
 }
 
+/* "Hover a note" with a mouse, "Tap a note" with a finger. */
+.anatomy__hint--tap {
+  display: none;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .anatomy__hint--hover {
+    display: none;
+  }
+
+  .anatomy__hint--tap {
+    display: inline;
+  }
+}
+
 .anatomy__group {
   margin: 0 0 0.35rem;
   font-size: 0.875rem;
@@ -831,8 +859,10 @@
   cursor: pointer;
 }
 
-.run__replay:hover:not(:disabled) {
-  border-color: var(--st-line-strong);
+@media (hover: hover) and (pointer: fine) {
+  .run__replay:hover:not(:disabled) {
+    border-color: var(--st-line-strong);
+  }
 }
 
 .run__replay:disabled {
@@ -884,6 +914,31 @@
 
 .story--panel .run__screen {
   background: var(--st-canvas);
+}
+
+/* On a phone the run keeps a terminal's lines and scrolls sideways in its
+   own box, instead of wrapping into a screen-high column. */
+@media (max-width: 600px) {
+  .run__screen {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    white-space: pre;
+    overflow-wrap: normal;
+  }
+}
+
+/* A finger needs 40px. */
+@media (pointer: coarse) {
+  .install__tab,
+  .copy,
+  .run__replay {
+    min-height: 2.5rem;
+  }
+
+  .copy {
+    top: 0.25rem;
+    right: 0.25rem;
+  }
 }
 
 .run__screen code {
@@ -1031,9 +1086,14 @@
   font-weight: var(--st-font-weight-regular);
 }
 
-.conf__tabs button:hover,
 .conf__tabs button[aria-selected='true'] {
   color: var(--st-text);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .conf__tabs button:hover {
+    color: var(--st-text);
+  }
 }
 
 .conf__tabs button[aria-selected='true']::after {
@@ -1184,6 +1244,12 @@
     gap: 2.5rem;
   }
 
+  /* The notes come after the run here, too far below it to light it up:
+     they are read as text, and the page does not ask to hover them. */
+  .anatomy__hint {
+    display: none;
+  }
+
 
   .plot {
     grid-template-columns: minmax(0, 1fr);
@@ -1224,6 +1290,11 @@
     position: relative;
     z-index: 2;
     justify-self: end;
+  }
+
+  /* The group's heading shares its row with "× go-tpc": it wraps before it. */
+  .plot__group {
+    padding-right: 6rem;
   }
 
   .plot__lane {
@@ -1276,6 +1347,14 @@
   }
 }
 
+/* Where the content reaches the screen's edge, it keeps clear of the map of
+   pages pinned there. */
+@media (min-width: 997px) and (max-width: 1240px) and (min-height: 700px) {
+  html.landing-paged .page .container {
+    padding-right: 3.5rem;
+  }
+}
+
 /* A link to a page (#cli, #results) lands it under the navbar. When the
    landing pages, scroll-padding does that already; a margin on top of it
    would stop every page a navbar's height too high. */
@@ -1310,9 +1389,14 @@ html:not(.landing-paged) .page {
   transition: opacity 0.2s;
 }
 
-.pager:hover,
 .pager:focus-within {
   opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pager:hover {
+    opacity: 1;
+  }
 }
 
 .pager__item {
@@ -1368,10 +1452,16 @@ html:not(.landing-paged) .page {
     transform 0.15s;
 }
 
-.pager__item:hover .pager__label,
 .pager__item:focus-visible .pager__label {
   opacity: 1;
   transform: translateX(0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pager__item:hover .pager__label {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .pager-cue {
@@ -1391,8 +1481,10 @@ html:not(.landing-paged) .page {
   cursor: pointer;
 }
 
-.pager-cue:hover {
-  color: var(--st-text);
+@media (hover: hover) and (pointer: fine) {
+  .pager-cue:hover {
+    color: var(--st-text);
+  }
 }
 
 .pager-cue__icon {

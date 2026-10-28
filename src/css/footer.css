@@ -37,8 +37,13 @@
 }
 
 .site-footer__logo:hover {
-  color: var(--st-text);
   text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .site-footer__logo:hover {
+    color: var(--st-text);
+  }
 }
 
 .site-footer__logo img {
@@ -66,9 +71,14 @@
 }
 
 .site-footer__cta:hover {
-  background: var(--st-text);
-  color: var(--st-canvas);
   text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .site-footer__cta:hover {
+    background: var(--st-text);
+    color: var(--st-canvas);
+  }
 }
 
 .site-footer__social {
@@ -87,9 +97,11 @@
   color: var(--st-muted);
 }
 
-.site-footer__social a:hover {
-  border-color: var(--st-line-strong);
-  color: var(--st-text);
+@media (hover: hover) and (pointer: fine) {
+  .site-footer__social a:hover {
+    border-color: var(--st-line-strong);
+    color: var(--st-text);
+  }
 }
 
 .site-footer__icon {
@@ -140,8 +152,33 @@
 
 .site-footer__group a:hover,
 .site-footer__title a:hover {
-  color: var(--st-text);
   text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .site-footer__group a:hover,
+  .site-footer__title a:hover {
+    color: var(--st-text);
+  }
+}
+
+/* A finger needs 40px: the links keep their text size and the rhythm of the
+   list, the tap area grows around them. */
+@media (pointer: coarse) {
+  .site-footer__group li + li {
+    margin-top: 0;
+  }
+
+  .site-footer__group a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+  }
+
+  .site-footer__social a {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
 }
 
 /* Docusaurus marks external links with an icon; the map reads cleaner without. */

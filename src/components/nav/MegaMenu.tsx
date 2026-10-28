@@ -1,4 +1,4 @@
-import {useEffect, useId, useSyncExternalStore, type CSSProperties, type ReactNode} from 'react';
+import {useEffect, useId, useRef, useSyncExternalStore, type CSSProperties, type ReactNode} from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import {useLocation} from '@docusaurus/router';
@@ -125,10 +125,24 @@ function Desktop({s}: {s: MenuSection}) {
   const shown = current === s.id;
   const {pathname, hash} = useLocation();
 
+  const item = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLAnchorElement>(null);
+  // Set while Escape hands focus back to the trigger, so that focus does not
+  // reopen the panel it just closed.
+  const returning = useRef(false);
+
   useEffect(() => setOpen(null), [pathname, hash]);
   useEffect(() => {
     if (!shown) return undefined;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(null);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (item.current?.contains(document.activeElement)) {
+        returning.current = true;
+        trigger.current?.focus();
+        returning.current = false;
+      }
+      setOpen(null);
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [shown]);
@@ -137,11 +151,12 @@ function Desktop({s}: {s: MenuSection}) {
     // Hover and focus are on the item, not the link: Docusaurus's Link takes
     // the link's own onMouseEnter for preloading the page.
     <div
+      ref={item}
       className={clsx('navbar__item mega', shown && 'mega--open')}
       onMouseEnter={() => setOpen(s.id)}
       onMouseLeave={closeLater}
-      onFocus={() => setOpen(s.id)}>
-      <Link to={s.href} className="mega__trigger" aria-expanded={shown} aria-controls={id}>
+      onFocus={() => returning.current || setOpen(s.id)}>
+      <Link ref={trigger} to={s.href} className="mega__trigger" aria-expanded={shown} aria-controls={id}>
         {s.label}
       </Link>
       <Panel s={s} id={id} shown={shown} />

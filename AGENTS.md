@@ -88,23 +88,26 @@ src/css/custom.css        site styling
 src/css/nav.css           the top menu: mega panels, Sign in and Create account
 src/components/nav/       the top bar: mega menu content (menu.ts) and panels, icons, account links
 src/theme/NavbarItem/     registers `custom-mega` and `custom-account` next to Docusaurus's navbar items
-src/theme/DocSidebar/     the docs version switch, on top of the docs sidebar
+src/theme/DocSidebar/     the docs version switch (src/components/nav/VersionSwitch.tsx) on top of the
+                          docs sidebar, desktop and the mobile drawer
+src/theme/Navbar/MobileSidebar/  the mobile drawer, closed by Escape
 src/theme/Footer/         the site footer: a site map built from the top menu, copyright, theme switch
 src/css/footer.css        the footer's styles
 src/client/theme-cookie.ts  the theme shared with Stroppy Cloud through the stroppy-theme cookie
+src/client/theme-color.ts   <meta name="theme-color"> following the shown theme (the navbar's colour)
 src/pages/index.tsx       landing page
 src/pages/how.tsx         how Stroppy Cloud works, a screen at a time (src/css/how.css); the menu
                           links to its screens and opens the product diagram on a story (#suites, #share)
 src/components/how/       the /how diagrams: Diagram.tsx and their data (product model, architecture)
 src/pages/conformity.tsx  which databases really speak the protocol they claim: per-protocol tabs, a
                           compatibility map of engines × feature groups, an engine's findings in a
-                          drawer, "About this data" folded at the bottom (src/css/conformity.css);
+                          drawer, "About this data" in a side panel from the header (src/css/conformity.css);
                           reads static/data/conformity/compat.json at build, fetches details on open
 src/components/conformity/ CompatMap, Drawer, About, and data.ts (the five states, groups, protocols)
 static/data/conformity/   the dataset as exported: compat.json and details/<row id>.json
 src/components/landing/   landing pieces: scroll-driven mark, charts from blog data, run replay,
                           leaderboard (hero top rows, Stroppy Cloud's full board in an iframe)
-plugins/cloud-rating.ts   copies Stroppy Cloud's public rating and catalog into the build for the hero
+plugins/cloud-rating.ts   copies Stroppy Cloud's public rating into the build for the hero
 plugins/conformity.ts     a summary of the conformity dataset for the landing's teaser
 src/css/landing.css       landing styles
 plans/                    agreed plans of work, not published
@@ -113,6 +116,22 @@ kit.json                  pinned UI kit release: version and archive sha256
 scripts/                  changelog and UI kit synchronization, changelog slicing; extract-conformity.mjs
                           re-extracts the conformity dataset from a report.html (interim)
 ```
+
+## Touch and small screens
+
+- Every `:hover` that changes how something looks sits in
+  `@media (hover: hover) and (pointer: fine)`, so it does not stick after a
+  tap. Only `text-decoration: none` against Infima's link underline stays
+  outside.
+- Under `(pointer: coarse)` a control is at least 40px tall (2.5rem), grown
+  with padding or a stretched `::after`, not with a bigger text.
+- Fields are 16px under `(pointer: coarse)`, or iOS zooms into them.
+- The tap highlight, `touch-action` and `user-select` baseline is in
+  `src/css/custom.css`.
+- Nothing scrolls the page sideways at any width: a wide thing (a table, a
+  terminal) scrolls in its own box.
+- Check 360, 390, 768, 996 and 997 wide (the Docusaurus breakpoint), and a
+  tablet both ways, in both themes.
 
 ## UI kit
 

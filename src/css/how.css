@@ -177,8 +177,17 @@
 }
 
 .strip__seg:hover {
-  color: var(--st-text);
   text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .strip__seg:hover {
+    color: var(--st-text);
+  }
+
+  .strip__seg:hover .strip__fill {
+    background: var(--c);
+  }
 }
 
 .strip__fill {
@@ -202,7 +211,6 @@
   border-radius: 1px;
 }
 
-.strip__seg:hover .strip__fill,
 .strip__seg:focus-visible .strip__fill {
   background: var(--c);
 }
@@ -412,8 +420,10 @@
   transform-origin: left center;
 }
 
-.how-clock__seg:hover::before {
-  background: color-mix(in srgb, var(--c) 45%, var(--st-canvas));
+@media (hover: hover) and (pointer: fine) {
+  .how-clock__seg:hover::before {
+    background: color-mix(in srgb, var(--c) 45%, var(--st-canvas));
+  }
 }
 
 .how-clock__seg:focus-visible {
@@ -699,9 +709,11 @@
     background-color 0.15s;
 }
 
-.how-chips__chip:hover {
-  border-color: var(--st-muted);
-  color: var(--st-text);
+@media (hover: hover) and (pointer: fine) {
+  .how-chips__chip:hover {
+    border-color: var(--st-muted);
+    color: var(--st-text);
+  }
 }
 
 .how-chips__chip[aria-selected='true'] {

@@ -70,7 +70,7 @@
   display: table;
   width: 100%;
   /* Below this a cell could not hold its sign and share: scroll instead. */
-  min-width: calc(23.5rem + var(--cols, 8) * 5rem);
+  min-width: calc(23.5rem + var(--cols, 8) * 5.25rem);
   margin: 0;
   border-collapse: separate;
   border-spacing: 3px;
@@ -145,6 +145,9 @@
   line-height: 1.25;
   text-align: left;
   vertical-align: bottom;
+  /* Headers wrap between words only; a column is wide enough for the
+     longest word (.cmap__table's min-width). */
+  overflow-wrap: normal;
 }
 
 .cmap__group button,
@@ -162,9 +165,11 @@
   cursor: pointer;
 }
 
-.cmap__group button:hover,
-.cmap__close:hover {
-  color: var(--st-primary-text);
+@media (hover: hover) and (pointer: fine) {
+  .cmap__group button:hover,
+  .cmap__close:hover {
+    color: var(--st-primary-text);
+  }
 }
 
 .cmap__close {
@@ -193,10 +198,22 @@
   cursor: pointer;
 }
 
-.cmap__name:hover {
-  color: var(--st-primary-text);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+/* A finger needs more than the name's line: the whole cell is the link. The
+   cell is sticky, so it holds the stretched area. */
+@media (pointer: coarse) {
+  .cmap__name::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cmap__name:hover {
+    color: var(--st-primary-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 .cmap__ref th {
@@ -333,7 +350,7 @@
   }
 
   .cmap__table {
-    min-width: calc(16rem + var(--cols, 8) * 4.75rem);
+    min-width: calc(16rem + var(--cols, 8) * 5.25rem);
   }
 
   .cmap__name {

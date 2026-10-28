@@ -89,6 +89,9 @@ html[data-theme] {
   --ifm-color-danger-dark: var(--st-error);
   --ifm-color-danger-contrast-background: color-mix(in srgb, var(--st-error) 10%, var(--st-panel));
   --ifm-color-danger-contrast-foreground: var(--st-text);
+  /* The outline of secondary buttons ("See results"); Infima's own grey is
+     invisible on the light canvas. */
+  --ifm-color-secondary: var(--st-line-strong);
   --ifm-color-secondary-dark: var(--st-line-strong);
   --ifm-color-secondary-contrast-background: var(--st-panel);
   --ifm-color-secondary-contrast-foreground: var(--st-text);
@@ -107,6 +110,46 @@ body {
 
 body {
   -webkit-font-smoothing: antialiased;
+}
+
+/* On a phone: no grey flash over a tapped control (each has its own pressed
+   state), no font inflation in landscape, a tap is a click at once (no
+   double-tap zoom wait), and a long press on a control does not select its
+   label. Hover styles are gated by (hover: hover) and (pointer: fine) where
+   they are written, so they do not stick after a tap. */
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+a,
+button,
+[role='button'],
+[role='tab'] {
+  touch-action: manipulation;
+}
+
+button,
+[role='button'],
+[role='tab'],
+.button {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* iOS zooms into a field with text under 16px and stays zoomed. */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+.navbar__search-input::placeholder {
+  color: var(--st-muted);
+  opacity: 1;
 }
 
 /* Numbers line up in tables and summaries, as in the app. */
@@ -210,9 +253,11 @@ div[class^='codeBlockTitle'] {
   transition: background-color 0.15s;
 }
 
-.header-github-link:hover::before,
-.header-discord-link:hover::before {
-  background-color: var(--st-text);
+@media (hover: hover) and (pointer: fine) {
+  .header-github-link:hover::before,
+  .header-discord-link:hover::before {
+    background-color: var(--st-text);
+  }
 }
 
 .header-github-link::before {

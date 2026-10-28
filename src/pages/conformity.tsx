@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState, type KeyboardEvent, type ReactNode} from 'react';
+import {useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode} from 'react';
 import clsx from 'clsx';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
@@ -89,6 +89,19 @@ function ConformityPage() {
     };
   }, []);
 
+  // The map's box is as tall as the room under the sticky tabs
+  // (src/css/conformity.css); the tabs wrap with the width, so they are
+  // measured.
+  const cbar = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const bar = cbar.current;
+    if (!bar) return undefined;
+    const page = bar.parentElement;
+    const ro = new ResizeObserver(() => page?.style.setProperty('--cbar-h', `${bar.offsetHeight}px`));
+    ro.observe(bar);
+    return () => ro.disconnect();
+  }, []);
+
   const pick = (p: string) => {
     setProtocol(p);
     setOpen(null);
@@ -137,7 +150,7 @@ function ConformityPage() {
         <AboutButton onOpen={() => setAbout(true)} />
       </header>
 
-      <div className="cbar">
+      <div className="cbar" ref={cbar}>
         <div className="cbar__inner">
           <div className="tabs" role="tablist" aria-label="Protocol" onKeyDown={onTabKey}>
             {PROTOCOLS.map((p) => (

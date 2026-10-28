@@ -286,8 +286,11 @@ function Notes({notes, part, setPart}: {notes: Note[]; part: RunPart | null; set
             type="button"
             className="note"
             aria-pressed={part === n.part}
-            onMouseEnter={() => setPart(n.part)}
-            onMouseLeave={() => setPart(null)}
+            // A mouse lights a part while over its note; a finger toggles it
+            // on press (a tap neither hovers nor, on iOS, focuses a button).
+            onPointerEnter={(e) => e.pointerType === 'mouse' && setPart(n.part)}
+            onPointerLeave={(e) => e.pointerType === 'mouse' && setPart(null)}
+            onPointerDown={(e) => e.pointerType !== 'mouse' && setPart(part === n.part ? null : n.part)}
             onFocus={() => setPart(n.part)}
             onBlur={() => setPart(null)}>
             <span className="note__title">{n.title}</span>
@@ -317,7 +320,12 @@ function Anatomy() {
             <Heading as="h2">Prefer the terminal?</Heading>
             <p>
               Stroppy CLI is open source and runs against any database it has a driver for: one Go binary with the
-              workloads, the drivers and the report inside. Hover a note to see which part of the run it’s about.
+              workloads, the drivers and the report inside.
+              <span className="anatomy__hint">
+                {' '}
+                <span className="anatomy__hint--hover">Hover</span>
+                <span className="anatomy__hint--tap">Tap</span> a note to see which part of the run it’s about.
+              </span>
             </p>
           </div>
           <Install />
