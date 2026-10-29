@@ -1,0 +1,14 @@
+{
+  "reproduction.zip": {
+    "bytes": 3074239,
+    "sha256": "fb6bb984ab7b767671a284cc33be50ed8ceaa530ca46fccc195f69d8c67c3aa5"
+  },
+  "results.json": {
+    "bytes": 761120,
+    "sha256": "3130eb662d4a4d9419d6d8975133debe15abc62c9741073736b899c2e2fac883"
+  },
+  "cases.csv": {
+    "bytes": 4053,
+    "sha256": "589e41d2cd1d3321be53ea29edf2ee4648c6f91e2ec5bdcab596b3686d90f88b"
+  }
+}
