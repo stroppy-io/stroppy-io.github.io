@@ -1,0 +1,284 @@
+---
+slug: stroppy-framework-performance
+title: "How much does Stroppy add to a database benchmark?"
+description: "We ran HammerDB and go-tpc workloads through Stroppy's Go SDK, then limited client CPU to check what similar throughput really meant. Results, limits, charts and reproduction files."
+authors: [stroppy-authors]
+tags: [performance, benchmark, tpc-c, mysql, go]
+---
+
+import {MainResults, NoReuseResults, EfficiencyResults, RuntimeResults} from './Charts';
+
+How much speed do we lose by running a database workload through Stroppy's Go
+SDK? We ported HammerDB and go-tpc workloads to find out: their SQL and workload
+choices, our framework.
+
+Our [earlier v5 comparison](/blog/stroppy-vs-go-tpc) looked at different TPC-C
+workload shapes. This time we wanted the workload held steady. Below are the
+results, a prepared-statement follow-up, and a test with limited client CPU.
+
+{/* truncate */}
+
+## HammerDB: the same workload through two clients
+
+We ran original HammerDB against its `hammerdb-tpcc` port, then native go-tpc
+against `go-tpc-tpcc`. These are separate workloads, not Stroppy's built-in TPC-C.
+Each port keeps its original tool's SQL and transaction choices.
+
+MySQL 8.4.11, 1,000 warehouses, 32 unpaced clients, eight client cores and
+48 database cores. Two runs per tool and placement, reversing tool order and
+restoring the same dataset before each run. Charts show **committed New-Orders
+per second** after five minutes of warm-up, over a ten-minute measurement budget.
+
+<MainResults family="hammerdb" />
+
+On the same host, the medians were **10,141/s for HammerDB** and **10,039/s for
+its Stroppy port**. One repetition favored HammerDB; the other slightly favored
+Stroppy. Over the private LAN, the medians were **9,760/s** and **9,588/s**.
+
+That is about a 1–2% difference in these runs. With two repetitions, we would not
+claim a meaningful local winner. Running the HammerDB workload through the SDK
+did not produce a large throughput penalty here.
+
+## go-tpc: one important execution difference
+
+<MainResults family="go-tpc" />
+
+Native go-tpc was faster. On the same host, its median was **6,443/s**, against
+**3,847/s for the Stroppy port**. Over the LAN, it was **5,691/s** against
+**3,456/s**. Stroppy was roughly 40% lower in this comparison.
+
+The two families have different SQL, mixes and data. Compare each original tool
+with its own port, not HammerDB's rate with go-tpc's.
+
+One execution difference was already known. Native go-tpc prepares statements
+once per worker connection and reuses them. The tested Stroppy SDK, v6.2.1, did
+not expose the same session-scoped reusable statement handles. The port kept
+query text but went through the ordinary SDK parameterized query path.
+
+That gives native go-tpc a real advantage as shipped. To check how much it
+explained, we changed statement reuse without changing the workload.
+
+## Disable reuse, keep the SQL
+
+For a small follow-up, we changed one file in a copy of native go-tpc. Its
+statement wrappers called the worker's `sql.Conn` directly instead of keeping
+reusable `sql.Stmt` handles. Transaction SQL, batching, random choices,
+connection pings, transaction boundaries and driver defaults stayed unchanged.
+
+With MySQL's default driver settings, that does **not** mean “no prepared
+statements on the server.” A parameterized call prepares, executes and closes a
+statement each time. We did not enable client-side parameter interpolation.
+Server counters confirmed about one client prepare and close per execute.
+Automatic server reprepares were counted separately.
+
+<NoReuseResults />
+
+Without reuse, native go-tpc fell to **3,810/s locally** and **3,267/s over the
+LAN**. The earlier Stroppy results were **3,847/s** and **3,456/s**.
+
+With comparable statement execution, the results were close. That supports
+practical performance parity for these paths and points to reuse as the main
+reason for the earlier gap. It does not give an exact cost for every SDK layer:
+these were later runs, not a newly interleaved three-way comparison.
+
+The next SDK improvement is tracked in [issue #233: session-scoped reusable
+prepared-statement handles](https://github.com/stroppy-io/stroppy/issues/233).
+It is still open. We have not measured a Stroppy implementation of the feature,
+so its eventual speed remains untested.
+
+<RuntimeResults />
+
+## Could similar throughput just mean a busy database?
+
+Yes. Two clients can reach the same database limit while spending very different
+amounts of CPU to get there. We needed a case where the client was short of CPU
+and the database could accept more work.
+
+We ran all three paths again, this time on **one physical client core**, then
+two. The database kept its 48 cores. These were fresh local-TCP runs, with the
+same SF1000 copy and 32 workers. To keep this follow-up small, each run used
+60 seconds of warm-up and 120 seconds of measurement; complete samples covered
+about 115 seconds. There was one invocation per setting.
+
+<EfficiencyResults />
+
+On one core, all three clients used **99–100% of their CPU budget**:
+
+| Client path | Committed New-Orders/s | Client CPU microseconds per committed order |
+|---|---:|---:|
+| Native go-tpc, reusable statements | 1,575 | 631 |
+| Native go-tpc, no reuse | 761 | 1,314 |
+| Stroppy go-tpc port | 753 | 1,326 |
+
+We also ran a fresh native-with-reuse control with eight client cores. It reached
+**6,208/s** against the same database. That establishes that the database could
+handle much more than the one-core clients were sending. It is not a claim that
+6,208/s is the database's maximum.
+
+Here, Stroppy and native go-tpc without reuse were close in both throughput and
+client CPU cost. Native go-tpc with reuse still did about twice as much committed
+work per client CPU-second. Reusing statements saves work in the client and the
+server; this is not a pure scheduler comparison.
+
+The two-core follow-up was less clean. Throughput rose to **2,181/s** with native
+reuse, **1,134/s** with native no-reuse, and **1,161/s** with Stroppy. But clients
+used only 70–80% of their two-core budgets. Our predeclared check required at
+least 90% utilization at both budgets, so **none passed that strict check**.
+We can use the one-core result to discuss CPU-constrained efficiency. We cannot
+call both budgets fully CPU-bound or name the cause of the two-core shortfall
+from these measurements alone.
+
+The CPU figures count each process's user and system CPU time. They exclude
+separately charged host interrupt work and observers, and are not energy-use
+measurements. All transaction types and expected rollbacks consume CPU; the
+common denominator is committed New-Orders.
+
+## Why we used ports, not the built-in TPC-C
+
+The same business logic can produce a different load. Batching SQL changes round
+trips; warehouse selection changes hot rows and the working set. Our
+[v5 article](/blog/stroppy-vs-go-tpc) covered that distinction on PostgreSQL.
+
+For example, Stroppy's built-in `tpcc/tx` gives each virtual user a fixed home
+warehouse by default; go-tpc picks one for each transaction. The fixed-home
+choice is closer to the terminal model in [TPC-C clause 2.4.1.1](https://www.tpc.org/TPC_Documents_Current_Versions/pdf/tpc-c_v5.11.0.pdf),
+which keeps a terminal's home warehouse constant during measurement. Stroppy
+also offers keying and think times with `--pacing`, and a separate
+`--spread-warehouses` stress mode. That is a statement about workload shape,
+not full compliance: [strict terminal-model work remains open](https://github.com/stroppy-io/stroppy/issues/193),
+and these unpaced runs are not audited TPC-C results.
+
+Using the original workloads avoids mixing those choices into an SDK comparison.
+The HammerDB port keeps its procedures, mix and generator behavior. The go-tpc
+port keeps its client-side SQL, batching and random choices. Before the large
+runs, we checked small original-loader datasets and deterministic transaction
+sequences using table counts and non-timestamp hashes. Those checks cover the
+tested cases, not every possible execution.
+
+## What we ran
+
+The main comparison used MySQL 8.4.11 and 1,000 warehouses, with 32 active,
+unpaced clients. Each tool had eight physical client cores. The database had
+48 other physical cores on the same machine.
+
+We ran each pair in two placements: client and database on the same host over
+TCP, then client on a second host over the private LAN. Each placement had two
+repetitions, with tool order reversed. Every invocation started from the same
+family-specific cold database copy, followed by five minutes of warm-up and ten
+minutes of measurement.
+
+<details>
+<summary>Machines, MySQL settings and measurement details</summary>
+
+- Two dual-socket AMD EPYC 9374F hosts, each with 64 physical cores, 128 logical
+  CPUs and about 751 GiB RAM. Primary allocations did not include SMT siblings.
+- Database cores `0-23,32-55`; client cores `24-31`; observers `56-59`. Go clients
+  used `GOMAXPROCS=8`. Memory was interleaved across the two NUMA nodes.
+- Database storage: two NVMe drives in RAID0, ext4. The database stayed on the
+  same host for both placements.
+- MySQL: 512 GiB buffer pool, 16 buffer-pool instances, 32 GiB redo, `O_DIRECT`,
+  doublewrite enabled, commit flushing set to `1`, binary logging disabled,
+  READ-COMMITTED isolation. This is not a replicated production durability setup.
+- Local access: TCP `127.0.0.1:3307`. Remote access: private TCP over bonded
+  25 GbE links. No artificial latency or traffic shaping. Initial private-link
+  ICMP round-trip time averaged 0.247 ms; that is context, not SQL latency.
+- Each original tool loaded its own family's SF1000 dataset. The two families
+  have different schemas and generators; their data was not made identical.
+  Counts and bounded per-district checks passed. We did not run all twelve
+  expensive upstream go-tpc consistency checks at SF1000.
+- Before every measured invocation, the stopped server's full working datadir
+  was restored from its family's pristine copy and all 195 file hashes checked.
+  Buffer-pool dump/load was disabled. Effective MySQL settings and schema/routine
+  definitions matched within each family.
+- No unrelated workload, profiling, OTLP export or Prometheus serving ran during
+  measurement. Stroppy's normal local metric collection remained enabled.
+
+</details>
+
+We did not compare the tools' headline TPS values. Instead, an independent
+observer sampled the committed district order counter every five seconds. Our
+rate is the change in `SUM(d_next_o_id)` divided by the actual monotonic elapsed
+time inside the measurement window. Expected New-Order rollbacks are not counted
+as committed orders.
+
+This gives **committed New-Orders per second**, not total transactions per
+second, and not a certified tpmC score. Complete samples covered about 595 seconds
+of each ten-minute window. Exact boundaries and raw values are in the download.
+
+## What the tidy charts do not show
+
+All 27 measured windows passed our sample and worker-continuity checks. That
+is not the same as saying all full runs were error-free.
+
+The timed go-tpc runs canceled in-flight work when their budgets expired. Some
+native workers ended with a canceled connection check; the SDK port also
+reported `sql: connection is already closed` during connection cleanup. Its raw
+JSON still says `completed_with_errors`. We kept those reports and the failed
+initial classifications, then checked timestamps, final error counts and worker
+sessions before accepting the earlier measurement windows. There were no
+observed in-window failures in the accepted windows. The eight main HammerDB
+runs had no reported client errors.
+
+There are other limits worth keeping next to the results:
+
+- The main comparison has two repetitions per setting; the CPU test has one.
+  Neither supports statistical-significance claims.
+- This is one MySQL version, two hosts and one scale/concurrency setup. It is not
+  a test of every backend, workload or high-VU scaling limit.
+- Local versus LAN changes co-location and host effects as well as network
+  latency. We did not isolate a cost per network round trip.
+- The framework was tested through complete clients. We did not subtract CPU
+  times to invent an exact “SDK-only” overhead.
+- Prepared-statement support is a missing capability, not an excuse to compare
+  a limited native tool with Stroppy and declare an unconditional win.
+
+## Files to check and repeat the runs
+
+[Download the reproduction bundle (about 3 MiB)](/data/framework-performance/reproduction.zip).
+It includes the effective MySQL configuration, exact command and environment
+for every case, run order and CPU allocations, restore records, dataset checks,
+raw counter samples, stdout/stderr, SDK reports, the no-reuse patch and source,
+and scripts that recompute all 27 measured rates and the CPU costs. No database
+files, executables or private SSH keys are included. Paths and benchmark-only
+credentials in the historical scripts need review before use on new hosts.
+
+Also available separately:
+
+- [All measured cases as CSV](/data/framework-performance/cases.csv)
+- [Results and runtime samples as JSON](/data/framework-performance/results.json)
+- [Download SHA-256 checksums](/data/framework-performance/checksums.json)
+
+After unpacking, `python3 -I recompute.py` checks the reported rates from the raw
+samples without connecting to a database. To rerun the workload, use independent
+empty data paths and the recorded configurations; **do not run the historical
+restore or loader scripts unchanged against an existing installation**.
+
+The tested sources and binaries were pinned:
+
+| Component | Tested version |
+|---|---|
+| Stroppy SDK | [v6.2.1](https://github.com/stroppy-io/stroppy/releases/tag/v6.2.1) |
+| Collection containing both ports | [contrib fork commit `5210a29`](https://github.com/Cianidos/stroppy-contrib/tree/5210a29a839979904f102298701505b7d62f44ae) |
+| HammerDB | [v6.1](https://github.com/TPC-Council/HammerDB/releases/tag/v6.1) |
+| Native go-tpc | [commit `a9ca481`](https://github.com/pingcap/go-tpc/tree/a9ca4818625deef91ff80f6c395a575ccae22b7c) |
+| Native no-reuse variant | Same go-tpc commit, with the attached one-file patch |
+| MySQL | 8.4.11, Ubuntu package `8.4.11-0ubuntu0.26.04.1` |
+
+The ports are in a separate collection, not the built-in workloads. The
+HammerDB-derived module carries GPL-3.0 source; the go-tpc port is Apache-2.0.
+The bundle includes original full-archive verification receipts and artifact
+hashes so that a later change to a rolling download cannot silently change what
+was tested.
+
+## What we take from this
+
+Under comparable execution conditions, Stroppy's framework and SDK were
+competitive with these established tools. That held in the main workload runs
+and in a one-core test where client CPU was scarce. We did not see a large extra
+cost from the Stroppy path when compared with native go-tpc's non-reusing path.
+
+There is no need to turn that into “Stroppy is always as fast.” Native go-tpc
+with reusable statements was faster, and the SDK should support that capability.
+The useful conclusion is narrower: the framework is a reasonable base for these
+database workloads, the workload shape must be understood before comparing
+numbers, and we have a concrete next performance feature to build.
