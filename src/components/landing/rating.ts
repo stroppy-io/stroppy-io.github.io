@@ -4,7 +4,13 @@
 // which the API allows by CORS.
 
 export const CLOUD = 'https://cloud.stroppy.io';
-export const RATING_URL = `${CLOUD}/api/v1/public/rating`;
+
+// The board compares like with like: one scenario (a round trip per
+// statement; stored procedures run another scenario at about twice the tps)
+// on one hardware class, the single 32-core node that has the most runs.
+export const SCENARIO = 'tpcc/tx';
+export const HARDWARE = '1x32c128g';
+export const RATING_URL = `${CLOUD}/api/v1/public/rating?scenario=${SCENARIO}&hardware=${HARDWARE}`;
 
 export type RatingRow = {
   rank: number;
@@ -27,6 +33,7 @@ export type Rating = {
 
 const ENGINES: Record<string, string> = {
   postgres: 'PostgreSQL',
+  orioledb: 'OrioleDB',
   mysql: 'MySQL',
   mariadb: 'MariaDB',
   picodata: 'Picodata',

@@ -1,7 +1,7 @@
 import {useEffect, useRef, useState, type CSSProperties} from 'react';
 import {usePluginData} from '@docusaurus/useGlobalData';
 import {useColorMode} from '@docusaurus/theme-common';
-import {CLOUD, engine, fetchRating, machine, shareUrl, topology, workload, type Rating} from './rating';
+import {CLOUD, engine, fetchRating, machine, SCENARIO, shareUrl, topology, workload, type Rating} from './rating';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
@@ -82,7 +82,7 @@ export function TopBoard({limit = 5}: {limit?: number}) {
   );
 }
 
-const EMBED = `${CLOUD}/embed/leaderboard?filters=1&bg=transparent`;
+const EMBED = `${CLOUD}/embed/leaderboard?filters=1&bg=transparent&scenario=${SCENARIO}`;
 
 type EmbedMessage = {type: 'stroppy-embed:ready'} | {type: 'stroppy-embed:height'; height: number};
 
