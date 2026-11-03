@@ -1,6 +1,6 @@
 ---
 slug: stroppy-framework-performance
-title: "How much does Stroppy add to a database benchmark?"
+title: "Running HammerDB and go-tpc workloads through Stroppy"
 description: "We ran HammerDB and go-tpc workloads through Stroppy's Go SDK, then limited client CPU to check what similar throughput really meant. Results, limits, charts and reproduction files."
 authors: [stroppy-authors]
 tags: [performance, benchmark, tpc-c, mysql, go]
@@ -8,13 +8,16 @@ tags: [performance, benchmark, tpc-c, mysql, go]
 
 import {MainResults, NoReuseResults, EfficiencyResults, RuntimeResults} from './Charts';
 
-How much speed do we lose by running a database workload through Stroppy's Go
-SDK? We ported HammerDB and go-tpc workloads to find out: their SQL and workload
-choices, our framework.
+HammerDB, go-tpc and Stroppy all offer TPC-C workloads, but they don’t generate
+the same load. HammerDB uses stored procedures; go-tpc runs transaction SQL from
+the client. Stroppy’s built-in TPC-C makes different choices too: each virtual
+user keeps a fixed home warehouse by default, while go-tpc chooses one for each
+transaction.
 
-Our [earlier v5 comparison](/blog/stroppy-vs-go-tpc) looked at different TPC-C
-workload shapes. This time we wanted the workload held steady. Below are the
-results, a prepared-statement follow-up, and a test with limited client CPU.
+For this comparison, we ported HammerDB and go-tpc workloads to Stroppy’s Go SDK
+rather than using our built-in TPC-C. We then tested each port against its
+original tool on MySQL, keeping workload choices separate from client
+performance.
 
 {/* truncate */}
 
