@@ -1,12 +1,24 @@
 import type {Compat, Feature, FeatureCell, Row} from './types';
 
-// Reading the export for /conformity and the landing's teaser: protocol
+// Reading the export for the conformity map and plugins/conformity.ts: protocol
 // names, the five plain states the map shows (from the export's outcome
 // codes), feature groups and what a row did in each. Every word about an
 // engine comes from the export; this names protocols, states and roles only.
 
 /** Where the export lives on the site; a row's `details` is relative to it. */
 export const DATA_BASE = '/data/conformity/';
+
+/**
+ * The map on /tools/conformity (Explorer.tsx), on a protocol's tab or with an
+ * engine open: ?map=<protocol>&engine=<row id>, at its section (#results).
+ */
+export function mapUrl({protocol, engine}: {protocol?: string; engine?: string} = {}): string {
+  const q = new URLSearchParams();
+  if (protocol) q.set('map', protocol);
+  if (engine) q.set('engine', engine);
+  const s = q.toString();
+  return `/tools/conformity${s ? `?${s}` : ''}#results`;
+}
 
 /** Tabs in this order, PostgreSQL first; a protocol the export adds goes after. */
 export const PROTOCOL_ORDER = ['pgwire', 'mysql', 'mongo', 'elastic'];

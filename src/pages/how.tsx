@@ -285,7 +285,7 @@ function HowPage() {
             <a className="button button--primary" href={REGISTER}>
               Create account
             </a>
-            <Link className="button button--secondary button--outline" to="/#results">
+            <Link className="button button--secondary button--outline" to="/ratings">
               See results
             </Link>
           </div>
@@ -398,7 +398,7 @@ function HowPage() {
                   <dt>On the leaderboard</dt>
                   <dd>
                     Send a run to the public leaderboard, where it’s ranked against setups of the same size.{' '}
-                    <Link to="/#results">Open the leaderboard</Link>
+                    <Link to="/ratings">Open the ratings</Link>
                   </dd>
                 </div>
               </dl>
@@ -487,7 +487,7 @@ function HowPage() {
           <a className="button button--primary button--lg" href={REGISTER}>
             Create account
           </a>
-          <Link className="button button--secondary button--outline button--lg" to="/#cli">
+          <Link className="button button--secondary button--outline button--lg" to="/tools/stroppy#install">
             Run the CLI locally
           </Link>
         </div>

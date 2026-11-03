@@ -3,10 +3,10 @@ import clsx from 'clsx';
 import {STATES, percent, stateInfo, stateOfCode, type Cell} from './data';
 import '../../css/compat-map.css';
 
-// The compatibility map's visual language, shared by /conformity's map and
-// the landing's preview so both draw identically: a cell (a state's tint,
-// its glyph and the share of checks that matched), the five-state legend
-// and a score with its bar. Styles: src/css/compat-map.css.
+// The compatibility map's visual language (Explorer.tsx, CompatMap.tsx,
+// Drawer.tsx): a cell (a state's tint, its glyph and the share of checks
+// that matched), the five-state legend and a score with its bar. Styles:
+// src/css/compat-map.css.
 
 /** One map cell, as a table cell. `where` names it for the tooltip and screen readers. */
 export function StateCell({cell, where}: {cell: Cell; where: string}) {

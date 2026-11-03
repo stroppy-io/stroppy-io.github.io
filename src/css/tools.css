@@ -1,0 +1,357 @@
+/* Pages of sections (src/components/tools/SectionPage.tsx): one per tool
+   (/tools/<id>) and /vendors. Kit colours only; each tool has its accent, the
+   same one on its card in the other tools' pages. */
+
+.tl--stroppy {
+  --tl-accent: var(--st-mark);
+}
+
+.tl--conformity {
+  --tl-accent: var(--st-series-3);
+}
+
+.tl--graphene {
+  --tl-accent: var(--st-series-4);
+}
+
+.tl--cloud {
+  --tl-accent: var(--st-series-1);
+}
+
+.tl--vendors {
+  --tl-accent: var(--st-series-2);
+}
+
+.tl {
+  --tl-pad: 2rem;
+  width: 100%;
+  min-width: 0;
+  max-width: calc(1180px + 2 * var(--tl-pad));
+  margin: 0 auto;
+  padding: 2.5rem var(--tl-pad) 3rem;
+}
+
+.tl a:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Hero ---------- */
+
+.tl-hero {
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--st-line);
+}
+
+.tl-hero > * {
+  max-width: 46rem;
+}
+
+.tl-eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tl-accent);
+}
+
+.tl-hero h1 {
+  margin: 0;
+  font-size: clamp(2rem, 1.4rem + 1.8vw, 2.75rem);
+  line-height: 1.1;
+}
+
+.tl-tagline {
+  margin: 0.75rem 0 0;
+  font-size: clamp(1.05rem, 1rem + 0.3vw, 1.25rem);
+  line-height: 1.45;
+}
+
+.tl-intro p {
+  margin: 0.75rem 0 0;
+  color: var(--st-muted);
+}
+
+.tl-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+
+.tl-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border: 1px solid var(--st-line-strong);
+  border-radius: var(--st-radius-md);
+  color: var(--st-text);
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    border-color 150ms ease,
+    transform 160ms ease-out;
+}
+
+.tl-btn:active {
+  transform: scale(0.97);
+}
+
+.tl-btn--primary {
+  border-color: var(--tl-accent);
+  background: var(--tl-accent);
+  color: var(--st-canvas);
+}
+
+.tl-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--st-muted);
+}
+
+.tl-facts li::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 0.5rem;
+  border-radius: 50%;
+  background: var(--tl-accent);
+  vertical-align: 2px;
+}
+
+/* ---------- Sections: text on the left, its example on the right ---------- */
+
+.tl-section {
+  position: relative;
+  padding: 2.25rem 0;
+  border-bottom: 1px solid var(--st-line);
+  scroll-margin-top: var(--ifm-navbar-height);
+}
+
+.tl-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+
+/* No example: the text keeps the left column, so every section lines up. */
+.tl-row--text .tl-text {
+  grid-column: 1;
+}
+
+/* The section a link landed on (ToolPage's useLinkedSection), marked in the
+   gutter, so it is found even when it cannot reach the top. */
+.tl-section--linked::before {
+  content: '';
+  position: absolute;
+  top: 2.25rem;
+  bottom: 2.25rem;
+  left: -1rem;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--tl-accent);
+}
+
+.tl-section h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.375rem;
+}
+
+.tl-section__anchor {
+  color: inherit;
+  text-decoration: none;
+}
+
+.tl-lead p,
+.tl-lead {
+  margin: 0;
+  max-width: 46rem;
+  color: var(--st-text);
+}
+
+.tl-points {
+  max-width: 46rem;
+  margin: 0.75rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--st-muted);
+  font-size: 14px;
+}
+
+.tl-points li + li {
+  margin-top: 0.3rem;
+}
+
+.tl-example .theme-code-block {
+  margin: 0;
+}
+
+/* Go examples keep the docs' tabs; a browser tab is 8 columns wide. */
+.tl-example pre {
+  tab-size: 2;
+}
+
+/* A non-code example: a short list or a set of names, in the code's frame. */
+.tl-list {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-md);
+  background: var(--st-panel);
+  list-style: none;
+  font-size: 14px;
+}
+
+.tl-list li {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.45rem 0;
+}
+
+.tl-list li + li {
+  border-top: 1px solid var(--st-line);
+}
+
+.tl-list b {
+  font-weight: 500;
+}
+
+.tl-list span {
+  color: var(--st-muted);
+}
+
+.tl-list code {
+  font-size: 12px;
+}
+
+.tl-media {
+  margin-top: 1.75rem;
+}
+
+.tl-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  margin: 1rem 0 0;
+  font-size: 14px;
+}
+
+.tl-links a {
+  font-weight: 500;
+}
+
+/* ---------- The other tools ---------- */
+
+.tl-family {
+  padding-top: 2.25rem;
+}
+
+.tl-family h2 {
+  margin: 0 0 1rem;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--st-muted);
+}
+
+.tl-family__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.tl-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--st-line);
+  border-top: 3px solid var(--tl-accent);
+  border-radius: var(--st-radius-md);
+  background: var(--st-panel);
+  color: var(--st-text);
+  text-decoration: none;
+}
+
+.tl-card__name {
+  font-weight: 600;
+}
+
+.tl-card__what {
+  font-size: 13px;
+  color: var(--st-muted);
+}
+
+/* ---------- Hover only where it does not stick after a tap ---------- */
+
+@media (hover: hover) and (pointer: fine) {
+  .tl-btn:hover {
+    border-color: var(--tl-accent);
+    color: var(--st-text);
+    text-decoration: none;
+  }
+
+  .tl-btn--primary:hover {
+    color: var(--st-canvas);
+    filter: brightness(1.08);
+  }
+
+  .tl-section__anchor:hover {
+    color: var(--tl-accent);
+  }
+
+  .tl-card:hover {
+    border-color: var(--st-line-strong);
+    border-top-color: var(--tl-accent);
+    color: var(--st-text);
+    text-decoration: none;
+  }
+}
+
+/* ---------- Touch ---------- */
+
+@media (pointer: coarse) {
+  .tl-links a {
+    min-height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+/* ---------- Narrower: one column ---------- */
+
+@media (max-width: 996px) {
+  .tl-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+
+  .tl-section--linked::before {
+    left: -0.6rem;
+  }
+
+  .tl-list li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.15rem;
+  }
+
+  .tl-family__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .tl {
+    --tl-pad: 1rem;
+  }
+}

@@ -9,8 +9,10 @@ export const CLOUD = 'https://cloud.stroppy.io';
 // statement; stored procedures run another scenario at about twice the tps)
 // on one hardware class, the single 32-core node that has the most runs.
 export const SCENARIO = 'tpcc/tx';
+/** TPC-C with stored procedures: one round trip per transaction. */
+export const SCENARIO_PROCS = 'tpcc/procs';
 export const HARDWARE = '1x32c128g';
-export const RATING_URL = `${CLOUD}/api/v1/public/rating?scenario=${SCENARIO}&hardware=${HARDWARE}`;
+const ratingUrl = (scenario: string) => `${CLOUD}/api/v1/public/rating?scenario=${scenario}&hardware=${HARDWARE}`;
 
 export type RatingRow = {
   rank: number;
@@ -69,8 +71,9 @@ export const workload = (row: RatingRow) => row.workload_name.replace(/\s*\([^)]
 
 export const shareUrl = (row: RatingRow) => (row.share_token ? `${CLOUD}/s/${row.share_token}` : `${CLOUD}/leaderboard`);
 
-export async function fetchRating(signal?: AbortSignal): Promise<Rating> {
-  const res = await fetch(RATING_URL, {signal, headers: {accept: 'application/json'}});
-  if (!res.ok) throw new Error(`${RATING_URL}: HTTP ${res.status}`);
+export async function fetchRating(scenario: string, signal?: AbortSignal): Promise<Rating> {
+  const url = ratingUrl(scenario);
+  const res = await fetch(url, {signal, headers: {accept: 'application/json'}});
+  if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   return (await res.json()) as Rating;
 }

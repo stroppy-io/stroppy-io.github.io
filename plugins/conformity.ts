@@ -1,30 +1,19 @@
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import type {LoadContext, Plugin} from '@docusaurus/types';
-import {groupCell, groupsOf, mergeCells, protocolsOf, rowsOf, type Cell} from '../src/components/conformity/data';
+import {protocolsOf} from '../src/components/conformity/data';
 import type {Compat} from '../src/components/conformity/types';
 
-// A small summary of the conformity dataset (static/data/conformity, see
-// scripts/extract-conformity.mjs) for the landing's preview of the map, so
-// the landing does not carry the whole compat.json; /conformity imports that
-// itself. Per protocol, in /conformity's tab order: its feature groups, the
-// references as one row and the best engines, their cells already
-// aggregated by group the way /conformity's map does it.
-
-const TOP = 5;
+// A summary of the conformity dataset (static/data/conformity, see
+// scripts/extract-conformity.mjs) for the landing, so the landing does not
+// carry the whole compat.json; /tools/conformity imports that itself. Per
+// protocol, in the map's tab order: every engine that claims it (not the
+// originals, not a vendor switch's variant) with its overall score, best first.
 
 export type ConformitySummary = {
   dataset: string;
   auditedAt?: string;
-  protocols: {
-    protocol: string;
-    /** How many engines claim it. */
-    engines: number;
-    /** Feature group names, in map order. */
-    groups: string[];
-    ref: {targets: string[]; cells: Cell[]};
-    rows: {id: string; target: string; score: number; cells: Cell[]}[];
-  }[];
+  protocols: {protocol: string; scores: {target: string; score: number}[]}[];
 };
 
 export default function conformity(context: LoadContext): Plugin<ConformitySummary | null> {
@@ -42,23 +31,13 @@ export default function conformity(context: LoadContext): Plugin<ConformitySumma
       return {
         dataset: compat.dataset.id,
         auditedAt: compat.dataset.audited_at,
-        protocols: protocolsOf(compat).map((protocol) => {
-          const groups = groupsOf(compat, protocol);
-          const {refs, subjects} = rowsOf(compat, protocol);
-          return {
-            protocol,
-            engines: subjects.length,
-            groups: groups.map((g) => g.name),
-            ref: {
-              targets: refs.map((r) => r.target),
-              cells: groups.map((g) => mergeCells(refs.map((r) => groupCell(r, g)))),
-            },
-            rows: subjects
-              .filter((r) => typeof r.scores.overall === 'number')
-              .slice(0, TOP)
-              .map((r) => ({id: r.id, target: r.target, score: r.scores.overall as number, cells: groups.map((g) => groupCell(r, g))})),
-          };
-        }),
+        protocols: protocolsOf(compat).map((protocol) => ({
+          protocol,
+          scores: compat.rows
+            .filter((r) => r.protocol === protocol && r.role === 'subject' && !r.variant)
+            .flatMap((r) => (typeof r.scores.overall === 'number' ? [{target: r.target, score: r.scores.overall}] : []))
+            .sort((a, b) => b.score - a.score),
+        })),
       };
     },
     async contentLoaded({content, actions}) {

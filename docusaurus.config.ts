@@ -110,8 +110,9 @@ const config: Config = {
       items: [
         // Mega menus: src/components/nav/menu.ts.
         {type: 'custom-mega', section: 'benchmarks', position: 'left'},
-        {type: 'custom-mega', section: 'how', position: 'left'},
+        {type: 'custom-mega', section: 'tools', position: 'left'},
         {type: 'custom-mega', section: 'docs', position: 'left'},
+        {type: 'custom-mega', section: 'vendors', position: 'left'},
         // Sign in and Try Stroppy Cloud, or Open console: src/components/nav/Account.tsx.
         // The docs version switch is in the docs sidebar (src/theme/DocSidebar),
         // the theme switch, GitHub and Discord in the footer.

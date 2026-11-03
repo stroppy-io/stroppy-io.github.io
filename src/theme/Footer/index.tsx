@@ -5,7 +5,7 @@ import {useColorMode, useThemeConfig} from '@docusaurus/theme-common';
 import ColorModeToggle from '@theme/ColorModeToggle';
 import ThemedImage from '@theme/ThemedImage';
 import Icon from '@site/src/components/nav/icons';
-import {CLOUD, MENU} from '@site/src/components/nav/menu';
+import {CLOUD, DISCORD, GITHUB, MENU, sectionItems, type MenuSection} from '@site/src/components/nav/menu';
 
 // The site's footer, in place of Docusaurus's: the mark and the one thing to
 // do on the left, a map of the site on the right (the top menu's sections,
@@ -15,36 +15,23 @@ import {CLOUD, MENU} from '@site/src/components/nav/menu';
 type FooterLink = {label: string; href: string};
 type FooterColumn = {title: string; href?: string; groups: {title?: string; links: FooterLink[]}[]};
 
-const GITHUB = 'https://github.com/stroppy-io/stroppy';
-const DISCORD = 'https://discord.gg/2mSSrkBkHm';
-
-const section = (id: string) => MENU.find((s) => s.id === id)!;
-const links = (id: string) => section(id).columns.flatMap((c) => c.items.map(({label, href}) => ({label, href})));
+// A section's column: its parts when it has them, otherwise its first items,
+// then the links along its panel's bottom.
+const sectionColumn = (s: MenuSection): FooterColumn => ({
+  title: s.label,
+  href: s.href,
+  groups: [
+    {
+      links: [
+        ...('parts' in s ? s.parts : sectionItems(s).slice(0, 6)).map(({label, href}) => ({label, href})),
+        ...(s.strip?.links ?? []),
+      ],
+    },
+  ],
+});
 
 const COLUMNS: FooterColumn[] = [
-  {title: section('benchmarks').label, href: section('benchmarks').href, groups: [{links: links('benchmarks')}]},
-  {title: section('how').label, href: section('how').href, groups: [{links: links('how')}]},
-  {
-    title: section('docs').label,
-    href: section('docs').href,
-    groups: [
-      {
-        links: [
-          ...section('docs').columns[0].items.map(({label, href}) => ({label, href})),
-          {label: 'Migrating to v6', href: '/docs/migration-v6'},
-          {label: 'CLI reference', href: '/docs/cli-reference'},
-        ],
-      },
-      {
-        title: 'Earlier work',
-        links: [
-          {label: 'Historical overview', href: '/docs/legacy/overview'},
-          {label: 'FoundationDB report', href: '/docs/legacy/fdb-report'},
-          {label: 'MongoDB report', href: '/docs/legacy/mongodb-report'},
-        ],
-      },
-    ],
-  },
+  ...MENU.map(sectionColumn),
   {
     title: 'Community',
     groups: [
@@ -54,6 +41,14 @@ const COLUMNS: FooterColumn[] = [
           {label: 'Discord', href: DISCORD},
           {label: 'GitHub', href: GITHUB},
           {label: 'Releases', href: `${GITHUB}/releases`},
+        ],
+      },
+      {
+        title: 'Earlier work',
+        links: [
+          {label: 'Historical overview', href: '/docs/legacy/overview'},
+          {label: 'FoundationDB report', href: '/docs/legacy/fdb-report'},
+          {label: 'MongoDB report', href: '/docs/legacy/mongodb-report'},
         ],
       },
     ],

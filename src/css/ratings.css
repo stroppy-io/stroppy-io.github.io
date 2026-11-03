@@ -1,0 +1,648 @@
+/* /ratings: databases rated against the original they claim to replace
+   (src/pages/ratings.tsx, components under src/components/ratings).
+   Kit colours only. A category's colour names the category (compatibility,
+   speed); quality is told by the score chip's tone (good, fair, poor). */
+
+/* The engine panel sits outside .rt, so the palette is set on both. */
+.rt,
+.rt-panel {
+  --rt-compat: var(--st-series-3);
+  --rt-speed: var(--st-series-1);
+  --rt-good: var(--st-success);
+  --rt-fair: var(--st-warning);
+  --rt-poor: var(--st-error);
+}
+
+/* min-width 0: in Docusaurus's flex column the table would widen the page. */
+.rt {
+  width: 100%;
+  min-width: 0;
+  max-width: calc(1240px + 4rem);
+  margin: 0 auto;
+  padding: 1.5rem 2rem 3rem;
+  font-size: 14px;
+}
+
+.rt a:focus-visible,
+.rt button:focus-visible,
+.rt select:focus-visible,
+.rt input:focus-visible,
+.rt [tabindex]:focus-visible,
+.rt-panel button:focus-visible,
+.rt-panel a:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 2px;
+}
+
+.rt button,
+.rt-panel button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.rt select {
+  background: var(--st-panel);
+  color: var(--st-text);
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-sm);
+  font: inherit;
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+/* ---------- Title and protocol ---------- */
+
+.rt-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem 1.25rem;
+}
+
+.rt-top h1 {
+  margin: 0;
+  font-size: clamp(1.375rem, 1.1rem + 0.8vw, 1.75rem);
+}
+
+.rt-seg {
+  display: inline-flex;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-md);
+  overflow: hidden;
+}
+
+.rt-seg button {
+  background: var(--st-panel);
+  color: var(--st-muted);
+  border: 0;
+  padding: 0.3rem 0.8rem;
+  font-size: 13px;
+}
+
+.rt-seg button + button {
+  border-left: 1px solid var(--st-line);
+}
+
+.rt-seg button[aria-selected='true'] {
+  background: var(--st-raised);
+  color: var(--st-text);
+}
+
+.rt-view {
+  margin: 0.35rem 0 0;
+  font-size: 14px;
+  color: var(--st-text);
+}
+
+.rt-dataset {
+  margin: 0.25rem 0 1rem;
+  font-size: 12px;
+  color: var(--st-muted);
+}
+
+/* ---------- Picks ---------- */
+
+.rt-box {
+  background: var(--st-panel);
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-lg);
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.rt-box__title {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--st-muted);
+}
+
+.rt-box__title span {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  color: var(--st-disabled);
+}
+
+.rt-picks {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+/* One column, top to bottom: award, name, then the score beside its reason.
+   An empty pick has no score, so nothing depends on a second column. */
+.rt-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-md);
+  background: var(--st-canvas);
+  color: var(--st-text);
+  text-align: left;
+}
+
+.rt-pick__award {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rt-pick__who {
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.rt-pick__line {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.15rem;
+}
+
+.rt-pick__why {
+  min-width: 0;
+  font-size: 12px;
+  color: var(--st-muted);
+}
+
+.rt-pick--empty .rt-pick__who {
+  color: var(--st-disabled);
+}
+
+.rt-pick--top .rt-pick__award,
+.rt-badge--top {
+  --rt-award: var(--st-mark);
+}
+
+.rt-pick--runner .rt-pick__award,
+.rt-badge--runner {
+  --rt-award: var(--st-series-1);
+}
+
+.rt-pick--fast .rt-pick__award,
+.rt-badge--fast {
+  --rt-award: var(--st-series-5);
+}
+
+.rt-pick--warn .rt-pick__award,
+.rt-badge--warn {
+  --rt-award: var(--st-error);
+}
+
+.rt-pick__award {
+  color: var(--rt-award);
+}
+
+.rt-rules {
+  margin: 0.5rem 0 0;
+  font-size: 11px;
+  color: var(--st-disabled);
+}
+
+.rt-rules b {
+  font-weight: 500;
+}
+
+/* ---------- Score chip, tags and badges ---------- */
+
+.rt-score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.rt-score b {
+  font-family: var(--st-font-mono);
+  font-size: 17px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: var(--st-radius-sm);
+}
+
+.rt-score small {
+  font-size: 11px;
+  color: var(--st-muted);
+}
+
+.rt-tone--good {
+  --rt-tone: var(--rt-good);
+}
+
+.rt-tone--fair {
+  --rt-tone: var(--rt-fair);
+}
+
+.rt-tone--poor {
+  --rt-tone: var(--rt-poor);
+}
+
+.rt-score b {
+  color: var(--rt-tone);
+  background: color-mix(in srgb, var(--rt-tone) 18%, transparent);
+}
+
+.rt-tag {
+  font-size: 10px;
+  padding: 0 6px;
+  border-radius: var(--st-radius-pill);
+  border: 1px solid var(--st-line-strong);
+  color: var(--st-muted);
+  margin-left: 6px;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
+.rt-tag--base {
+  border-color: var(--st-primary);
+  color: var(--st-primary-text);
+}
+
+.rt-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: var(--st-radius-pill);
+  margin-left: 6px;
+  vertical-align: 1px;
+  white-space: nowrap;
+  color: var(--rt-award);
+  background: color-mix(in srgb, var(--rt-award) 18%, transparent);
+}
+
+.rt-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  vertical-align: 1px;
+}
+
+.rt-dot--compat,
+.rt-cell--compat {
+  --rt-cat: var(--rt-compat);
+}
+
+.rt-dot--speed,
+.rt-cell--speed {
+  --rt-cat: var(--rt-speed);
+}
+
+.rt-dot {
+  background: var(--rt-cat);
+}
+
+.rt-na {
+  font-size: 12px;
+  color: var(--st-disabled);
+}
+
+.rt-breaks {
+  color: var(--st-error);
+}
+
+/* ---------- Filters ---------- */
+
+.rt-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--st-line);
+  font-size: 13px;
+  color: var(--st-muted);
+}
+
+.rt-filters label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.rt-filters__count {
+  margin-left: auto;
+}
+
+.rt-filters button,
+.rt-more button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--st-primary-text);
+  font-size: 13px;
+}
+
+/* ---------- Table: a wide one scrolls in its own box ---------- */
+
+.rt-scroll {
+  position: relative;
+  overflow-x: auto;
+}
+
+.rt-table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+}
+
+.rt-table tr,
+.rt-table tr:nth-child(2n) {
+  background: none;
+  border: 0;
+}
+
+.rt-table th,
+.rt-table td {
+  border: 0;
+  border-bottom: 1px solid var(--st-line);
+  padding: 0.45rem 0.5rem;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.rt-table th {
+  vertical-align: bottom;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--st-muted);
+  border-bottom-color: var(--st-line-strong);
+}
+
+.rt-table th button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font-weight: 500;
+}
+
+.rt-table th select {
+  display: block;
+  margin-top: 4px;
+}
+
+.rt-sep {
+  border-left: 1px solid var(--st-line) !important;
+}
+
+.rt-row {
+  cursor: pointer;
+}
+
+.rt-row--original td {
+  background: color-mix(in srgb, var(--st-panel) 60%, transparent);
+}
+
+.rt-row--sel td {
+  background: var(--st-panel);
+}
+
+.rt-row--sel td:first-child {
+  box-shadow: inset 2px 0 0 var(--st-mark);
+}
+
+.rt-rank {
+  width: 1.5rem;
+  color: var(--st-muted);
+  font-family: var(--st-font-mono);
+}
+
+.rt-name {
+  font-weight: 500;
+}
+
+.rt-cell {
+  display: grid;
+  grid-template-columns: 8.5rem 6rem 1.75rem;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* No number to lead with (the compatibility average): the bar takes its place. */
+.rt-cell--bare {
+  grid-template-columns: 6rem 1.75rem;
+}
+
+.rt-cell__raw {
+  font-family: var(--st-font-mono);
+  font-size: 13px;
+}
+
+.rt-cell__bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--st-raised);
+  overflow: hidden;
+}
+
+.rt-cell__bar i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--rt-cat);
+}
+
+.rt-cell__score {
+  font-family: var(--st-font-mono);
+  font-size: 12px;
+  color: var(--st-muted);
+  text-align: right;
+}
+
+.rt-more td,
+.rt-band td {
+  padding-top: 0.6rem;
+}
+
+.rt-band td {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--st-muted);
+}
+
+.rt-foot {
+  margin-top: 0.75rem;
+  font-size: 12px;
+  color: var(--st-disabled);
+}
+
+/* ---------- One engine ---------- */
+
+.rt-panel {
+  position: fixed;
+  top: var(--ifm-navbar-height);
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  width: min(460px, 100vw);
+  overflow: auto;
+  padding: 1.1rem 1.25rem 1.75rem;
+  background: var(--st-panel);
+  border-left: 1px solid var(--st-line-strong);
+  box-shadow: -12px 0 32px rgb(0 0 0 / 0.35);
+  font-size: 14px;
+}
+
+.rt-panel h2 {
+  margin: 0 2.5rem 0.25rem 0;
+  font-size: 20px;
+}
+
+.rt-panel__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  background: none;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-md);
+  color: var(--st-muted);
+}
+
+.rt-panel__sub {
+  margin: 0;
+  font-size: 12px;
+  color: var(--st-muted);
+}
+
+.rt-panel__score {
+  margin-top: 0.6rem;
+}
+
+.rt-panel h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 1rem 0 0.4rem;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--st-muted);
+}
+
+.rt-panel h3 b {
+  margin-left: auto;
+  font-family: var(--st-font-mono);
+  color: var(--st-text);
+}
+
+.rt-part {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr) 2.5rem;
+  gap: 0.15rem 0.6rem;
+  align-items: center;
+  padding: 0.2rem 0;
+  font-size: 13px;
+}
+
+.rt-part__score {
+  font-family: var(--st-font-mono);
+  text-align: right;
+}
+
+.rt-part__raw {
+  grid-column: 2 / 4;
+  font-size: 11px;
+  color: var(--st-muted);
+}
+
+.rt-findings {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 12px;
+  color: var(--st-muted);
+}
+
+.rt-panel__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.rt-panel__links a {
+  font-size: 12px;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-md);
+  padding: 0.3rem 0.6rem;
+  text-decoration: none;
+}
+
+/* ---------- Hover only where it does not stick after a tap ---------- */
+
+@media (hover: hover) and (pointer: fine) {
+  .rt-pick:not(.rt-pick--empty):hover {
+    border-color: var(--st-line-strong);
+  }
+
+  .rt-row:hover td {
+    background: var(--st-panel);
+  }
+
+  .rt-table th button:hover {
+    color: var(--st-text);
+  }
+}
+
+/* ---------- Touch: controls at least 40px, fields at 16px ---------- */
+
+@media (pointer: coarse) {
+  .rt-seg button,
+  .rt-filters label,
+  .rt-filters button,
+  .rt-more button,
+  .rt-table th button {
+    min-height: 2.5rem;
+  }
+
+  .rt select {
+    font-size: 16px;
+    min-height: 2.5rem;
+  }
+
+  .rt-panel__close {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 1100px) {
+  .rt-picks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .rt {
+    padding-inline: 1rem;
+  }
+
+  .rt-picks {
+    grid-template-columns: 1fr;
+  }
+
+  .rt-filters__count {
+    margin-left: 0;
+  }
+}

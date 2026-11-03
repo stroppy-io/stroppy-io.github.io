@@ -1,18 +1,19 @@
-import {useEffect, useRef, useState, type CSSProperties} from 'react';
+import {useEffect, useState, type CSSProperties, type ReactNode} from 'react';
 import {usePluginData} from '@docusaurus/useGlobalData';
-import {useColorMode} from '@docusaurus/theme-common';
+import Link from '@docusaurus/Link';
 import {CLOUD, engine, fetchRating, machine, SCENARIO, shareUrl, topology, workload, type Rating} from './rating';
+import type {CloudRating} from '@site/plugins/cloud-rating';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
 
 /** The build's copy of the rating, refreshed from the cloud once the page is up. */
 function useRating(): Rating | null {
-  const {rating} = usePluginData('cloud-rating') as {rating: Rating | null};
+  const {rating} = usePluginData('cloud-rating') as CloudRating;
   const [live, setLive] = useState(rating);
   useEffect(() => {
     const ac = new AbortController();
-    fetchRating(ac.signal)
+    fetchRating(SCENARIO, ac.signal)
       .then(setLive)
       .catch(() => undefined);
     return () => ac.abort();
@@ -20,11 +21,37 @@ function useRating(): Rating | null {
   return live;
 }
 
+const TROPHY = (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z" />
+    <path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3" />
+  </svg>
+);
+
+const MEDAL = (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M7 3l3 6M17 3l-3 6" />
+    <circle cx="12" cy="15" r="6" />
+  </svg>
+);
+
+/** A trophy for the first place, a medal for the next two, the number after; the rank stays readable. */
+function Rank({rank}: {rank: number}): ReactNode {
+  if (rank > 3) return rank;
+  return (
+    <>
+      {rank === 1 ? TROPHY : MEDAL}
+      <span className="visually-hidden">{rank}</span>
+    </>
+  );
+}
+
 /**
- * The top of the public rating, in the hero: one row per run, its bar
- * against the best one. A row opens that run's report in Stroppy Cloud.
+ * The top of the public rating: one row per run, its bar against the best
+ * one, the first three in gold, silver and bronze. A row opens that run's
+ * report in Stroppy Cloud.
  */
-export function TopBoard({limit = 5}: {limit?: number}) {
+export function TopBoard({limit = 5, more}: {limit?: number; more: {href: string; label: string}}) {
   const rating = useRating();
   const rows = rating?.data.slice(0, limit) ?? [];
   if (!rating || rows.length === 0) {
@@ -37,33 +64,33 @@ export function TopBoard({limit = 5}: {limit?: number}) {
       </div>
     );
   }
-  const top = rows[0].value;
+  const best = rows[0].value;
   const latest = rows.reduce((a, r) => (r.run_at > a ? r.run_at : a), rows[0].run_at);
   return (
     <div className="board">
       <div className="board__head">
-        <span className="board__label">
-          Leaderboard
+        <span className="board__label">Leaderboard</span>
+        <span className="board__workload">
+          {workload(rows[0])} · {machine(rows[0])}
         </span>
-        <span className="board__workload">{workload(rows[0])}</span>
       </div>
       <ol className="board__rows">
         {rows.map((r, i) => (
-          <li key={`${r.rank}-${r.share_token ?? r.run_at}`}>
+          <li key={`${r.rank}-${r.share_token ?? r.run_at}`} className={r.rank <= 3 ? `board__place--${r.rank}` : undefined}>
             <a
               className="board__row"
               href={shareUrl(r)}
               target="_blank"
               rel="noopener noreferrer"
-              style={{'--w': String(r.value / top), '--i': String(i)} as CSSProperties}>
-              <span className="board__rank">{r.rank}</span>
+              style={{'--w': String(r.value / best), '--i': String(i)} as CSSProperties}>
+              <span className="board__rank">
+                <Rank rank={r.rank} />
+              </span>
               <span className="board__who">
                 <span className="board__db">
                   {engine(r.db_kind)} {r.db_version}
                 </span>
-                <span className="board__setup">
-                  {topology(r)} · {machine(r)}
-                </span>
+                <span className="board__setup">{topology(r)}</span>
               </span>
               <span className="board__value">
                 {fmt(r.value)}
@@ -76,77 +103,8 @@ export function TopBoard({limit = 5}: {limit?: number}) {
       </ol>
       <div className="board__foot">
         <span>Latest run {day(latest)}</span>
-        <a href="#results">All results, with filters ↓</a>
+        <Link to={more.href}>{more.label}</Link>
       </div>
-    </div>
-  );
-}
-
-const EMBED = `${CLOUD}/embed/leaderboard?filters=1&bg=transparent&scenario=${SCENARIO}`;
-
-type EmbedMessage = {type: 'stroppy-embed:ready'} | {type: 'stroppy-embed:height'; height: number};
-
-/**
- * Stroppy Cloud's full leaderboard with its filters, in a frame. The frame
- * reports its height and when it has drawn (web/AGENTS.md §6a in
- * stroppy-cloud); the page sends it the site's theme.
- */
-export function ResultsFrame() {
-  const {colorMode} = useColorMode();
-  const frame = useRef<HTMLIFrameElement>(null);
-  const [src, setSrc] = useState<string | null>(null);
-  const [height, setHeight] = useState<number | null>(null);
-  const [ready, setReady] = useState(false);
-  const [slow, setSlow] = useState(false);
-
-  // The first theme goes in the URL. It is read from <html>: while the page
-  // hydrates, useColorMode still answers the default.
-  useEffect(() => {
-    const theme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
-    setSrc(`${EMBED}&theme=${theme}`);
-  }, []);
-
-  useEffect(() => {
-    const onMessage = (e: MessageEvent<EmbedMessage>) => {
-      if (e.origin !== CLOUD || e.source !== frame.current?.contentWindow) return;
-      if (e.data?.type === 'stroppy-embed:height') setHeight(e.data.height);
-      if (e.data?.type === 'stroppy-embed:ready') setReady(true);
-    };
-    window.addEventListener('message', onMessage);
-    const t = window.setTimeout(() => setSlow(true), 15_000);
-    return () => {
-      window.removeEventListener('message', onMessage);
-      window.clearTimeout(t);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (ready) frame.current?.contentWindow?.postMessage({type: 'stroppy-embed:theme', theme: colorMode}, CLOUD);
-  }, [colorMode, ready]);
-
-  return (
-    <div className={ready ? 'results results--ready' : 'results'}>
-      {!ready && (
-        <div className="results__wait">
-          {slow ? (
-            <>
-              The leaderboard is taking a while. <a href={`${CLOUD}/leaderboard`}>Open it in Stroppy Cloud</a>.
-            </>
-          ) : (
-            'Loading the leaderboard…'
-          )}
-        </div>
-      )}
-      {src && (
-        <iframe
-          ref={frame}
-          className="results__frame"
-          src={src}
-          title="Stroppy Cloud leaderboard"
-          loading="lazy"
-          style={{height: height ?? undefined}}
-        />
-      )}
     </div>
   );
 }

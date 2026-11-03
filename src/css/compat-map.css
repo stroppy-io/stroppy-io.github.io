@@ -1,8 +1,7 @@
 /* The compatibility map's visual language (components/conformity/Cell.tsx),
-   shared by /conformity's map and the landing's preview: five states, each
-   a tone and a glyph (same ✓, differs ≠, refused ∅, breaks ✕, not
-   measured ·), the map table, and score bars. Kit colours
-   only. */
+   on /tools/conformity: five states, each a tone and a glyph (same ✓,
+   differs ≠, refused ∅, breaks ✕, not measured ·), the map table, and score
+   bars. Kit colours only. */
 
 .c--same {
   --tone: var(--st-success);

@@ -7,7 +7,7 @@ import type {Compat, Details, RootCause, Row} from './types';
 // differs from the original, worst first. The row's top findings show at
 // once from compat.json; its root causes (with the diff and the command
 // that re-runs each) are fetched from details/<id>.json only now. Escape,
-// the backdrop or ✕ closes it; the page keeps the URL hash in step.
+// the backdrop or ✕ closes it; the map keeps the URL's query in step.
 
 const cache = new Map<string, Promise<Details>>();
 

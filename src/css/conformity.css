@@ -1,21 +1,7 @@
-/* /conformity: which databases really speak the protocol they claim
-   (src/pages/conformity.tsx, components under src/components/conformity).
+/* The conformity explorer (src/components/conformity/Explorer.tsx) on
+   /tools/conformity: which databases really speak the protocol they claim.
    Kit colours only. Five states, each a tone and a glyph:
    same ✓, differs ≠, refused ∅, breaks ✕, not measured ·. */
-
-.cf {
-  --cf-pad: 2rem;
-  --cf-max: calc(1320px + 2 * var(--cf-pad));
-  --cf-bar: 3.5rem;
-}
-
-.cf-wrap,
-.cf-hero,
-.cbar__inner {
-  max-width: var(--cf-max);
-  margin: 0 auto;
-  padding-inline: var(--cf-pad);
-}
 
 .cf a:focus-visible,
 .cf button:focus-visible,
@@ -32,70 +18,37 @@
   font-size: 0.85em;
 }
 
-/* ---------- Hero: three short lines, so the map starts on the first
-   screen; the tabs below are the navigation ---------- */
+/* ---------- The bar: protocol tabs, the legend and About ---------- */
 
-.cf-hero {
+.cf-bar {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem 2rem;
-  padding-top: 2rem;
-  padding-bottom: 1.25rem;
-}
-
-.cf-hero__title {
-  flex-basis: 100%;
-}
-
-/* The intro wraps its lines before the About button leaves the row. */
-.cf-hero__intro {
-  flex: 1 1 20rem;
-  min-width: 0;
-}
-
-.cf-hero__title {
-  margin: 0;
-  font-size: clamp(1.75rem, 1.2rem + 1.2vw, 2.375rem);
-  font-weight: var(--st-font-weight-bold);
-  line-height: 1.15;
-  letter-spacing: -0.03em;
-}
-
-.cf-lead {
-  margin: 0.5rem 0 0;
-  color: color-mix(in srgb, var(--st-text) 78%, var(--st-muted));
-  font-size: 1rem;
-  line-height: 1.5;
+  gap: 0.5rem 2rem;
+  border-bottom: 1px solid var(--st-line);
 }
 
 .cf-prov {
-  margin: 0.35rem 0 0;
+  margin: 0.75rem 0 0;
   color: var(--st-muted);
   font-size: 0.8125rem;
 }
 
-.cf-prov a {
-  margin-left: 0.25rem;
+/* A button that reads as a link: it opens a panel, not a page. */
+.cf-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--st-primary-text);
+  font: inherit;
+  cursor: pointer;
 }
 
-/* ---------- The bar: protocol tabs and the legend, pinned ---------- */
-
-.cbar {
-  position: sticky;
-  top: var(--ifm-navbar-height);
-  z-index: 10;
-  border-bottom: 1px solid var(--st-line);
-  background: var(--st-canvas);
-}
-
-.cbar__inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem 2.5rem;
-  min-height: var(--cf-bar);
+@media (hover: hover) and (pointer: fine) {
+  .cf-link:hover {
+    text-decoration: underline;
+  }
 }
 
 .tabs {
@@ -154,26 +107,14 @@
   font-variant-numeric: tabular-nums;
 }
 
-.states--inline {
-  display: none;
-}
-
-@media (max-width: 1199px) {
-  .states--bar {
-    display: none;
-  }
-
-  .states--inline {
-    display: flex;
-    margin-top: 1.25rem;
-  }
+.cf .states {
+  margin-top: 1rem;
 }
 
 /* ---------- A protocol's panel ---------- */
 
 .panel {
-  padding-top: 1.75rem;
-  scroll-margin-top: calc(var(--ifm-navbar-height) + var(--cf-bar));
+  padding-top: 1.25rem;
 }
 
 .panel__title {
@@ -606,10 +547,6 @@ html.cf-drawer-open {
 /* ---------- Narrow screens ---------- */
 
 @media (max-width: 996px) {
-  .cf {
-    --cf-pad: 1rem;
-  }
-
   .tabs {
     gap: 1.5rem;
   }
@@ -627,11 +564,10 @@ html.cf-drawer-open {
 /* ---------- The map's header stays in view ---------- */
 
 /* The map scrolls in its own box (sideways on a phone), so its header can
-   only stick inside that box: the box is never taller than the room under
-   the navbar and the tabs (--cbar-h, measured by the page), less a margin
-   that keeps the page around it reachable. */
+   only stick inside that box: the box is never taller than most of the room
+   under the navbar, so the page around it stays reachable. */
 .cf .cmap {
-  max-height: calc(100dvh - var(--ifm-navbar-height) - var(--cbar-h, 3.5rem) - 3rem);
+  max-height: min(70dvh, 46rem);
   overflow: auto;
 }
 
@@ -649,81 +585,3 @@ html.cf-drawer-open {
   box-shadow: 0 0 0 4px var(--st-canvas);
 }
 
-/* ---------- One screen: on a wide, tall enough screen the page (without
-   the footer) is exactly the room under the navbar, and only the map's
-   list scrolls, under its own header. Below 820px of height that list
-   would show three or four engines, so the page scrolls instead ---------- */
-
-@media (min-width: 997px) and (min-height: 820px) {
-  .cf {
-    display: flex;
-    flex-direction: column;
-    height: calc(100dvh - var(--ifm-navbar-height));
-  }
-
-  .cf-hero,
-  .cbar {
-    flex: none;
-  }
-
-  .cf-wrap {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    width: 100%;
-    min-height: 0;
-    padding-top: 0.75rem;
-  }
-
-  .cf-hero {
-    padding-top: 1.25rem;
-    padding-bottom: 0.75rem;
-  }
-
-  .cf .panel:not([hidden]) {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    min-height: 0;
-    padding-top: 0.25rem;
-  }
-
-  /* The tab already names the protocol: its title shrinks to a hint. */
-  .cf .panel__title {
-    flex: none;
-    margin-bottom: 0.5rem;
-    font-size: 1rem;
-  }
-
-  .cf .panel__title span {
-    font-size: 0.875rem;
-  }
-
-  .cf .cmap {
-    flex: 1;
-    min-height: 0;
-    max-height: none;
-    overscroll-behavior: contain;
-    border-bottom: 1px solid var(--st-line);
-  }
-
-  /* One line: the caveat cut short, the link to all of them kept. */
-  .cf-caveat {
-    display: flex;
-    flex: none;
-    gap: 0.5rem;
-    max-width: none;
-    margin-top: 0.6rem;
-    white-space: nowrap;
-  }
-
-  .cf-caveat__text {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .cf-caveat {
-    margin-bottom: 1rem;
-  }
-}

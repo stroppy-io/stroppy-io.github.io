@@ -1,8 +1,10 @@
 import {useEffect, useState, type ReactNode} from 'react';
-import {CLOUD} from './menu';
+import Icon from './icons';
+import {CLOUD, GITHUB} from './menu';
 
-// The right end of the navbar (navbar item type `custom-account`): "Sign in"
-// for a guest, "Open console" for someone signed in to Stroppy Cloud. The
+// The right end of the navbar (navbar item type `custom-account`): GitHub,
+// then "Sign in" for a guest, "Open console" for someone signed in to Stroppy
+// Cloud. The
 // console answers only whether there is a session (GET
 // /api/v1/public/session, its cookie is on .stroppy.io); no answer within a
 // few seconds, or an error, counts as signed out.
@@ -28,39 +30,26 @@ function useSignedIn(): boolean {
   return signedIn;
 }
 
+// The drawer has its own copy at its bottom (src/theme/Navbar/MobileSidebar/PrimaryMenu).
 export default function Account({mobile}: {mobile?: boolean}): ReactNode {
   const signedIn = useSignedIn();
+  if (mobile) return null;
   // The site and the console are one product: the way into the console is
   // to sign in (registering starts from there, or from the page's own calls
   // to action), not a second door to "another" site.
-  const links = signedIn
-    ? [{label: 'Open console', href: `${CLOUD}/`, cta: true}]
-    : [{label: 'Sign in', href: `${CLOUD}/login`, cta: true}];
-  if (mobile) {
-    return (
-      <>
-        {links.map((l) => (
-          <li key={l.label} className="menu__list-item">
-            <a className="menu__link" href={l.href}>
-              {l.label}
-            </a>
-          </li>
-        ))}
-      </>
-    );
-  }
   return (
     <>
-      {links.map((l) => (
-        <a key={l.label} className={l.cta ? 'navbar__item navbar-cta' : 'navbar__item navbar-signin'} href={l.href}>
-          {l.label}
-          {signedIn && (
-            <span className="navbar-cta__arrow" aria-hidden="true">
-              →
-            </span>
-          )}
-        </a>
-      ))}
+      <a className="navbar__item navbar-github" href={GITHUB} aria-label="Stroppy on GitHub">
+        <Icon name="github" className="navbar-github__icon" />
+      </a>
+      <a className="navbar__item navbar-cta" href={signedIn ? `${CLOUD}/` : `${CLOUD}/login`}>
+        {signedIn ? 'Open console' : 'Sign in'}
+        {signedIn && (
+          <span className="navbar-cta__arrow" aria-hidden="true">
+            →
+          </span>
+        )}
+      </a>
     </>
   );
 }

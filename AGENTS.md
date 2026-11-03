@@ -85,32 +85,67 @@ no diff. Never edit generated `docs/changelog.md` or a frozen changelog by hand.
 docusaurus.config.ts     site metadata, plugins, navbar, footer, versions
 sidebars.ts               current navigation
 src/css/custom.css        site styling
-src/css/nav.css           the top menu: mega panels, Sign in and Create account
-src/components/nav/       the top bar: mega menu content (menu.ts) and panels, icons, account links
+src/css/nav.css           the top bar and its panels, the search box, GitHub and Sign in, the mobile drawer
+src/components/nav/       the top bar: the menu's content (menu.ts: sections, their parts, columns, the
+                          line of links and the promo; every item links to a page or its section) and
+                          its panels with hover intent (MegaMenu.tsx),
+                          icons, GitHub and the account link
 src/theme/NavbarItem/     registers `custom-mega` and `custom-account` next to Docusaurus's navbar items
 src/theme/DocSidebar/     the docs version switch (src/components/nav/VersionSwitch.tsx) on top of the
                           docs sidebar, desktop and the mobile drawer
-src/theme/Navbar/MobileSidebar/  the mobile drawer, closed by Escape
+src/theme/Navbar/MobileSidebar/  the mobile drawer, full screen: search, the menu's sections, the account
+                          and community links at its bottom (PrimaryMenu); closed by Escape
 src/theme/SearchBar/      the local search with a close button: on a phone the open field takes the bar
 src/theme/Footer/         the site footer: a site map built from the top menu, copyright, theme switch
 src/css/footer.css        the footer's styles
 src/client/theme-cookie.ts  the theme shared with Stroppy Cloud through the stroppy-theme cookie
 src/client/theme-color.ts   <meta name="theme-color"> following the shown theme (the navbar's colour)
-src/pages/index.tsx       landing page
-src/pages/how.tsx         how Stroppy Cloud works, a screen at a time (src/css/how.css); the menu
-                          links to its screens and opens the product diagram on a story (#suites, #share)
+src/pages/index.tsx       landing page: the claim (pick a database on evidence) over the mark, then
+                          the top of the TPC-C rating, the PostgreSQL compatibility spread, and the four
+                          open tools
+src/pages/how.tsx         how Stroppy Cloud works, a screen at a time (src/css/how.css); a link to a
+                          screen opens the product diagram on its story (#suites, #share)
 src/components/how/       the /how diagrams: Diagram.tsx and their data (product model, architecture)
-src/pages/conformity.tsx  which databases really speak the protocol they claim: per-protocol tabs, a
-                          compatibility map of engines × feature groups, an engine's findings in a
-                          drawer, "About this data" in a side panel from the header (src/css/conformity.css);
-                          reads static/data/conformity/compat.json at build, fetches details on open
-src/components/conformity/ CompatMap, Drawer, About, and data.ts (the five states, groups, protocols)
+src/components/conformity/ Explorer: which databases really speak the protocol they claim, on
+                          /tools/conformity#results: per-protocol tabs, a compatibility map of
+                          engines × feature groups, an engine's findings in a drawer, "About this data"
+                          in a side panel (src/css/conformity.css); what is open is in the query string
+                          (?map=<protocol>&engine=<row id>&about, built by mapUrl in data.ts); reads
+                          static/data/conformity/compat.json at build, fetches details on open.
+                          CompatMap, Drawer, About, and data.ts (the five states, groups, protocols)
 static/data/conformity/   the dataset as exported: compat.json and details/<row id>.json
-src/components/landing/   landing pieces: scroll-driven mark, charts from blog data, run replay,
-                          leaderboard (hero top rows, Stroppy Cloud's full board in an iframe)
-plugins/cloud-rating.ts   copies Stroppy Cloud's public rating into the build for the hero
-plugins/conformity.ts     a summary of the conformity dataset for the landing's teaser
-src/css/landing.css       landing styles
+src/pages/ratings.tsx     databases rated against the original they replace, per protocol: four picks,
+                          filters, a table of compatibility and TPC-C speed out of 10 with the baseline
+                          (the original) on top, an engine's parts in a side panel (src/css/ratings.css);
+                          every choice in the query string (?proto=mysql&sort=speed&bench&db=<id>), so
+                          the Benchmarks menu links into it
+src/components/ratings/   score.ts: conformity rows joined with TPC-C runs (DB_KINDS maps Stroppy Cloud's
+                          db_kind to conformity's engine), each engine's kind (ENGINE_KIND: the site's
+                          call, transactional, analytical, search or proxy), the parts, categories,
+                          baseline and picks; state.ts: the query string, also used by the Benchmarks
+                          menu (src/components/nav/menu.ts), whose items are the page's filters;
+                          the table, picks, filters and panel
+src/pages/tools/          a page per tool: stroppy, conformity, graphene, cloud (src/css/tools.css); the
+                          Tools menu links into their sections by id, and to the manual where one
+                          covers it (/docs for Stroppy, graphene-ci.github.io/docs for Graphene CI)
+src/components/tools/     SectionPage (a hero, then sections as rows: text beside a real example, data
+                          under them; the section the URL's hash names is marked), ToolPage (a tool's
+                          SectionPage, the other tools after it) and tools.ts: the four tools, their
+                          pages, manuals and repositories; sections show published data
+                          (landing/evidence.tsx, the rating, the conformity map)
+src/pages/vendors.tsx     for database vendors, a SectionPage: add your database, run the tests on your
+                          build, how we keep it fair, reproduce a result, report an error, corrections,
+                          talk to us; the Vendors menu links to its sections
+src/components/vendors/   vendors.ts: the two issue forms opened in stroppy-io/stroppy (add a database,
+                          report an error) and CORRECTIONS, the published list of results we changed;
+                          add a correction there when a reported error is confirmed
+src/components/landing/   published-data pieces: the scroll-driven mark, the leaderboard's top (places
+                          in gold, silver and bronze), the compatibility spread (CompatSpread), the
+                          client-speed plot from blog data (Charts, evidence.tsx), the rating client
+plugins/cloud-rating.ts   copies Stroppy Cloud's public rating (TPC-C, and TPC-C with stored procedures)
+                          on one 32 vCPU · 128 GB node into the build for the hero and /ratings
+plugins/conformity.ts     every engine's overall score per protocol, for the landing's spread
+src/css/landing.css       the landing and the published-data pieces (mark, board, spread, plot)
 plans/                    agreed plans of work, not published
 src/prism-stroppy.ts      code highlighting on the kit's variables, both modes
 kit.json                  pinned UI kit release: version and archive sha256

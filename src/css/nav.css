@@ -1,7 +1,8 @@
-/* The top bar: logo on the left, the sections in the middle, the account
-   on the right (src/components/nav). A section opens a panel under the bar
-   that spans the page, with icons, a promo card and the page dimmed behind
-   it. Kit colours only. */
+/* The top bar: logo on the left, the sections next to it, the search,
+   GitHub and the account on the right (src/components/nav). A section opens
+   a panel under the bar that spans the page: its parts down the left when it
+   has them, columns of links, a promo card, and a line of links along the
+   bottom; the page dims behind it. Kit colours only. */
 
 :root {
   --ifm-navbar-height: 4rem;
@@ -29,28 +30,24 @@ html.plugin-docs .navbar__inner {
   letter-spacing: -0.01em;
 }
 
-/* The sections sit in the middle of the space between the logo and the
-   account links. */
+/* The sections follow the logo; the right end takes the rest. */
 .navbar__items:not(.navbar__items--right) {
   flex: 1;
+  align-self: stretch;
 }
 
-.navbar__items > .mega:first-of-type {
-  margin-left: auto;
-}
-
-.navbar__items > .mega:last-of-type {
-  margin-right: auto;
+.navbar__brand {
+  margin-right: 1.25rem;
 }
 
 /* Search first on the right, compact: the account links end the bar. */
 .navbar__items--right > :has(.navbar__search) {
   order: -1;
-  margin-right: 0.75rem;
+  margin-right: 0.5rem;
 }
 
 .navbar__items--right .navbar__search-input {
-  width: 9.5rem;
+  width: 13rem;
 }
 
 /* Below 997px Docusaurus pins the search absolutely to the bar's right edge,
@@ -59,6 +56,10 @@ html.plugin-docs .navbar__inner {
 @media (max-width: 996px) {
   .navbar__items--right > :has(.navbar__search) {
     position: static;
+  }
+
+  .navbar__items--right .navbar__search-input {
+    width: 9.5rem;
   }
 
   /* The search box is positioned and comes later in the bar, so without
@@ -87,40 +88,47 @@ html.plugin-docs .navbar__inner {
 
   .navbar__inner:has(.navbar-search:focus-within) .navbar__items--right,
   .navbar__items--right > :has(.navbar-search:focus-within),
-  .navbar-search:focus-within .navbar__search {
+  .navbar__items--right .navbar-search:focus-within .navbar__search {
     flex: 1;
     margin-right: 0;
   }
 
-  .navbar-search:focus-within {
+  .navbar__items--right .navbar-search:focus-within {
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
 
-  .navbar-search:focus-within .navbar__search {
+  .navbar__items--right .navbar-search:focus-within .navbar__search {
     margin: 0;
   }
 
   /* The plugin's autocomplete wrapper is inline-block (an inline style), as
      wide as the field: stretched, it puts the plugin's clear button inside
      the field and the results under all of it. */
-  .navbar-search:focus-within .navbar__search > span {
+  .navbar__items--right .navbar-search:focus-within .navbar__search > span {
     width: 100%;
   }
 
-  .navbar-search:focus-within .navbar__search-input {
+  .navbar__items--right .navbar-search:focus-within .navbar__search-input {
     width: 100%;
   }
 
-  .navbar-search:focus-within .navbar-search__close {
+  .navbar__items--right .navbar-search:focus-within .navbar-search__close {
     display: inline-flex;
   }
 
   /* The results line up with the field instead of the plugin's 340px. */
-  .navbar-search .navbar__search {
+  .navbar__items--right .navbar-search .navbar__search {
     --search-local-modal-width-sm: 100%;
   }
+}
+
+/* The field is a box with the kit's corners, as Stroppy Cloud's inputs. */
+.navbar__search-input {
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-md);
+  background-color: var(--st-canvas);
 }
 
 .navbar-search__close {
@@ -148,61 +156,61 @@ html.plugin-docs .navbar__inner {
 
 /* ---------- Sections ---------- */
 
-.mega {
+/* A section's name takes the bar's full height, so its underline sits on the
+   bar's bottom edge. */
+.navbar__item.mega {
   position: static;
-  padding: 0 0.15rem;
+  display: flex;
+  align-self: stretch;
+  margin-block: calc(-1 * var(--ifm-navbar-padding-vertical));
+  padding: 0;
+}
+
+/* Below 997px the sections live in the drawer (PrimaryMenu); the display
+   above would otherwise keep them in the bar, over the account button. */
+@media (max-width: 996px) {
+  .navbar__item.mega {
+    display: none;
+  }
 }
 
 .mega__trigger {
-  display: inline-block;
-  padding: 0.4rem 0.85rem;
-  border: none;
-  border-radius: var(--st-radius-pill);
-  background: none;
-  color: var(--st-muted);
-  font: inherit;
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  border-top: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  color: var(--st-text);
   font-size: 0.9375rem;
-  cursor: pointer;
-  transition:
-    color 0.15s,
-    background-color 0.15s;
+  font-weight: var(--st-font-weight-medium);
+  transition: border-color 0.15s;
 }
 
 .mega__trigger:hover {
+  color: var(--st-text);
   text-decoration: none;
 }
 
-.mega__trigger:focus-visible,
-.mega--open .mega__trigger {
-  color: var(--st-text);
+.mega--open .mega__trigger,
+.mega--here .mega__trigger {
+  border-bottom-color: var(--st-mark);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .mega__trigger:hover {
-    color: var(--st-text);
+    border-bottom-color: var(--st-mark);
   }
 }
 
-.mega--open .mega__trigger {
-  background: var(--st-raised);
-}
-
-/* A small chevron says the name opens a menu; it turns up while open. */
+/* A small chevron says the name opens a menu. */
 .mega__trigger::after {
   content: '';
-  display: inline-block;
-  width: 0.36em;
-  height: 0.36em;
-  margin-left: 0.45em;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  opacity: 0.7;
-  transform: translateY(-0.22em) rotate(45deg);
-  transition: transform 0.15s;
-}
-
-.mega--open .mega__trigger::after {
-  transform: translateY(0.05em) rotate(-135deg);
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 8px;
+  border: solid var(--st-muted);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
 }
 
 /* The panel spans the page under the bar. Only the open section's panel is
@@ -215,56 +223,58 @@ html.plugin-docs .navbar__inner {
   z-index: 1;
   visibility: hidden;
   opacity: 0;
+  /* A closing panel lets the pointer through at once: while it fades, a move
+     over it would otherwise reach its section and open it again. */
+  pointer-events: none;
   transition:
     opacity 0.18s ease,
     visibility 0s linear 0.18s;
   border-bottom: 1px solid var(--st-line);
-  border-radius: 0 0 1.5rem 1.5rem;
   background: var(--st-panel);
-  box-shadow: 0 24px 48px -24px color-mix(in srgb, var(--st-text) 35%, transparent);
+  box-shadow: 0 18px 40px -12px color-mix(in srgb, var(--st-text) 30%, transparent);
 }
 
 .mega__panel--shown {
   visibility: visible;
   opacity: 1;
+  pointer-events: auto;
   transition: opacity 0.18s ease;
 }
 
 .mega__inner {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 17rem)) minmax(0, 1fr);
-  gap: 2.5rem;
-  padding-top: 2rem;
-  padding-bottom: 2.25rem;
+  grid-template-columns: minmax(0, 1fr) 17.5rem;
+  gap: 2rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.mega__inner--rail {
+  grid-template-columns: 13.75rem minmax(0, 1fr) 17.5rem;
+}
+
+.mega__cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: 1.25rem 1.75rem;
+  align-content: start;
 }
 
 .mega__title {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.625rem;
   color: var(--st-muted);
   font-size: 0.75rem;
-  font-weight: var(--st-font-weight-medium);
-  letter-spacing: 0.06em;
+  font-weight: var(--st-font-weight-bold);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.mega__list {
-  display: grid;
-  gap: 0.25rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
 .mega__link {
-  display: grid;
-  grid-template-columns: 2.25rem minmax(0, 1fr);
-  gap: 0.85rem;
-  align-items: start;
-  margin: 0 -0.65rem;
-  padding: 0.6rem 0.65rem;
+  display: block;
+  margin: 0 -0.625rem;
+  padding: 0.3125rem 0.625rem;
   border-radius: var(--st-radius-lg);
   color: var(--st-text);
-  transition: background-color 0.12s;
 }
 
 .mega__link:hover {
@@ -278,32 +288,85 @@ html.plugin-docs .navbar__inner {
   }
 }
 
-.mega__icon {
-  box-sizing: content-box;
-  width: 1.15rem;
-  height: 1.15rem;
-  padding: 0.55rem;
-  border: 1px solid var(--st-line);
-  border-radius: var(--st-radius-md);
-  background: var(--st-canvas);
-  color: var(--st-primary-text);
-}
-
-.mega__text {
-  display: grid;
-  gap: 0.15rem;
-}
-
 .mega__label {
-  font-size: 0.9375rem;
-  font-weight: var(--st-font-weight-medium);
-  line-height: 1.3;
+  display: block;
+  font-size: 0.875rem;
+  font-weight: var(--st-font-weight-bold);
+  line-height: 1.6;
 }
 
 .mega__desc {
+  display: block;
   color: var(--st-muted);
   font-size: 0.8125rem;
-  line-height: 1.45;
+  font-weight: var(--st-font-weight-regular);
+  line-height: 1.4;
+}
+
+/* ---------- Parts down the left ---------- */
+
+.mega__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: 1rem;
+  border-right: 1px solid var(--st-line);
+}
+
+/* A part is a tab of the panel, a button: it shows its columns, nothing more. */
+.mega__part {
+  display: block;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 0 var(--st-radius-lg) var(--st-radius-lg) 0;
+  background: none;
+  color: var(--st-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mega__part .mega__label {
+  font-size: 0.9375rem;
+}
+
+.mega__part .mega__desc {
+  font-size: 0.75rem;
+}
+
+.mega__part--on {
+  border-left-color: var(--st-mark);
+  background: var(--st-raised);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mega__part:hover {
+    border-left-color: var(--st-mark);
+    background: var(--st-raised);
+  }
+}
+
+/* ---------- The line along the bottom ---------- */
+
+.mega__strip {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  gap: 0.5rem 1.25rem;
+  align-items: center;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--st-line);
+  font-size: 0.875rem;
+}
+
+.mega__strip .mega__title {
+  margin: 0;
+}
+
+.mega__strip a {
+  color: var(--st-primary-text);
 }
 
 /* ---------- Promo card ---------- */
@@ -311,12 +374,11 @@ html.plugin-docs .navbar__inner {
 .mega__promo {
   display: flex;
   flex-direction: column;
+  gap: 0.625rem;
   align-self: start;
-  justify-self: end;
-  width: 100%;
-  max-width: 21rem;
-  padding: 0.75rem 0.75rem 1.1rem;
-  border-radius: 1.1rem;
+  min-width: 0;
+  padding: 1.25rem;
+  border-radius: var(--st-radius-lg);
   background: var(--st-raised);
   color: var(--st-text);
 }
@@ -335,104 +397,81 @@ html.plugin-docs .navbar__inner {
 .mega__art {
   display: grid;
   place-items: center;
-  height: 8.5rem;
-  margin-bottom: 0.9rem;
+  height: 5rem;
   overflow: hidden;
-  border-radius: 0.8rem;
+  border-radius: var(--st-radius-lg);
   background:
     radial-gradient(circle at 70% 20%, color-mix(in srgb, var(--st-mark) 45%, transparent), transparent 60%),
     linear-gradient(135deg, color-mix(in srgb, var(--st-primary) 35%, var(--st-canvas)), var(--st-canvas));
 }
 
 .mega__art img {
-  height: 5.5rem;
+  height: 3.5rem;
   rotate: -12deg;
-  filter: drop-shadow(0 12px 18px color-mix(in srgb, var(--st-canvas) 60%, transparent));
-}
-
-.mega__promo-title,
-.mega__promo-body,
-.mega__promo-cta {
-  padding: 0 0.4rem;
 }
 
 .mega__promo-title {
   font-size: 1rem;
-  font-weight: var(--st-font-weight-medium);
+  font-weight: var(--st-font-weight-bold);
+  line-height: 1.2;
 }
 
 .mega__promo-body {
-  margin-top: 0.3rem;
   color: var(--st-muted);
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
   line-height: 1.5;
 }
 
 .mega__promo-cta {
   display: inline-flex;
   gap: 0.3rem;
-  margin-top: 0.75rem;
   color: var(--st-primary-text);
-  font-size: 0.8125rem;
-  font-weight: var(--st-font-weight-medium);
+  font-size: 0.9375rem;
   transition: gap 0.15s;
 }
 
 /* The leaderboard's top three, in place of a picture. */
 .mega__board {
-  display: grid;
-  gap: 0.35rem;
-  margin: 0 0 0.9rem;
-  padding: 0.75rem;
-  border-radius: 0.8rem;
-  background: var(--st-panel);
+  margin: 0;
+  padding: 0;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
   list-style: none;
 }
 
 .mega__board li {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.35rem 0.5rem;
-  overflow: hidden;
-  border-radius: var(--st-radius-sm);
-  font-size: 0.8125rem;
+  display: grid;
+  grid-template-columns: 1.125rem minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  padding: 0.375rem 0;
+  border-bottom: 1px solid var(--st-line);
 }
 
-.mega__board li::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: calc(var(--w) * 100%);
-  background: color-mix(in srgb, var(--st-primary) 14%, transparent);
-}
-
-.mega__board-db,
-.mega__board-value {
-  position: relative;
-}
-
-.mega__board small {
-  display: block;
+.mega__board-rank {
   color: var(--st-muted);
-  font-size: 0.6875rem;
+}
+
+.mega__board-db {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mega__board-value {
-  font-variant-numeric: tabular-nums;
-  font-weight: var(--st-font-weight-medium);
+  font-weight: var(--st-font-weight-bold);
   white-space: nowrap;
 }
 
 .mega__board-value small {
-  display: inline;
+  color: var(--st-muted);
+  font-size: inherit;
+  font-weight: var(--st-font-weight-regular);
 }
 
 /* ---------- The page under an open panel ---------- */
 
 @media (min-width: 997px) {
-  html.mega-active body::after {
+  html[data-mega-open] body::after {
     content: '';
     position: fixed;
     inset: 0;
@@ -442,20 +481,34 @@ html.plugin-docs .navbar__inner {
   }
 }
 
-/* ---------- Account ---------- */
+/* ---------- GitHub and the account ---------- */
 
-.navbar__item.navbar-signin {
+.navbar__item.navbar-github {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem;
   color: var(--st-muted);
-  font-size: 0.9375rem;
 }
 
-.navbar__item.navbar-signin:hover {
+.navbar__item.navbar-github:hover {
   text-decoration: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .navbar__item.navbar-signin:hover {
+  .navbar__item.navbar-github:hover {
     color: var(--st-text);
+  }
+}
+
+.navbar-github__icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* In the bar below 997px GitHub moves to the drawer's bottom. */
+@media (max-width: 996px) {
+  .navbar__items--right .navbar__item.navbar-github {
+    display: none;
   }
 }
 
@@ -509,6 +562,12 @@ html.plugin-docs .navbar__inner {
     min-height: 2.5rem;
   }
 
+  .navbar__item.navbar-github {
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    justify-content: center;
+  }
+
   .navbar__toggle {
     display: inline-grid;
     place-items: center;
@@ -517,7 +576,8 @@ html.plugin-docs .navbar__inner {
   }
 
   .navbar-sidebar .menu__link,
-  .navbar-sidebar .menu__caret {
+  .navbar-sidebar .menu__caret,
+  .mmenu__head {
     min-height: 2.5rem;
   }
 
@@ -536,13 +596,150 @@ html.plugin-docs .navbar__inner {
 
 /* ---------- Mobile drawer ---------- */
 
-.mega__mobile-trigger {
+/* The drawer covers the screen: the search on top, every section as a list
+   that opens, the account at the bottom (src/theme/Navbar/MobileSidebar). */
+@media (max-width: 996px) {
+  :root {
+    --ifm-navbar-sidebar-width: 100vw;
+  }
+}
+
+/* The drawer's panel is its scroller; the foot sticks to its bottom edge, so
+   the panel's own bottom padding is taken off. */
+.navbar-sidebar__item:has(> .drawer) {
+  padding-bottom: 0;
+}
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 0 1rem;
+}
+
+.drawer__search {
+  padding: 0.25rem 0.25rem 0.75rem;
+}
+
+.drawer .navbar__search {
   width: 100%;
-  border: none;
-  background: none;
-  font: inherit;
-  text-align: left;
+  margin: 0;
+}
+
+.drawer .navbar__search > span,
+.drawer .navbar__search .navbar__search-input {
+  width: 100%;
+}
+
+.drawer .navbar__search .navbar__search-input {
+  height: 2.75rem;
+}
+
+.drawer > .menu__list {
+  flex: 1;
+  margin: 0;
+}
+
+.mmenu {
+  padding: 0 0.25rem;
+  border-top: 1px solid var(--st-line);
+  list-style: none;
+}
+
+.mmenu__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 0;
+  color: var(--st-text);
+  font-weight: var(--st-font-weight-bold);
+  list-style: none;
   cursor: pointer;
+}
+
+.mmenu__head::-webkit-details-marker {
+  display: none;
+}
+
+.mmenu__head::after {
+  content: '+';
+  color: var(--st-muted);
+}
+
+details[open] > .mmenu__head::after {
+  content: '–';
+}
+
+.mmenu__part {
+  margin-left: 0.75rem;
+}
+
+.mmenu__head--part {
+  flex-wrap: wrap;
+  padding: 0.625rem 0;
+  font-weight: var(--st-font-weight-medium);
+}
+
+.mmenu__head--part .mega__desc {
+  flex-basis: 100%;
+  order: 3;
+  font-size: 0.75rem;
+}
+
+.mmenu__link {
+  display: block;
+  padding: 0.3125rem 0;
+  color: var(--st-text);
+}
+
+.mmenu__link:hover {
+  color: var(--st-text);
+  text-decoration: none;
+}
+
+.mmenu details:last-child,
+.mmenu > details[open] {
+  padding-bottom: 0.5rem;
+}
+
+/* With room for several columns every section is open, like a site map. */
+@media (min-width: 700px) {
+  .drawer > .menu__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0.5rem 2rem;
+    align-items: start;
+  }
+
+  .mmenu {
+    border-top: 0;
+  }
+
+  .mmenu > details > .mmenu__head {
+    margin-bottom: 0.375rem;
+    border-bottom: 1px solid var(--st-line);
+  }
+}
+
+.drawer__foot {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 0.625rem;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 0.75rem 0.25rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--st-line);
+  background: var(--st-panel);
+}
+
+.drawer__foot .navbar__item.navbar-github {
+  display: inline-flex;
+}
+
+.drawer__foot .navbar__item.navbar-cta {
+  order: -1;
+  margin: 0 auto 0 0;
 }
 
 /* ---------- Docs sidebar: the version switch ---------- */

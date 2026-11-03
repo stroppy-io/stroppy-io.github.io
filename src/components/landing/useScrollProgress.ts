@@ -30,11 +30,13 @@ export default function useScrollProgress(
       if (!frame) frame = requestAnimationFrame(measure);
     };
     measure();
-    window.addEventListener('scroll', schedule, {passive: true});
+    // Captured, so a scroll of any container the element sits in counts, not
+    // only the window's: scroll events do not bubble.
+    window.addEventListener('scroll', schedule, {passive: true, capture: true});
     window.addEventListener('resize', schedule);
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('scroll', schedule, {capture: true});
       window.removeEventListener('resize', schedule);
     };
   }, [ref, start, end, settled]);

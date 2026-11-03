@@ -1,12 +1,13 @@
 import type {LoadContext, Plugin} from '@docusaurus/types';
-import {fetchRating, type Rating} from '../src/components/landing/rating';
+import {fetchRating, SCENARIO, SCENARIO_PROCS, type Rating} from '../src/components/landing/rating';
 
 // Takes a copy of Stroppy Cloud's public rating when the site is built (and
-// when the dev server starts), so the landing's board is in the HTML. The
-// page refreshes it in the browser. If the cloud does not answer, the build
-// goes on without it.
+// when the dev server starts), so the landing's board and /ratings are in the
+// HTML. Pages refresh it in the browser. If the cloud does not answer, the
+// build goes on without it.
 
-type Content = {rating: Rating | null};
+/** TPC-C as one round trip per statement (`rating`) and with stored procedures (`procs`). */
+export type CloudRating = {rating: Rating | null; procs: Rating | null};
 
 async function load<T>(what: string, get: (s: AbortSignal) => Promise<T>): Promise<T | null> {
   try {
@@ -17,11 +18,15 @@ async function load<T>(what: string, get: (s: AbortSignal) => Promise<T>): Promi
   }
 }
 
-export default function cloudRating(_context: LoadContext): Plugin<Content> {
+export default function cloudRating(_context: LoadContext): Plugin<CloudRating> {
   return {
     name: 'cloud-rating',
     async loadContent() {
-      return {rating: await load('rating', fetchRating)};
+      const [rating, procs] = await Promise.all([
+        load(SCENARIO, (s) => fetchRating(SCENARIO, s)),
+        load(SCENARIO_PROCS, (s) => fetchRating(SCENARIO_PROCS, s)),
+      ]);
+      return {rating, procs};
     },
     async contentLoaded({content, actions}) {
       actions.setGlobalData(content);

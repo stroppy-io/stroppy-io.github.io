@@ -1,8 +1,6 @@
-/* Landing page, kit variables only. The page argues its headline with
-   published measurements, a page at a time: scrolling snaps from page to page
-   (where a page fits the viewport, PAGED_QUERY in components/landing/Pager.tsx),
-   and what is on a page follows the scroll that brings it in: the content
-   arrives, the mark behind the headline opens, chart bars grow. */
+/* Landing page (src/pages/index.tsx) and the published-data pieces it shares
+   with the tool pages: the mark, the leaderboard's top, the client-speed plot,
+   the compatibility spread. Kit variables only. */
 
 .visually-hidden {
   position: absolute;
@@ -15,17 +13,20 @@
 
 /* ---------- The mark (geometry in components/landing/HeroMark.tsx) ---------- */
 
+/* Behind the hero's text on its right, large, turned and dimmed enough to
+   read through; it opens as the page scrolls away (index.tsx). */
 .mark {
   --open: 0;
   position: absolute;
   top: 0;
   bottom: 0;
-  right: 4vw;
-  /* One size on the first page and the last, set by the viewport. */
-  --mark-w: calc(clamp(18rem, 62dvh, 40rem) * 100 / 132);
-  height: clamp(18rem, 62dvh, 40rem);
+  right: max(-6rem, calc(50% - 44rem));
+  z-index: 0;
+  height: clamp(22rem, 72dvh, 44rem);
   aspect-ratio: 100 / 132;
   margin: auto 0;
+  rotate: -16deg;
+  opacity: 0.3;
   pointer-events: none;
 }
 
@@ -56,9 +57,8 @@
   transform: translateY(calc(var(--open) * var(--lift)));
 }
 
-/* Under the headline but clearly the logo; a little louder as it opens. */
 .mark__body {
-  opacity: calc(0.28 + 0.07 * var(--open));
+  opacity: calc(0.85 + 0.15 * var(--open));
   fill: var(--st-text);
 }
 
@@ -112,100 +112,164 @@
   }
 }
 
-/* ---------- Hero ---------- */
+/* ---------- The landing: a claim, two measurements, the open tools ---------- */
 
-.intro {
+.home-hero {
   position: relative;
   overflow: clip;
-  padding: 3.5rem 0 4rem;
+  padding: 7rem 0 6.5rem;
   border-bottom: 1px solid var(--st-line);
 }
 
-.intro__inner {
+.home-hero__inner {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(21rem, 27rem);
-  align-items: center;
-  gap: 3rem 4rem;
 }
 
-/* On the first page and the last the mark sits behind the text, faint
-   enough to read through. */
-.intro .mark,
-.finale .mark {
-  right: auto;
-  left: max(0px, calc(50% - 30rem));
-  rotate: -16deg;
-  opacity: 0.22;
-  bottom: 22rem;
-}
-
-/* On the last page the right half is free: the mark stands there, bright. */
-.finale .mark {
-  left: auto;
-  right: max(2rem, calc(50% - 38rem));
-  bottom: 0;
-  opacity: 0.85;
-}
-
-.intro__title {
+.home-hero__title {
+  max-width: 46rem;
   margin: 0;
-  font-size: clamp(1.75rem, 0.45rem + 2.05vw, 3rem);
+  font-size: clamp(2.4rem, 1.4rem + 3vw, 4rem);
   font-weight: var(--st-font-weight-bold);
-  line-height: 1.03;
-  letter-spacing: -0.035em;
+  line-height: 1.04;
+  letter-spacing: -0.04em;
   text-wrap: balance;
 }
 
-/* Two lines on a wide screen, whatever the width of the column. */
-@media (min-width: 997px) {
-  .intro__line {
-    display: block;
-    white-space: nowrap;
-  }
-}
-
-.intro__lede {
-  max-width: 38em;
-  margin: 1.25rem 0 0;
-  font-size: clamp(1.0625rem, 0.9rem + 0.4vw, 1.25rem);
+.home-hero__lead {
+  max-width: 32rem;
+  margin: 1.4rem 0 0;
+  font-size: clamp(1.0625rem, 0.95rem + 0.4vw, 1.25rem);
   line-height: 1.55;
-  color: color-mix(in srgb, var(--st-text) 85%, var(--st-muted));
+  color: color-mix(in srgb, var(--st-text) 80%, var(--st-muted));
 }
 
-.intro__actions,
-.finale__actions {
+.home-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  margin-top: 2rem;
 }
 
-.intro__actions {
-  margin-top: 1.75rem;
+.home-block {
+  padding: 4.5rem 0;
+  border-bottom: 1px solid var(--st-line);
 }
 
-.intro__local {
-  display: inline-block;
-  margin-top: 0.9rem;
+.home-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  align-items: start;
+  gap: 4rem;
+}
+
+.home-eyebrow {
+  margin: 0 0 0.75rem;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--st-mark);
+}
+
+.home-block h2 {
+  margin: 0;
+  font-size: clamp(1.7rem, 1.2rem + 1.4vw, 2.3rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.home-text {
+  max-width: 30rem;
+  margin: 1rem 0 0;
+  color: color-mix(in srgb, var(--st-text) 80%, var(--st-muted));
+}
+
+.home-big {
+  margin: 1.75rem 0 0;
+  font-size: 3.4rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.home-big span {
+  margin-left: 0.5rem;
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0;
   color: var(--st-muted);
-  font-size: 0.9375rem;
+}
+
+.home-tools {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.home-tool {
+  --tool: var(--st-mark);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--st-line);
+  border-top: 3px solid var(--tool);
+  border-radius: var(--st-radius-md);
+  background: var(--st-panel);
+  color: var(--st-text);
+}
+
+.home-tool--conformity {
+  --tool: var(--st-series-3);
+}
+
+.home-tool--graphene {
+  --tool: var(--st-series-4);
+}
+
+.home-tool--cloud {
+  --tool: var(--st-series-1);
+}
+
+.home-tool:hover {
+  text-decoration: none;
+}
+
+.home-tool__name {
+  font-weight: 600;
+}
+
+.home-tool__what {
+  font-size: 13px;
+  color: var(--st-muted);
+}
+
+.home-cloud {
+  margin: 1.75rem 0 0;
+  color: var(--st-muted);
+}
+
+.home-cloud a {
+  font-weight: 500;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .intro__local:hover {
+  .home-tool:hover {
+    border-color: var(--st-line-strong);
+    border-top-color: var(--tool);
     color: var(--st-text);
   }
 }
 
-/* ---------- The top of the leaderboard (in the hero) ---------- */
+/* ---------- The top of the leaderboard ---------- */
 
 .board {
   padding: 1.1rem 1.25rem 0.9rem;
-  background: color-mix(in srgb, var(--st-panel) 88%, transparent);
+  background: var(--st-panel);
   border: 1px solid var(--st-line);
   border-radius: var(--st-radius-lg);
-  backdrop-filter: blur(6px);
 }
 
 .board__head {
@@ -216,9 +280,6 @@
 }
 
 .board__label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
   font-size: var(--st-font-size-sm);
   font-weight: var(--st-font-weight-medium);
   letter-spacing: 0.06em;
@@ -237,9 +298,26 @@
   list-style: none;
 }
 
+/* Gold, silver and bronze: the place's icon and its bar. */
+.board__rows li {
+  --place: var(--st-line-strong);
+}
+
+.board__rows .board__place--1 {
+  --place: var(--st-warning);
+}
+
+.board__rows .board__place--2 {
+  --place: color-mix(in srgb, var(--st-text) 70%, var(--st-muted));
+}
+
+.board__rows .board__place--3 {
+  --place: var(--st-mark);
+}
+
 .board__row {
   display: grid;
-  grid-template-columns: 1.25rem minmax(0, 1fr) auto;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
   align-items: baseline;
   gap: 0 0.75rem;
   padding: 0.55rem 0.5rem 0.6rem;
@@ -266,8 +344,20 @@
 }
 
 .board__rank {
+  align-self: center;
   font-size: var(--st-font-size-sm);
   color: var(--st-muted);
+}
+
+.board__rank svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--place);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .board__who {
@@ -317,13 +407,9 @@
   width: calc(var(--w) * 100%);
   height: 100%;
   border-radius: inherit;
-  background: var(--st-mark);
+  background: var(--place);
   transform-origin: left;
   animation: board-grow 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) calc(0.25s + var(--i) * 0.09s) both;
-}
-
-.board__rows li:first-child .board__bar::after {
-  background: var(--st-primary);
 }
 
 @keyframes board-grow {
@@ -355,208 +441,92 @@
   }
 }
 
-/* ---------- Install (on the CLI page) ---------- */
+/* ---------- Compatibility: every engine of a protocol, one bar each ---------- */
 
-.install {
-  max-width: 44rem;
-  margin-top: 1.75rem;
-}
-
-.install__tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  margin-bottom: 0.6rem;
-}
-
-.install__tab {
-  padding: 0.3rem 0.75rem;
-  font: inherit;
-  font-size: 0.875rem;
-  color: var(--st-muted);
-  background: none;
-  border: 1px solid transparent;
-  border-radius: var(--st-radius-md);
-  cursor: pointer;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .install__tab:hover {
-    color: var(--st-text);
-  }
-}
-
-.install__tab[aria-selected='true'] {
-  color: var(--st-text);
-  background: var(--st-raised);
-  border-color: var(--st-line);
-}
-
-.install__more {
-  margin: 0.75rem 0 0;
-  font-size: 0.875rem;
-  color: color-mix(in srgb, var(--st-text) 70%, var(--st-muted));
-}
-
-.shell {
-  position: relative;
-}
-
-.shell pre {
+.spread {
   margin: 0;
-  padding: 0.75rem 4.5rem 0.75rem 1rem;
-  background: var(--st-panel);
-  border: 1px solid var(--st-line);
-  border-radius: var(--st-radius-md);
-  font-size: 13px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
 }
 
-.shell pre code {
+.spread__rows {
+  display: grid;
+  gap: 5px;
+  margin: 0;
   padding: 0;
-  white-space: inherit;
-  background: none;
-  border: 0;
+  list-style: none;
 }
 
-.copy {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  padding: 0.15rem 0.55rem;
-  font: inherit;
-  font-size: var(--st-font-size-sm);
-  color: var(--st-muted);
-  background: var(--st-raised);
-  border: 1px solid var(--st-line);
-  border-radius: var(--st-radius-md);
-  cursor: pointer;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .copy:hover {
-    color: var(--st-text);
-  }
-}
-
-.copy:focus-visible,
-.install__tab:focus-visible,
-.run__replay:focus-visible,
-.note:focus-visible {
-  outline: 2px solid var(--st-primary);
-  outline-offset: 2px;
-}
-
-/* ---------- Sections ---------- */
-
-.story {
-  padding: 6rem 0;
-}
-
-.story--panel {
-  background: var(--st-panel);
-  border-block: 1px solid var(--st-line);
-}
-
-.story h2 {
-  margin: 0;
-  font-size: clamp(1.75rem, 1.2rem + 1.4vw, 2.5rem);
-  font-weight: var(--st-font-weight-bold);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-  text-wrap: balance;
-}
-
-/* The site draws a rule above markdown h2s; not here. */
-.story h2::before {
-  display: none;
-}
-
-.story p code {
-  white-space: nowrap;
-}
-
-.story__head p {
-  max-width: 36em;
-  margin: 1.25rem 0 0;
-  color: var(--st-muted);
-}
-
-.story__head {
-  margin-bottom: 2.5rem;
-}
-
-/* A heading with something next to it (the CLI page: the install snippet). */
-.story__head--split {
+.spread__row,
+.spread__axis {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 1.5rem 3rem;
+  grid-template-columns: 8.5rem minmax(0, 1fr) 2.6rem;
   align-items: center;
+  gap: 0.75rem;
+  font-size: 13px;
 }
 
-.story__head--split {
-  margin-bottom: 1.75rem;
-}
-
-.story__head--split .install {
-  margin-top: 0;
-}
-
-.story__head--split .install__more {
-  margin-top: 0.5rem;
-}
-
-@media (max-width: 996px) {
-  .story__head--split {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-/* ---------- Results: Stroppy Cloud's leaderboard in a frame ---------- */
-
-.results {
-  position: relative;
-  min-height: 28rem;
-}
-
-.results--ready {
-  min-height: 0;
-}
-
-/* The embed pads its own content by 16px; the frame steps out into the
-   container's padding so the board lines up with the heading. No further:
-   the padding is 1rem (15px here), and a pixel more scrolls a phone
-   sideways. */
-.results__frame {
-  display: block;
-  width: calc(100% + 2 * var(--ifm-spacing-horizontal));
-  height: 28rem;
-  margin-inline: calc(-1 * var(--ifm-spacing-horizontal));
-  border: 0;
-  /* The embed draws without a background (bg=transparent); a frame in another
-     colour scheme would otherwise get an opaque one from the browser. */
-  color-scheme: normal;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.results--ready .results__frame {
-  opacity: 1;
-}
-
-.results__wait {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
+.spread__name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: var(--st-muted);
-  border: 1px dashed var(--st-line);
-  border-radius: var(--st-radius-lg);
 }
 
-/* ---------- How fast: measured pairs on one log axis ---------- */
+.spread__row--ok .spread__name {
+  color: var(--st-text);
+}
+
+.spread__track {
+  position: relative;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--st-raised);
+}
+
+.spread__track i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 3px;
+  background: var(--st-error);
+}
+
+.spread__row--ok .spread__track i {
+  background: var(--st-success);
+}
+
+/* The line a reader would call compatible. */
+.spread__track::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: var(--line);
+  width: 1px;
+  background: var(--st-text);
+  opacity: 0.5;
+}
+
+.spread__value {
+  font-family: var(--st-font-mono);
+  text-align: right;
+}
+
+.spread__axis {
+  margin-top: 0.6rem;
+  font-size: 12px;
+  color: var(--st-muted);
+}
+
+.spread__ticks {
+  position: relative;
+  height: 1em;
+}
+
+.spread__ticks span {
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+/* ---------- Client speed: measured pairs on one log axis ---------- */
 
 /* Labels | the plot | the multiplier. The grid spans every row of the plot column. */
 .plot {
@@ -734,522 +704,40 @@
   background: var(--st-mark);
 }
 
-/* ---------- One command in, a summary out: the run, and notes beside it ---------- */
-
-.anatomy {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  gap: 2.5rem;
-  align-items: center;
-}
-
-.anatomy__run {
-  min-width: 0;
-}
-
-.anatomy__run .run__screen {
-  padding: 1.5rem 1.75rem 1.75rem;
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-/* "Hover a note" with a mouse, "Tap a note" with a finger. */
-.anatomy__hint--tap {
-  display: none;
-}
-
-@media (hover: none), (pointer: coarse) {
-  .anatomy__hint--hover {
-    display: none;
-  }
-
-  .anatomy__hint--tap {
-    display: inline;
-  }
-}
-
-.anatomy__group {
-  margin: 0 0 0.35rem;
-  font-size: 0.875rem;
-  font-weight: var(--st-font-weight-medium);
-  color: var(--st-muted);
-}
-
-.anatomy__group + .notes + .anatomy__group {
-  margin-top: 1.5rem;
-}
-
-.notes {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.notes li + li {
-  margin-top: 0.15rem;
-}
-
-.note {
-  display: block;
-  width: 100%;
-  padding: 0.45rem 0.85rem;
-  font: inherit;
-  text-align: left;
-  color: var(--st-muted);
-  background: none;
-  border: 1px solid transparent;
-  border-left: 2px solid var(--st-line-strong);
-  border-radius: 0 var(--st-radius-md) var(--st-radius-md) 0;
-  cursor: default;
-  transition:
-    border-color 0.15s,
-    background 0.15s;
-}
-
-.note[aria-pressed='true'] {
-  background: var(--st-canvas);
-  border-color: var(--st-line);
-  border-left-color: var(--st-mark);
-}
-
-.note__title {
-  margin-right: 0.5rem;
-  font-family: var(--st-font-mono);
-  font-size: 0.875rem;
-  color: var(--st-text);
-}
-
-.note__body {
-  font-size: 0.875rem;
-  line-height: 1.5;
-}
-
-.note__body code {
-  font-size: 0.85em;
-}
-
-/* ---------- Run replay (components/landing/RunReplay.tsx) ---------- */
-
-.run {
-  margin: 0;
-  min-width: 0;
-}
-
-.run__bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 0.75rem 0.5rem 1rem;
-  background: var(--st-raised);
-  border: 1px solid var(--st-line);
-  border-bottom: 0;
-  border-radius: var(--st-radius-lg) var(--st-radius-lg) 0 0;
-  font-family: var(--st-font-mono);
-  font-size: var(--st-font-size-sm);
-  color: var(--st-muted);
-}
-
-.run__replay {
-  padding: 0.2rem 0.6rem;
-  font: inherit;
-  color: var(--st-primary-text);
-  background: none;
-  border: 1px solid transparent;
-  border-radius: var(--st-radius-md);
-  cursor: pointer;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .run__replay:hover:not(:disabled) {
-    border-color: var(--st-line-strong);
-  }
-}
-
-.run__replay:disabled {
-  color: var(--st-disabled);
-  cursor: default;
-}
-
-/* A hairline of the mark colour that sweeps while the run is going. */
-.run__load {
-  height: 2px;
-  background: var(--st-line);
-  border-inline: 1px solid var(--st-line);
-}
-
-.run__load--active {
-  background:
-    linear-gradient(90deg, transparent, var(--st-mark), transparent) 0 0 / 40% 100% no-repeat,
-    var(--st-line);
-  animation: run-sweep 0.55s linear infinite;
-}
-
-@keyframes run-sweep {
-  from {
-    background-position:
-      -40% 0,
-      0 0;
-  }
-  to {
-    background-position:
-      140% 0,
-      0 0;
-  }
-}
-
-.run__screen {
-  margin: 0;
-  padding: 1.25rem 1.25rem 1.5rem;
-  background: var(--st-panel);
-  border: 1px solid var(--st-line);
-  border-top: 0;
-  border-radius: 0 0 var(--st-radius-lg) var(--st-radius-lg);
-  font-family: var(--st-font-mono);
-  font-size: 13px;
-  line-height: 1.75;
-  color: var(--st-text);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.story--panel .run__screen {
-  background: var(--st-canvas);
-}
-
-/* On a phone the run keeps a terminal's lines and scrolls sideways in its
-   own box, instead of wrapping into a screen-high column. */
-@media (max-width: 600px) {
-  .run__screen {
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    white-space: pre;
-    overflow-wrap: normal;
-  }
-}
-
-/* A finger needs 40px. */
-@media (pointer: coarse) {
-  .install__tab,
-  .copy,
-  .run__replay {
-    min-height: 2.5rem;
-  }
-
-  .copy {
-    top: 0.25rem;
-    right: 0.25rem;
-  }
-}
-
-.run__screen code {
-  padding: 0;
-  font: inherit;
-  background: none;
-  border: 0;
-  white-space: inherit;
-}
-
-/* Laid out from the start, revealed as the run plays: the panel never resizes. */
-.run__hidden {
-  visibility: hidden;
-}
-
-.run__prompt,
-.run__heading,
-.run__key {
-  color: var(--st-muted);
-}
-
-.run__flag {
-  color: var(--st-primary-text);
-  white-space: nowrap;
-}
-
-.run__name {
-  white-space: pre;
-}
-
-.run__field {
-  white-space: nowrap;
-}
-
-.run__tail,
-.run__tail .run__key {
-  color: var(--st-series-2);
-}
-
-.run__caret {
-  position: relative;
-}
-
-.run__caret::after {
-  content: '';
-  position: absolute;
-  top: 0.15em;
-  left: 1px;
-  width: 0.55em;
-  height: 1.2em;
-  background: var(--st-text);
-}
-
-/* A note picks out its part of the run; the rest steps back. */
-.run {
-  --dim: color-mix(in srgb, var(--st-text) 28%, transparent);
-}
-
-.run__screen * {
-  transition:
-    color 0.15s,
-    background 0.15s;
-}
-
-.run__dim,
-.run__dim :is(.run__flag, .run__key, .run__tail, .run__heading) {
-  color: var(--dim);
-}
-
-.run__lit {
-  background: color-mix(in srgb, var(--st-series-2) 16%, transparent);
-  border-radius: 2px;
-}
-
-/* p(99) sits inside the histogram line: the line stays, its other fields step back. */
-.run[data-hl='tail'] .run__line :is(.run__name, .run__field:not(.run__tail)) {
-  color: var(--dim);
-}
-
-.run[data-hl='tail'] .run__line :is(.run__name, .run__field:not(.run__tail)) .run__key {
-  color: inherit;
-}
-
-.run[data-hl='tail'] .run__line .run__field.run__tail {
-  color: var(--st-series-2);
-  background: color-mix(in srgb, var(--st-series-2) 16%, transparent);
-  border-radius: 2px;
-}
-
-.run__log {
-  color: var(--st-muted);
-}
-
-.run__caption {
-  margin-top: 0.6rem;
-  font-size: 0.8125rem;
-  color: var(--st-muted);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .run__load--active {
-    animation: none;
-  }
-}
-
-/* ---------- Conformity: a preview of /conformity's map (components/landing/Conformity.tsx);
-   its cells and table are src/css/compat-map.css ---------- */
-
-.conf__bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 2rem;
-  margin-bottom: 0.75rem;
-  border-bottom: 1px solid var(--st-line);
-}
-
-.conf__tabs {
-  display: flex;
-  gap: 1.75rem;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.conf__tabs button {
-  position: relative;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.35rem;
-  padding: 0.6rem 0 0.7rem;
-  border: 0;
-  background: none;
-  color: var(--st-muted);
-  font: inherit;
-  font-size: 1rem;
-  font-weight: var(--st-font-weight-medium);
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.conf__tabs button span {
-  font-size: 0.8125rem;
-  font-weight: var(--st-font-weight-regular);
-}
-
-.conf__tabs button[aria-selected='true'] {
-  color: var(--st-text);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .conf__tabs button:hover {
-    color: var(--st-text);
-  }
-}
-
-.conf__tabs button[aria-selected='true']::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  bottom: -1px;
-  left: 0;
-  height: 3px;
-  border-radius: 2px 2px 0 0;
-  background: var(--st-primary);
-}
-
-.conf__tabs button:focus-visible {
-  outline: 2px solid var(--st-primary);
-  outline-offset: -2px;
-}
-
-.conf__legend {
-  font-size: 0.8125rem;
-}
-
-.conf__legend .states__swatch {
-  width: 1.25rem !important;
-  height: 1.25rem !important;
-}
-
-/* The preview: shorter cells than the full map. */
-.cmap--mini .cmap__table .c {
-  height: 2.1rem;
-}
-
-.cmap--mini thead tr:last-child th a {
-  color: var(--st-text);
-  font-weight: var(--st-font-weight-medium);
-}
-
-.cmap--mini .cmap__name {
-  display: inline-block;
-}
-
-.conf__foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem 1.5rem;
-  margin-top: 1.25rem;
-}
-
-.conf__provenance {
-  color: var(--st-muted);
-  font-size: 0.8125rem;
-}
-
-/* ---------- Finale: Stroppy Cloud, running into the footer ---------- */
-
-.finale {
-  position: relative;
-  overflow: clip;
-  background: var(--st-panel);
-  border-top: 1px solid var(--st-line);
-}
-
-.finale__inner {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-height: 22rem;
-}
-
-.finale__text {
-  position: relative;
-  z-index: 1;
-  max-width: 34rem;
-}
-
-.finale h2 {
-  margin: 0;
-  font-size: clamp(1.75rem, 1.2rem + 1.4vw, 2.5rem);
-  font-weight: var(--st-font-weight-bold);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-  text-wrap: balance;
-}
-
-.finale h2::before {
-  display: none;
-}
-
-.finale p {
-  margin: 1.25rem 0 2rem;
-  color: var(--st-muted);
-}
-
-
 /* ---------- Narrow screens ---------- */
 
 @media (max-width: 996px) {
-  .intro {
-    padding: 2.5rem 0 3rem;
-  }
-
-  /* One column: the board comes after the buttons and the line under them. */
-  .intro__inner {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
-  }
-
-  .intro__text {
-    display: contents;
-  }
-
-  .intro .board {
-    order: 1;
-    margin-top: 2.5rem;
-  }
-
-  .intro .mark {
-    left: auto;
-    rotate: 16deg;
-    bottom: auto;
-    top: -2rem;
-    height: min(90vw, 28rem);
-    opacity: 0.3;
-  }
-
-  /* Behind the headline on a narrow screen: quiet enough to read through. */
-  .mark {
-    right: -18vw;
-    height: 60%;
-    top: -30%;
-    opacity: 0.3;
-  }
-
-  .story {
+  .home-hero {
     padding: 4rem 0;
   }
 
-  .finale .mark {
-    left: auto;
-    right: -18vw;
+  /* Behind the headline's top right, turned the other way. */
+  .mark {
+    right: -14vw;
+    top: -4rem;
+    bottom: auto;
+    height: min(90vw, 26rem);
     rotate: 16deg;
-    opacity: 0.3;
+    opacity: 0.22;
   }
 
-  .anatomy {
+  .home-block {
+    padding: 3rem 0;
+  }
+
+  .home-split {
     grid-template-columns: minmax(0, 1fr);
     gap: 2.5rem;
   }
 
-  /* The notes come after the run here, too far below it to light it up:
-     they are read as text, and the page does not ask to hover them. */
-  .anatomy__hint {
-    display: none;
+  .home-tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .spread__row,
+  .spread__axis {
+    grid-template-columns: 6.5rem minmax(0, 1fr) 2.4rem;
+  }
 
   .plot {
     grid-template-columns: minmax(0, 1fr);
@@ -1310,197 +798,10 @@
     flex-direction: column;
     gap: 0.4rem;
   }
-
 }
 
-/* ---------- Paging ---------- */
-
-@media (min-width: 997px) and (min-height: 700px) {
-  html.landing-paged {
-    scroll-snap-type: y mandatory;
-    scroll-padding-top: var(--ifm-navbar-height);
-  }
-
-  .page {
-    display: flex;
-    align-items: center;
-    min-height: calc(100dvh - var(--ifm-navbar-height));
-    padding-block: 2.5rem 4.25rem;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-  }
-
-
-  .page__inner {
-    width: 100%;
-  }
-
-  /* The last page and the footer share the screen; the footer's snap point
-     coincides with the page's when they fit, and reaches it when they don't. */
-  .page--end {
-    min-height: calc(100dvh - var(--ifm-navbar-height) - var(--landing-footer-h, 0px));
-    padding-block: 2.5rem;
-  }
-
-  html.landing-paged .footer {
-    scroll-snap-align: end;
-  }
-}
-
-/* Where the content reaches the screen's edge, it keeps clear of the map of
-   pages pinned there. */
-@media (min-width: 997px) and (max-width: 1240px) and (min-height: 700px) {
-  html.landing-paged .page .container {
-    padding-right: 3.5rem;
-  }
-}
-
-/* A link to a page (#cli, #results) lands it under the navbar. When the
-   landing pages, scroll-padding does that already; a margin on top of it
-   would stop every page a navbar's height too high. */
-html:not(.landing-paged) .page {
-  scroll-margin-top: var(--ifm-navbar-height);
-}
-
-/* A page's content arrives with the scroll that brings the page in. */
-.page__inner {
-  --in: 1;
-  opacity: calc(0.1 + 0.9 * var(--in));
-  transform: translateY(calc((1 - var(--in)) * 56px));
-}
-
-.intro .page__inner,
-.intro__inner {
-  opacity: 1;
-  transform: none;
-}
-
-/* The map on the right edge and the way to the next page. */
-.pager {
-  position: fixed;
-  top: 50%;
-  right: 1.25rem;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  transform: translateY(-50%);
-  opacity: 0.6;
-  transition: opacity 0.2s;
-}
-
-.pager:focus-within {
-  opacity: 1;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .pager:hover {
-    opacity: 1;
-  }
-}
-
-.pager__item {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  width: 24px;
-  height: 20px;
-  padding: 0;
-  background: none;
-  border: 0;
-  cursor: pointer;
-}
-
-.pager__item:focus-visible,
-.pager-cue:focus-visible {
-  outline: 2px solid var(--st-text);
-  outline-offset: 2px;
-  border-radius: var(--st-radius-md);
-}
-
-.pager__mark {
-  width: 6px;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--st-muted);
-  transition:
-    height 0.25s,
-    background 0.25s;
-}
-
-.pager__mark--active {
-  height: 18px;
-  background: var(--st-mark);
-}
-
-.pager__label {
-  position: absolute;
-  right: 20px;
-  padding: 0.1rem 0.5rem;
-  white-space: nowrap;
-  font-size: var(--st-font-size-sm);
-  color: var(--st-text);
-  background: var(--st-raised);
-  border: 1px solid var(--st-line);
-  border-radius: var(--st-radius-md);
-  pointer-events: none;
-  opacity: 0;
-  transform: translateX(4px);
-  transition:
-    opacity 0.15s,
-    transform 0.15s;
-}
-
-.pager__item:focus-visible .pager__label {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .pager__item:hover .pager__label {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.pager-cue {
-  position: fixed;
-  left: 50%;
-  bottom: 1rem;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font: inherit;
-  font-size: 0.875rem;
-  color: var(--st-muted);
-  background: none;
-  border: 0;
-  transform: translateX(-50%);
-  cursor: pointer;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .pager-cue:hover {
-    color: var(--st-text);
-  }
-}
-
-.pager-cue__icon {
-  width: 22px;
-  height: 22px;
-  animation: cue-nudge 1.6s ease-in-out infinite;
-}
-
-@keyframes cue-nudge {
-  50% {
-    transform: translateY(5px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pager-cue__icon {
-    animation: none;
+@media (max-width: 480px) {
+  .home-tools {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

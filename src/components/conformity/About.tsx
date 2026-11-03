@@ -2,11 +2,11 @@ import {useEffect, useRef} from 'react';
 import {DATA_BASE, day} from './data';
 import type {Compat} from './types';
 
-// "About this data" on /conformity: a button in the page's header that opens a side
-// panel, like an engine's, with the export's own legend (scoring, weights,
-// baselines, every caveat, every outcome, roles, layers) and the dataset's
-// provenance. Nothing here is written again by the site; it is the legend in
-// compat.json as published. `#about` opens it too.
+// "About this data" on the conformity map (Explorer.tsx): a button in the map's
+// bar that opens a side panel, like an engine's, with the export's own legend
+// (scoring, weights, baselines, every caveat, every outcome, roles, layers)
+// and the dataset's provenance. Nothing here is written again by the site; it
+// is the legend in compat.json as published. `?about` opens it too.
 
 /** The way in: a plain button, so it reads as something to press. */
 export function AboutButton({onOpen}: {onOpen: () => void}) {
