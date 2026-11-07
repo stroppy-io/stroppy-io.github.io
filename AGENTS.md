@@ -24,6 +24,20 @@ npm run serve
 the pinned version) and refresh `docs/changelog.md` from Stroppy main.
 Search and `llms.txt`/`llms-full.txt` are generated only by production builds.
 
+## Merge gate
+
+The merge queue runs these in a branch's worktree, after rebasing it onto `next` and
+before landing it; the first that fails parks the branch. It reads this file from `next`,
+so a branch cannot change its own gate. `npm ci` and the build need the network: `prebuild`
+downloads the UI kit pinned in `kit.json` and refreshes the changelog.
+
+```sh
+npm ci
+npm audit --omit=dev --audit-level=critical
+npm run typecheck
+npm run build
+```
+
 ## Deployment
 
 Pushes to `next` run `.github/workflows/deploy.yml` and deploy `build/` to
