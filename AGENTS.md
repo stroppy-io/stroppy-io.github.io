@@ -24,6 +24,21 @@ npm run serve
 the pinned version) and refresh `docs/changelog.md` from Stroppy main.
 Search and `llms.txt`/`llms-full.txt` are generated only by production builds.
 
+## Running npm
+
+Everything that runs npm or node runs in a disposable VM or container, never on
+the host. Two reasons: `npm ci` runs install scripts from dependencies in the
+lockfile (`@swc/core`, `core-js`, `fsevents` today), and the lifecycle hooks
+above reach the network and write into the tree. The sandbox needs the network
+for exactly that: the kit tarball and the upstream changelog are downloads.
+
+`npm run serve` is the exception in the other direction - it only serves an
+existing `build/`. Building in the sandbox and serving that directory on the host
+with a plain static file server, no node involved, is the cheap way to look at a
+change. This tree has been built in firecode, a Firecracker microVM runner over
+the project directory; any equivalent VM or container satisfies the rule, the
+isolation does, not the tool.
+
 ## Merge gate
 
 The merge queue runs these in a branch's worktree, after rebasing it onto `next` and
