@@ -39,9 +39,9 @@
   },
   "overrides": {
     "docusaurus-plugin-llms": {
-      "minimatch": "^9.0.9",
       "yaml": "^2.9.1"
     },
+    "minimatch": "^11.0.1",
     "proxy-addr": "^2.0.8",
     "qs": "^6.17.0",
     "serialize-javascript": "^7.1.4",
