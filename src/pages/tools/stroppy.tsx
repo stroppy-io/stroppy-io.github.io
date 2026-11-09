@@ -12,7 +12,6 @@ export default function StroppyPage() {
   return (
     <ToolPage
       tool="stroppy"
-      eyebrow="Load generator · open source"
       tagline="A database stress-testing CLI: one self-contained Go binary, no runtime to install."
       intro={
         <p>
@@ -25,7 +24,6 @@ export default function StroppyPage() {
         {label: 'Read the manual', href: '/docs/introduction'},
         {label: 'GitHub', href: REPOS.stroppy},
       ]}
-      facts={['One Go binary', 'TPC-B, TPC-C, TPC-H, TPC-DS', 'PostgreSQL, MySQL, YDB, Picodata', 'Apache-2.0']}
       sections={[
         {
           id: 'install',

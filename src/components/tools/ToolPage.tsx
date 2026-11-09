@@ -6,14 +6,14 @@ import {TOOLS, type ToolId} from './tools';
 // The page of one tool (/tools/<id>): what it is and for whom, its actions,
 // its sections (SectionPage), then the other tools.
 
-type Props = Omit<ComponentProps<typeof SectionPage>, 'accent' | 'title' | 'children'> & {tool: ToolId};
+type Props = Omit<ComponentProps<typeof SectionPage>, 'accent' | 'title' | 'eyebrow' | 'facts' | 'children'> & {tool: ToolId};
 
 export default function ToolPage({tool, ...page}: Props) {
   const me = TOOLS.find((t) => t.id === tool);
   if (!me) throw new Error(`ToolPage: no tool "${tool}" in src/components/tools/tools.ts`);
 
   return (
-    <SectionPage accent={tool} title={me.name} {...page}>
+    <SectionPage accent={tool} title={me.name} eyebrow={me.kind} facts={me.facts} {...page}>
       <section className="tl-family" aria-labelledby="tl-family">
         <h2 id="tl-family">The other tools</h2>
         <div className="tl-family__grid">

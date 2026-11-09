@@ -6,12 +6,13 @@
 
 :root {
   --ifm-navbar-height: 4rem;
-  --ifm-navbar-padding-horizontal: 1.5rem;
+  --ifm-navbar-padding-horizontal: var(--ifm-spacing-horizontal);
 }
 
-/* The bar's content lines up with the page's, as wide as the widest container. */
+/* The bar's content lines up with the page's: the bar's padding is a
+   container's, and its content is as wide as the widest container's. */
 .navbar__inner {
-  max-width: var(--ifm-container-width-xl);
+  max-width: calc(var(--ifm-container-width-xl) - 2 * var(--ifm-spacing-horizontal));
   margin: 0 auto;
 }
 

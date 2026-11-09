@@ -12,7 +12,6 @@ export default function CloudPage() {
   return (
     <ToolPage
       tool="cloud"
-      eyebrow="Database benchmarking as a service"
       tagline="Pick a database and a workload. Stroppy Cloud brings up the machines, tunes the engine, runs the load and hands you a report."
       intro={
         <p>
@@ -25,7 +24,6 @@ export default function CloudPage() {
         {label: 'How it works', href: '/how'},
         {label: 'See the ratings', href: '/ratings'},
       ]}
-      facts={['Your cloud account: Yandex Cloud or AWS', 'Stroppy and Graphene CI underneath', 'Public reports by link']}
       sections={[
         {
           id: 'databases',

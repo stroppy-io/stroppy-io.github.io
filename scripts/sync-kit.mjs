@@ -3,9 +3,8 @@
 // and unpacks it into src/kit/ (tokens, fonts, base.css, logo, chart). Also
 // writes static/kit/: the mark as light and dark SVG files with the kit
 // variables resolved, for places that load it as an image (navbar, favicon).
-// src/kit/mark.json carries the mark's paths for the landing's animated logo,
-// and static/kit/favicon.svg is Stroppy Cloud's favicon at the same tag, so
-// both sites show the same icon. Both directories are generated and gitignored.
+// static/kit/favicon.svg is Stroppy Cloud's favicon at the same tag, so both
+// sites show the same icon. Both directories are generated and gitignored.
 //
 //   node scripts/sync-kit.mjs                  skip when src/kit has the pinned version
 //   node scripts/sync-kit.mjs --force          fetch again regardless
@@ -33,7 +32,7 @@ const installed = () => {
   }
 };
 
-const generated = [join(STATIC_DIR, 'favicon.svg'), join(KIT_DIR, 'mark.json')];
+const generated = [join(STATIC_DIR, 'favicon.svg')];
 if (!local && !force && installed() === pin.version && generated.every((f) => existsSync(f))) {
   console.log(`sync-kit: src/kit is ${pin.version}, up to date`);
   process.exit(0);
@@ -81,14 +80,6 @@ try {
 function writeMarks() {
   const tokens = JSON.parse(readFileSync(join(KIT_DIR, 'tokens.json'), 'utf8'));
   const svg = readFileSync(join(KIT_DIR, 'logo/mark.svg'), 'utf8').replace(/<!--[\s\S]*?-->\s*/g, '');
-  // The first group is the orange (five rays, then the band), the second the cylinder.
-  const groups = [...svg.matchAll(/<g[^>]*>([\s\S]*?)<\/g>/g)].map((g) => [...g[1].matchAll(/ d="([^"]+)"/g)].map((m) => m[1]));
-  if (groups.length !== 2 || groups[0].length !== 6 || groups[1].length !== 3) {
-    throw new Error('sync-kit: logo/mark.svg is not five rays, a band and three body parts');
-  }
-  const viewBox = /viewBox="([^"]+)"/.exec(svg)[1];
-  const mark = {viewBox, rays: groups[0].slice(0, 5), band: groups[0][5], body: groups[1]};
-  writeFileSync(join(KIT_DIR, 'mark.json'), `${JSON.stringify(mark, null, 2)}\n`);
   rmSync(STATIC_DIR, {recursive: true, force: true});
   mkdirSync(STATIC_DIR, {recursive: true});
   for (const theme of ['light', 'dark']) {

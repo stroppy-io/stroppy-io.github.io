@@ -81,7 +81,7 @@ export default function Footer(): ReactNode {
             <ThemedImage sources={{light, dark}} alt="" />
             <span>Stroppy</span>
           </Link>
-          <p>Load-test your database without building or tuning the bench.</p>
+          <p>Pick a database on evidence: the same open tests for every engine, every result public.</p>
           <a className="site-footer__cta" href={`${CLOUD}/login`}>
             Sign in
           </a>

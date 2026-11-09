@@ -132,9 +132,13 @@ src/theme/Footer/         the site footer: a site map built from the top menu, c
 src/css/footer.css        the footer's styles
 src/client/theme-cookie.ts  the theme shared with Stroppy Cloud through the stroppy-theme cookie
 src/client/theme-color.ts   <meta name="theme-color"> following the shown theme (the navbar's colour)
-src/pages/index.tsx       landing page: the claim (pick a database on evidence) over the mark, then
-                          the top of the TPC-C rating, the PostgreSQL compatibility spread, and the four
-                          open tools
+src/pages/index.tsx       landing page in one 1120px column (html.home-page narrows the bar and the
+                          footer too), carried by text rather than charts: the claim (pick a database
+                          on evidence) beside the whole TPC-C rating (transactions or stored
+                          procedures), then what the project is with its numbers, the problems of
+                          choosing a database each answered with one measured number, the four open
+                          tools. Numbers are counted from the plugins' data or quoted from a
+                          published post
 src/pages/how.tsx         how Stroppy Cloud works, a screen at a time (src/css/how.css); a link to a
                           screen opens the product diagram on its story (#suites, #share)
 src/components/how/       the /how diagrams: Diagram.tsx and their data (product model, architecture)
@@ -171,13 +175,13 @@ src/pages/vendors.tsx     for database vendors, a SectionPage: add your database
 src/components/vendors/   vendors.ts: the two issue forms opened in stroppy-io/stroppy (add a database,
                           report an error) and CORRECTIONS, the published list of results we changed;
                           add a correction there when a reported error is confirmed
-src/components/landing/   published-data pieces: the scroll-driven mark, the leaderboard's top (places
-                          in gold, silver and bronze), the compatibility spread (CompatSpread), the
-                          client-speed plot from blog data (Charts, evidence.tsx), the rating client
+src/components/landing/   published-data pieces: the leaderboard (places in gold, silver and bronze; both
+                          TPC-C ratings through useRatings, shared with /ratings), the client-speed
+                          plot from blog data (Charts, evidence.tsx), the rating client
 plugins/cloud-rating.ts   copies Stroppy Cloud's public rating (TPC-C, and TPC-C with stored procedures)
                           on one 32 vCPU · 128 GB node into the build for the hero and /ratings
-plugins/conformity.ts     every engine's overall score per protocol, for the landing's spread
-src/css/landing.css       the landing and the published-data pieces (mark, board, spread, plot)
+plugins/conformity.ts     every engine's overall score per protocol, for the landing's numbers
+src/css/landing.css       the landing and the published-data pieces (board, plot)
 plans/                    agreed plans of work, not published
 src/prism-stroppy.ts      code highlighting on the kit's variables, both modes
 kit.json                  pinned UI kit release: version and archive sha256
@@ -215,8 +219,6 @@ sha256, and writes two generated, gitignored directories:
 - `src/kit/` — the bundle: `tokens.css` (`--st-*`, dark unless
   `data-theme="light"`), `fonts.css` with Inter and Roboto Mono, `base.css`
   (opt-in, everything scoped to `.st-doc`), `logo/`, `chart.js`, README.
-  `mark.json` is generated next to them: the mark's paths for the landing's
-  animated logo.
 - `static/kit/` — `mark-light.svg` and `mark-dark.svg`, the mark with the kit
   variables resolved, for places that load it as an image (navbar, social
   card); `favicon.svg`, Stroppy Cloud's `web/public/org-logo.svg` at the same

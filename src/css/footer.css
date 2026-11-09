@@ -18,7 +18,7 @@
 
 .site-footer__inner {
   display: grid;
-  grid-template-columns: minmax(16rem, 1fr) minmax(0, 2.4fr);
+  grid-template-columns: minmax(14rem, 1fr) minmax(0, 3fr);
   gap: 3rem 4rem;
   padding-top: 4rem;
   padding-bottom: 3.5rem;
@@ -111,10 +111,11 @@
 
 /* ---------- The site map ---------- */
 
+/* A column per menu section and Community, in one row. */
 .site-footer__map {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 2rem 1.5rem;
 }
 
 .site-footer__title {

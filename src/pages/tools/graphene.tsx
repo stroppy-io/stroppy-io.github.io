@@ -9,7 +9,6 @@ export default function GraphenePage() {
   return (
     <ToolPage
       tool="graphene"
-      eyebrow="Control plane for CI and its infrastructure"
       tagline="Pipelines are typed Go programs; the machines, containers and files they need are resources a run owns."
       intro={
         <p>
@@ -21,7 +20,6 @@ export default function GraphenePage() {
         {label: 'Read the docs', href: DOCS.graphene},
         {label: 'GitHub', href: REPOS.graphene},
       ]}
-      facts={['Pipelines in Go', 'Docker, Kubernetes, Crossplane, Git, files', 'CLI, Studio and an API']}
       sections={[
         {
           id: 'model',

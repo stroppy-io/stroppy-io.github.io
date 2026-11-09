@@ -1,25 +1,17 @@
-import {useEffect, useState, type CSSProperties, type ReactNode} from 'react';
-import {usePluginData} from '@docusaurus/useGlobalData';
+import {useState, type CSSProperties, type ReactNode} from 'react';
 import Link from '@docusaurus/Link';
-import {CLOUD, engine, fetchRating, machine, SCENARIO, shareUrl, topology, workload, type Rating} from './rating';
-import type {CloudRating} from '@site/plugins/cloud-rating';
+import {CLOUD, engine, machine, shareUrl, topology, workload} from './rating';
+import useRatings from './useRatings';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
 
-/** The build's copy of the rating, refreshed from the cloud once the page is up. */
-function useRating(): Rating | null {
-  const {rating} = usePluginData('cloud-rating') as CloudRating;
-  const [live, setLive] = useState(rating);
-  useEffect(() => {
-    const ac = new AbortController();
-    fetchRating(SCENARIO, ac.signal)
-      .then(setLive)
-      .catch(() => undefined);
-    return () => ac.abort();
-  }, []);
-  return live;
-}
+/** The two TPC-C ratings: a round trip per statement, and stored procedures. */
+const SCENARIOS = [
+  {id: 'rating', label: 'Transactions'},
+  {id: 'procs', label: 'Stored procedures'},
+] as const;
+type ScenarioId = (typeof SCENARIOS)[number]['id'];
 
 const TROPHY = (
   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -47,17 +39,27 @@ function Rank({rank}: {rank: number}): ReactNode {
 }
 
 /**
- * The top of the public rating: one row per run, its bar against the best
- * one, the first three in gold, silver and bronze. A row opens that run's
- * report in Stroppy Cloud.
+ * The public rating, whole: one row per run, its bar against the best one,
+ * the first three in gold, silver and bronze. A row opens that run's report
+ * in Stroppy Cloud.
  */
-export function TopBoard({limit = 5, more}: {limit?: number; more: {href: string; label: string}}) {
-  const rating = useRating();
-  const rows = rating?.data.slice(0, limit) ?? [];
-  if (!rating || rows.length === 0) {
+export function TopBoard({more}: {more: {href: string; label: string}}) {
+  const ratings = useRatings();
+  const [scenario, setScenario] = useState<ScenarioId>('rating');
+  const rows = ratings[scenario]?.data ?? [];
+  const tabs = (
+    <div className="board__tabs" role="group" aria-label="TPC-C variant">
+      {SCENARIOS.map((s) => (
+        <button key={s.id} type="button" aria-pressed={s.id === scenario} onClick={() => setScenario(s.id)}>
+          {s.label}
+        </button>
+      ))}
+    </div>
+  );
+  if (rows.length === 0) {
     return (
       <div className="board board--empty">
-        <span className="board__label">Leaderboard</span>
+        {tabs}
         <p>
           Published runs are on <a href={`${CLOUD}/leaderboard`}>the Stroppy Cloud leaderboard</a>.
         </p>
@@ -69,12 +71,12 @@ export function TopBoard({limit = 5, more}: {limit?: number; more: {href: string
   return (
     <div className="board">
       <div className="board__head">
-        <span className="board__label">Leaderboard</span>
         <span className="board__workload">
           {workload(rows[0])} · {machine(rows[0])}
         </span>
+        {tabs}
       </div>
-      <ol className="board__rows">
+      <ol className="board__rows" key={scenario}>
         {rows.map((r, i) => (
           <li key={`${r.rank}-${r.share_token ?? r.run_at}`} className={r.rank <= 3 ? `board__place--${r.rank}` : undefined}>
             <a

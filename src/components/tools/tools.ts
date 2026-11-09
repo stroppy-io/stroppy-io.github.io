@@ -3,13 +3,42 @@
 
 export type ToolId = 'stroppy' | 'conformity' | 'graphene' | 'cloud';
 
-export type Tool = {id: ToolId; name: string; what: string; href: string};
+/** `kind` is what sort of tool it is; `facts` are its short facts. Its page and the landing show both. */
+export type Tool = {id: ToolId; name: string; kind: string; what: string; facts: string[]; href: string};
 
 export const TOOLS: Tool[] = [
-  {id: 'stroppy', name: 'Stroppy', what: 'The open-source load generator: one binary, TPC workloads', href: '/tools/stroppy'},
-  {id: 'conformity', name: 'Stroppy Conformity', what: 'Does a database really speak the protocol it claims', href: '/tools/conformity'},
-  {id: 'graphene', name: 'Graphene CI', what: 'The control plane that brings up the stand and runs the run', href: '/tools/graphene'},
-  {id: 'cloud', name: 'Stroppy Cloud', what: 'Pick a database and a workload, get a report', href: '/tools/cloud'},
+  {
+    id: 'stroppy',
+    name: 'Stroppy',
+    kind: 'Load generator · open source',
+    facts: ['One Go binary', 'TPC-B, TPC-C, TPC-H, TPC-DS', 'PostgreSQL, MySQL, YDB, Picodata', 'Apache-2.0'],
+    what: 'The open-source load generator: one binary, TPC workloads',
+    href: '/tools/stroppy',
+  },
+  {
+    id: 'conformity',
+    name: 'Stroppy Conformity',
+    kind: 'Protocol conformity · open source',
+    facts: ['Five protocols', 'Expected values from the real engine', 'No account needed', 'Apache-2.0'],
+    what: 'Does a database really speak the protocol it claims',
+    href: '/tools/conformity',
+  },
+  {
+    id: 'graphene',
+    name: 'Graphene CI',
+    kind: 'Control plane for CI',
+    facts: ['Pipelines in Go', 'Docker, Kubernetes, Crossplane, Git, files', 'CLI, Studio and an API'],
+    what: 'The control plane that brings up the stand and runs the run',
+    href: '/tools/graphene',
+  },
+  {
+    id: 'cloud',
+    name: 'Stroppy Cloud',
+    kind: 'Benchmarking as a service',
+    facts: ['Your cloud account: Yandex Cloud or AWS', 'Stroppy and Graphene CI underneath', 'Public reports by link'],
+    what: 'Pick a database and a workload, get a report',
+    href: '/tools/cloud',
+  },
 ];
 
 /** Where each manual lives. */

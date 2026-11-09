@@ -1,12 +1,10 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import Layout from '@theme/Layout';
 import {useHistory, useLocation} from '@docusaurus/router';
-import {usePluginData} from '@docusaurus/useGlobalData';
 import compatJson from '@site/static/data/conformity/compat.json';
 import type {Compat} from '@site/src/components/conformity/types';
 import {day, protocolShort, protocolsOf} from '@site/src/components/conformity/data';
-import {fetchRating, SCENARIO, SCENARIO_PROCS} from '@site/src/components/landing/rating';
-import type {CloudRating} from '@site/plugins/cloud-rating';
+import useRatings from '@site/src/components/landing/useRatings';
 import Picks from '@site/src/components/ratings/Picks';
 import Filters from '@site/src/components/ratings/Filters';
 import RatingsTable from '@site/src/components/ratings/RatingsTable';
@@ -63,20 +61,6 @@ function viewFacts(st: State): string[] {
     st.bench && 'with a TPC-C run',
     sortLabel && `by ${sortLabel}`,
   ].filter((f): f is string => typeof f === 'string');
-}
-
-/** The build's copy of both TPC-C ratings, refreshed from the cloud once the page is up. */
-function useRatings(): CloudRating {
-  const built = usePluginData('cloud-rating') as CloudRating;
-  const [live, setLive] = useState(built);
-  useEffect(() => {
-    const ac = new AbortController();
-    Promise.all([fetchRating(SCENARIO, ac.signal), fetchRating(SCENARIO_PROCS, ac.signal)])
-      .then(([rating, procs]) => setLive({rating, procs}))
-      .catch(() => undefined);
-    return () => ac.abort();
-  }, []);
-  return live;
 }
 
 export default function RatingsPage() {

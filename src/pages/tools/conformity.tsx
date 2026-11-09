@@ -11,7 +11,6 @@ export default function ConformityToolPage() {
   return (
     <ToolPage
       tool="conformity"
-      eyebrow="Protocol conformity · open source"
       tagline="Does this database really speak PostgreSQL? MySQL? MongoDB? Elasticsearch? Redis? Measured, not claimed."
       intro={
         <p>
@@ -25,7 +24,6 @@ export default function ConformityToolPage() {
         {label: 'GitHub', href: REPOS.conformity},
         {label: 'Methodology', href: DOCS.conformityDoc('methodology.md')},
       ]}
-      facts={['Five protocols', 'Expected values from the real engine', 'No account needed', 'Apache-2.0']}
       sections={[
         {
           id: 'results',
