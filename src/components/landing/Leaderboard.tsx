@@ -66,6 +66,7 @@ export function TopBoard({more}: {more: {href: string; label: string}}) {
       </div>
     );
   }
+  const longest = Math.max(...SCENARIOS.map((s) => ratings[s.id]?.data.length ?? 0));
   const best = rows[0].value;
   const latest = rows.reduce((a, r) => (r.run_at > a ? r.run_at : a), rows[0].run_at);
   return (
@@ -100,6 +101,20 @@ export function TopBoard({more}: {more: {href: string; label: string}}) {
               </span>
               <span className="board__bar" aria-hidden="true" />
             </a>
+          </li>
+        ))}
+        {/* Blank rows up to the longer tab's count, so switching tabs never moves the page below. */}
+        {Array.from({length: longest - rows.length}, (_, i) => (
+          <li key={`blank-${i}`} className="board__blank" aria-hidden="true">
+            <span className="board__row">
+              <span className="board__rank" />
+              <span className="board__who">
+                <span className="board__db">&nbsp;</span>
+                <span className="board__setup">&nbsp;</span>
+              </span>
+              <span className="board__value">&nbsp;</span>
+              <span className="board__bar" />
+            </span>
           </li>
         ))}
       </ol>

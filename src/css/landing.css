@@ -24,10 +24,12 @@
   padding: 4.5rem 0 4rem;
 }
 
+/* Top-aligned: the rating's height changes with its tab (a scenario has as
+   many rows as it has runs), and the claim must not move with it. */
 .home-hero__inner {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: center;
+  align-items: start;
   gap: 3rem 4rem;
 }
 
@@ -527,6 +529,11 @@
   from {
     transform: scaleX(0);
   }
+}
+
+/* A blank row keeps a row's height and shows nothing. */
+.board__blank {
+  visibility: hidden;
 }
 
 .board__foot {
