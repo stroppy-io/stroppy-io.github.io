@@ -7,6 +7,7 @@ import {usePluginData} from '@docusaurus/useGlobalData';
 import type {ConformitySummary} from '@site/plugins/conformity';
 import {TopBoard} from '@site/src/components/landing/Leaderboard';
 import useRatings from '@site/src/components/landing/useRatings';
+import CompatSpread, {COMPATIBLE} from '@site/src/components/landing/CompatSpread';
 import {mapUrl, protocolShort} from '@site/src/components/conformity/data';
 import {TOOLS} from '@site/src/components/tools/tools';
 import '../css/landing.css';
@@ -14,12 +15,10 @@ import '../css/landing.css';
 // The landing says one thing: Stroppy is an open project that helps you pick
 // a database by measurement. The claim beside the live TPC-C rating, then
 // prose: what the project is, with its numbers; the problems of choosing a
-// database and how each is answered, with one measured number each; the open
-// tools behind the numbers. The numbers come from the data
+// database and how each is answered, with one measured number each; how
+// compatible the PostgreSQL-compatible engines are; the tools behind the
+// numbers. The numbers come from the data
 // (plugins/conformity.ts, plugins/cloud-rating.ts) or a published post.
-
-/** The score a reader would call compatible with the original. */
-const COMPATIBLE = 80;
 
 type Numbers = {engines: number; protocols: string[]; runs: number; pg: number; pgUnder: number};
 
@@ -114,8 +113,8 @@ function Problems({n}: {n: Numbers}) {
       why: 'Engines claim the PostgreSQL or MySQL protocol; clients find the gaps in production, one query at a time.',
       answer: (
         <>
-          <b>Stroppy Conformity</b> runs the same checks on the original and on the engine, and keeps what each answered. {n.pgUnder} of{' '}
-          {n.pg} PostgreSQL-compatible engines score under {COMPATIBLE} of 100.
+          <b>Stroppy Conformity</b> runs the same checks on the original and on the engine, and keeps what each answered: the request, the
+          original’s reply, the engine’s reply.
         </>
       ),
       link: {label: 'Open the conformity map', href: mapUrl({protocol: 'pgwire'})},
@@ -181,6 +180,34 @@ function Problems({n}: {n: Numbers}) {
   );
 }
 
+function Compatibility({n}: {n: Numbers}) {
+  return (
+    <section className="home-block">
+      <div className="container home-split">
+        <div>
+          <Heading as="h2" className="home-h2">
+            “PostgreSQL‑compatible” rarely is
+          </Heading>
+          <p className="home-text">
+            Each engine against PostgreSQL itself, on the same checks. A score is how often the engine answers like the original; the line
+            marks {COMPATIBLE}, where we call an engine compatible.
+          </p>
+          <p className="home-big">
+            {n.pgUnder} of {n.pg}
+            <span>PostgreSQL-compatible engines score under {COMPATIBLE} of 100</span>
+          </p>
+          <div className="home-actions">
+            <Link className="button button--primary button--lg" to={mapUrl({protocol: 'pgwire'})}>
+              Open the conformity map
+            </Link>
+          </div>
+        </div>
+        <CompatSpread protocol="pgwire" />
+      </div>
+    </section>
+  );
+}
+
 function Tools() {
   return (
     <section className="home-block">
@@ -220,6 +247,7 @@ export default function Home(): ReactNode {
           <Hero n={n} />
           <About n={n} />
           <Problems n={n} />
+          <Compatibility n={n} />
           <Tools />
         </main>
       </Layout>

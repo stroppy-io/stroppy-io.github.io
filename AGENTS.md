@@ -136,8 +136,8 @@ src/pages/index.tsx       landing page in one 1120px column (html.home-page narr
                           footer too), carried by text rather than charts: the claim (pick a database
                           on evidence) beside the whole TPC-C rating (transactions or stored
                           procedures), then what the project is with its numbers, the problems of
-                          choosing a database each answered with one measured number, the four open
-                          tools. Numbers are counted from the plugins' data or quoted from a
+                          choosing a database each answered with one measured number, how compatible
+                          the PostgreSQL-compatible engines are (CompatSpread), the four tools. Numbers are counted from the plugins' data or quoted from a
                           published post
 src/pages/how.tsx         how Stroppy Cloud works, a screen at a time (src/css/how.css); a link to a
                           screen opens the product diagram on its story (#suites, #share)
@@ -176,12 +176,13 @@ src/components/vendors/   vendors.ts: the two issue forms opened in stroppy-io/s
                           report an error) and CORRECTIONS, the published list of results we changed;
                           add a correction there when a reported error is confirmed
 src/components/landing/   published-data pieces: the leaderboard (places in gold, silver and bronze; both
-                          TPC-C ratings through useRatings, shared with /ratings), the client-speed
-                          plot from blog data (Charts, evidence.tsx), the rating client
+                          TPC-C ratings through useRatings, shared with /ratings), the compatibility
+                          spread (CompatSpread: a protocol's engines, a bar each, the line at 80), the
+                          client-speed plot from blog data (Charts, evidence.tsx), the rating client
 plugins/cloud-rating.ts   copies Stroppy Cloud's public rating (TPC-C, and TPC-C with stored procedures)
                           on one 32 vCPU · 128 GB node into the build for the hero and /ratings
-plugins/conformity.ts     every engine's overall score per protocol, for the landing's numbers
-src/css/landing.css       the landing and the published-data pieces (board, plot)
+plugins/conformity.ts     every engine's overall score per protocol, for the landing's numbers and spread
+src/css/landing.css       the landing and the published-data pieces (board, spread, plot)
 plans/                    agreed plans of work, not published
 src/prism-stroppy.ts      code highlighting on the kit's variables, both modes
 kit.json                  pinned UI kit release: version and archive sha256
