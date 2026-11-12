@@ -168,7 +168,7 @@ export const PARTS: Part[] = [
   {id: 'types', category: 'compat', label: 'Types', how: '% of data-type checks that behave like the original, ÷ 10'},
   {id: 'bulk', category: 'compat', label: 'Bulk load', how: '% of bulk-load checks that behave like the original, ÷ 10'},
   {id: 'stab', category: 'compat', label: 'Stability', how: '10, minus 2 per crash, hang or broken message'},
-  {id: 'tx', category: 'speed', label: 'TPC-C', how: 'TPC-C tps as a share of the baseline’s, × 10; as fast or faster is 10'},
+  {id: 'tx', category: 'speed', label: 'TPC-C', how: 'TPC-C tpmC as a share of the baseline’s, × 10; as fast or faster is 10'},
   {id: 'procs', category: 'speed', label: 'Procedures', how: 'TPC-C with stored procedures, as a share of the baseline’s, × 10'},
 ];
 
@@ -189,7 +189,7 @@ export const CATEGORIES: Category[] = [
 export const r1 = (x: number) => Math.round(x * 10) / 10;
 const mean = (xs: number[]) => r1(xs.reduce((a, b) => a + b, 0) / xs.length);
 
-/** A run's tps as a share of the baseline's run of the same scenario. */
+/** A run's value as a share of the baseline's run of the same scenario. */
 export function share(e: Engine, base: Engine | undefined, key: 'tx' | 'procs'): number | undefined {
   const mine = e[key]?.value,
     theirs = base?.[key]?.value;
@@ -250,7 +250,7 @@ export const PICKS: Pick[] = [
     rule: `the highest score among alternatives that score ${PICK_MIN.toFixed(1)} or more, with compatibility measured and nothing broken`,
   },
   {id: 'runner', title: 'Runner-up', rule: 'second by the same rule'},
-  {id: 'fast', title: 'Fastest', rule: 'the most TPC-C tps among alternatives'},
+  {id: 'fast', title: 'Fastest', rule: 'the highest TPC-C tpmC among alternatives'},
   {id: 'warn', title: 'Watch out', rule: 'the most crashes, hangs and broken messages'},
 ];
 

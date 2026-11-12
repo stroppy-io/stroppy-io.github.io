@@ -1,6 +1,6 @@
 import {useState, type CSSProperties, type ReactNode} from 'react';
 import Link from '@docusaurus/Link';
-import {CLOUD, engine, machine, shareUrl, topology, workload} from './rating';
+import {CLOUD, engine, lastRun, machine, shareUrl, topology, workload} from './rating';
 import useRatings from './useRatings';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
@@ -68,7 +68,7 @@ export function TopBoard({more}: {more: {href: string; label: string}}) {
   }
   const longest = Math.max(...SCENARIOS.map((s) => ratings[s.id]?.data.length ?? 0));
   const best = rows[0].value;
-  const latest = rows.reduce((a, r) => (r.run_at > a ? r.run_at : a), rows[0].run_at);
+  const latest = lastRun(rows);
   return (
     <div className="board">
       <div className="board__head">
@@ -79,7 +79,9 @@ export function TopBoard({more}: {more: {href: string; label: string}}) {
       </div>
       <ol className="board__rows" key={scenario}>
         {rows.map((r, i) => (
-          <li key={`${r.rank}-${r.share_token ?? r.run_at}`} className={r.rank <= 3 ? `board__place--${r.rank}` : undefined}>
+          <li
+            key={`${r.db_kind}-${r.db_version}-${r.hardware.key}-${r.share_token ?? r.run_at}`}
+            className={r.rank <= 3 ? `board__place--${r.rank}` : undefined}>
             <a
               className="board__row"
               href={shareUrl(r)}

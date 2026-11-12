@@ -31,7 +31,7 @@ function useNumbers(): Numbers {
   return {
     engines: new Set(protocols.flatMap((p) => p.scores.map((s) => s.target))).size,
     protocols: protocols.map((p) => protocolShort(p.protocol)),
-    runs: (rating?.data.length ?? 0) + (procs?.data.length ?? 0),
+    runs: [...(rating?.data ?? []), ...(procs?.data ?? [])].reduce((sum, r) => sum + r.runs, 0),
     pg: pg.length,
     pgUnder: pg.filter((s) => s.score < COMPATIBLE).length,
   };
@@ -91,7 +91,7 @@ function About({n}: {n: Numbers}) {
           </div>
           <div>
             <dt>{n.runs}</dt>
-            <dd>TPC-C runs in the public rating, each with its report</dd>
+            <dd>TPC-C runs behind the public rating in the last 30 days</dd>
           </div>
           <div>
             <dt>{TOOLS.length}</dt>

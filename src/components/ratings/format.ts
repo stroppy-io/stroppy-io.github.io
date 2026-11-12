@@ -1,10 +1,11 @@
 import {share, type Engine, type PartId, type View} from './score';
 
 export const pct = (v: number) => `${Number.isInteger(v) ? v : v.toFixed(1)}%`;
-export const tps = (v: number) => Math.round(v).toLocaleString('en-US');
+/** A run's value in its own unit: "175,084 tpmC". */
+export const speed = (run: {value: number; unit: string}) => `${Math.round(run.value).toLocaleString('en-US')} ${run.unit}`;
 const ofBase = (s: number | undefined) => (s === undefined ? '' : ` · ${Math.round(s * 100)}%`);
 
-/** The number a reader knows for a part: "97.4%", "3 breaks", "4,850 tps · 89%". */
+/** The number a reader knows for a part: "97.4%", "3 breaks", "175,084 tpmC · 89%". */
 export function rawPart(id: PartId, e: Engine, base: Engine | undefined): string {
   switch (id) {
     case 'frames':
@@ -18,7 +19,7 @@ export function rawPart(id: PartId, e: Engine, base: Engine | undefined): string
     case 'tx':
     case 'procs': {
       const run = e[id];
-      return run ? `${tps(run.value)} tps${ofBase(share(e, base, id))}` : '';
+      return run ? `${speed(run)}${ofBase(share(e, base, id))}` : '';
     }
   }
 }

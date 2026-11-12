@@ -1,5 +1,5 @@
 import ScoreChip from './ScoreChip';
-import {pct, tps} from './format';
+import {pct, speed} from './format';
 import {AVERAGES, PICKS, score, share, type Engine, type PickId} from './score';
 
 type Props = {
@@ -18,7 +18,7 @@ const EMPTY: Record<PickId, string> = {
 function why(id: PickId, e: Engine, base: Engine | undefined): string {
   if (id === 'fast' && e.tx) {
     const s = share(e, base, 'tx');
-    return `${tps(e.tx.value)} tps${s === undefined ? '' : ` · ${Math.round(s * 100)}% of the baseline`}`;
+    return `${speed(e.tx)}${s === undefined ? '' : ` · ${Math.round(s * 100)}% of the baseline`}`;
   }
   if (id === 'warn') return `${e.breaks} crashes, hangs or broken messages`;
   return `${typeof e.conf?.overall === 'number' ? pct(e.conf.overall) : '—'} like the original · nothing broke`;
