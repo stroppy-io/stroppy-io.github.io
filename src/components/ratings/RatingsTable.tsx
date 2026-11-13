@@ -1,4 +1,5 @@
 import type {KeyboardEvent} from 'react';
+import Select from './Select';
 import ScoreChip from './ScoreChip';
 import {rawCell, rawPart} from './format';
 import {CATEGORIES, PICKS, category, score, type CategoryId, type Engine, type PickId, type View} from './score';
@@ -100,7 +101,7 @@ export default function RatingsTable(props: Props) {
                   <span className={`rt-dot rt-dot--${c.id}`} /> {c.label}
                   {arrow(c.id)}
                 </button>
-                <select
+                <Select
                   aria-label={`${c.label}: what to show`}
                   value={views[c.id]}
                   onChange={(ev) => {
@@ -113,7 +114,7 @@ export default function RatingsTable(props: Props) {
                       {p.label}
                     </option>
                   ))}
-                </select>
+                </Select>
               </th>
             ))}
           </tr>

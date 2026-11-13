@@ -20,7 +20,7 @@ import '../css/landing.css';
 // number each. The numbers come from the data
 // (plugins/conformity.ts, plugins/cloud-rating.ts) or a published post.
 
-type Numbers = {engines: number; protocols: string[]; runs: number; pg: number; pgUnder: number};
+type Numbers = {engines: number; protocols: string[]; workloads: number; runs: number; pg: number; pgUnder: number};
 
 /** The project's numbers, counted from the data the site is built with. */
 function useNumbers(): Numbers {
@@ -31,6 +31,7 @@ function useNumbers(): Numbers {
   return {
     engines: new Set(protocols.flatMap((p) => p.scores.map((s) => s.target))).size,
     protocols: protocols.map((p) => protocolShort(p.protocol)),
+    workloads: Object.values(ratings).filter((r) => (r?.data.length ?? 0) + (r?.clusters.length ?? 0) > 0).length,
     runs: Object.values(ratings).reduce(
       (sum, r) => sum + [...(r?.data ?? []), ...(r?.clusters ?? [])].reduce((n, row) => n + row.runs, 0),
       0,
@@ -54,7 +55,7 @@ function Hero({n}: {n: Numbers}) {
           <ul className="home-facts">
             <li>{n.engines} engines checked</li>
             <li>{n.protocols.length} protocols</li>
-            <li>TPC-C on 32 vCPU · 128 GB</li>
+            <li>{n.workloads} workloads</li>
             <li>Open source</li>
           </ul>
           <div className="home-actions">

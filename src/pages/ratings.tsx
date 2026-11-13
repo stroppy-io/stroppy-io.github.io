@@ -125,9 +125,11 @@ export default function RatingsPage() {
       title="Database ratings"
       description="Databases rated against the original they claim to replace: compatibility, TPC-C speed and analytics, measured the same way.">
       <main className="rt">
-        <div className="rt-top">
-          <h1>{viewTitle(st, name)}</h1>
-          <div className="rt-seg" role="tablist" aria-label="Protocol">
+        <h1 className="rt-title">{viewTitle(st, name)}</h1>
+        {/* The page's first choice, on its own line: every table, pick and score below depends on it. */}
+        <div className="rt-proto">
+          <span id="rt-proto">Your clients speak</span>
+          <div className="rt-seg" role="tablist" aria-labelledby="rt-proto">
             {PROTOCOLS.map((p) => (
               <button
                 key={p}
@@ -185,16 +187,14 @@ export default function RatingsPage() {
           compared with, so it scores 10 by definition. {CATEGORIES.map((c) => `${c.label}: ${c.how}.`).join(' ')} Hover a cell for its
           parts; open a row for all of them.
         </p>
-        {st.proto === 'pgwire' && (
-          <section className="rt-mpp" aria-labelledby="rt-mpp">
-            <h2 id="rt-mpp">MPP clusters</h2>
-            <p>
-              Greenplum-family engines on a coordinator and four segment hosts. A cluster is ranked only against clusters, never against the
-              single machine above.
-            </p>
-            <TopBoard stand="clusters" more={{href: `${CLOUD}/leaderboard`, label: 'Stroppy Cloud leaderboard'}} />
-          </section>
-        )}
+        <section className="rt-mpp" aria-labelledby="rt-mpp">
+          <h2 id="rt-mpp">Clusters</h2>
+          <p>
+            Engines on several machines: nodes or replicas behind a proxy, MPP segment hosts. A cluster is ranked only against the same
+            cluster, never against the single machine above.
+          </p>
+          <TopBoard stands={['clusters']} more={{href: `${CLOUD}/leaderboard`, label: 'Stroppy Cloud leaderboard'}} />
+        </section>
       </main>
       {open && (
         <EnginePanel

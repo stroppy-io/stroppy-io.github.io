@@ -27,18 +27,33 @@ export function rawPart(id: PartId, e: Engine, base: Engine | undefined): string
 }
 
 /**
- * The number a category cell leads with, for what its column shows. The
+ * The number a category cell leads with, for what its column shows: a run's
+ * value alone (its share of the baseline is the cell's bar and score). The
  * compatibility average has none: it is a mean of parts in different units,
  * so only its score stands for it.
  */
 export function rawCell(category: CategoryId, view: View, e: Engine, base: Engine | undefined): string {
-  if (view !== 'avg') return rawPart(view, e, base);
+  const run = (id: 'tx' | 'procs' | 'tpch' | 'tpcds') => {
+    const r = e[id];
+    return r ? speed(r) : '';
+  };
+  switch (view) {
+    case 'tx':
+    case 'procs':
+    case 'tpch':
+    case 'tpcds':
+      return run(view);
+    case 'avg':
+      break;
+    default:
+      return rawPart(view, e, base);
+  }
   switch (category) {
     case 'compat':
       return '';
     case 'speed':
-      return e.tx ? rawPart('tx', e, base) : rawPart('procs', e, base);
+      return run('tx') || run('procs');
     case 'analytics':
-      return e.tpch ? rawPart('tpch', e, base) : rawPart('tpcds', e, base);
+      return run('tpch') || run('tpcds');
   }
 }

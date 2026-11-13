@@ -1,13 +1,14 @@
 /* /ratings: databases rated against the original they claim to replace
    (src/pages/ratings.tsx, components under src/components/ratings).
    Kit colours only. A category's colour names the category (compatibility,
-   speed); quality is told by the score chip's tone (good, fair, poor). */
+   speed, analytics); quality is told by the score chip's tone (good, fair, poor). */
 
 /* The engine panel sits outside .rt, so the palette is set on both. */
 .rt,
 .rt-panel {
   --rt-compat: var(--st-series-3);
   --rt-speed: var(--st-series-1);
+  --rt-analytics: var(--st-series-4);
   --rt-good: var(--st-success);
   --rt-fair: var(--st-warning);
   --rt-poor: var(--st-error);
@@ -40,43 +41,83 @@
   cursor: pointer;
 }
 
-.rt select {
+/* A select as a pill with a drawn chevron (components/ratings/Select.tsx);
+   the native control stays underneath for the keyboard and screen readers. */
+.rt-select {
+  position: relative;
+  display: inline-flex;
+}
+
+.rt-select select {
+  appearance: none;
+  padding: 0.2rem 1.6rem 0.2rem 0.7rem;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-pill);
   background: var(--st-panel);
   color: var(--st-text);
-  border: 1px solid var(--st-line);
-  border-radius: var(--st-radius-sm);
   font: inherit;
   font-size: 12px;
-  padding: 2px 4px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.rt-select::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0.7rem;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-right: 1.5px solid var(--st-muted);
+  border-bottom: 1.5px solid var(--st-muted);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rt-select select:hover {
+    border-color: var(--st-line-strong);
+  }
 }
 
 /* ---------- Title and protocol ---------- */
 
-.rt-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.75rem 1.25rem;
-}
-
-.rt-top h1 {
+.rt-title {
   margin: 0;
   font-size: clamp(1.375rem, 1.1rem + 0.8vw, 1.75rem);
 }
 
+.rt-proto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  margin: 0.9rem 0 0.5rem;
+  font-size: 14px;
+  color: var(--st-muted);
+}
+
 .rt-seg {
   display: inline-flex;
+  max-width: 100%;
+  overflow-x: auto;
   border: 1px solid var(--st-line);
   border-radius: var(--st-radius-md);
-  overflow: hidden;
 }
 
 .rt-seg button {
+  flex: none;
   background: var(--st-panel);
   color: var(--st-muted);
   border: 0;
-  padding: 0.3rem 0.8rem;
-  font-size: 13px;
+  padding: 0.45rem 1rem;
+  font-size: 14px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rt-seg button:hover {
+    color: var(--st-text);
+  }
 }
 
 .rt-seg button + button {
@@ -301,6 +342,11 @@
   --rt-cat: var(--rt-speed);
 }
 
+.rt-dot--analytics,
+.rt-cell--analytics {
+  --rt-cat: var(--rt-analytics);
+}
+
 .rt-dot {
   background: var(--rt-cat);
 }
@@ -392,9 +438,10 @@
   font-weight: 500;
 }
 
-.rt-table th select {
-  display: block;
-  margin-top: 4px;
+.rt-table th .rt-select {
+  display: flex;
+  width: fit-content;
+  margin-top: 6px;
 }
 
 .rt-sep {
@@ -483,7 +530,7 @@
   color: var(--st-disabled);
 }
 
-/* MPP clusters: their own board under the table, never ranked with it. */
+/* Clusters: their own board under the table, never ranked with it. */
 .rt-mpp {
   max-width: 44rem;
   margin-top: 3rem;
@@ -630,7 +677,7 @@
     min-height: 2.5rem;
   }
 
-  .rt select {
+  .rt-select select {
     font-size: 16px;
     min-height: 2.5rem;
   }

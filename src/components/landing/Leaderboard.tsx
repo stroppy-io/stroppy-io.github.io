@@ -31,16 +31,28 @@ function Rank({rank}: {rank: number}): ReactNode {
   );
 }
 
+/** A single machine or a cluster: ranked apart, never in one table. */
+const STANDS = [
+  {id: 'single', label: 'Single node'},
+  {id: 'clusters', label: 'Cluster'},
+] as const;
+type Stand = (typeof STANDS)[number]['id'];
+
 /**
- * The public rating, whole: a tab per scenario that has runs, one row per
+ * The public rating, whole: the stand (a single machine or a cluster), then a
+ * tab per scenario that has runs on it, one row per
  * configuration, its bar against the best one (the shortest time is the best
  * for a lower-is-better metric), the first three in gold, silver and bronze.
  * A row opens its best run's report in Stroppy Cloud.
  */
-export function TopBoard({more, stand = 'single'}: {more: {href: string; label: string}; stand?: 'single' | 'clusters'}) {
+export function TopBoard({more, stands = STANDS.map((s) => s.id)}: {more: {href: string; label: string}; stands?: Stand[]}) {
   const ratings = useRatings();
   const [picked, setPicked] = useState<ScenarioKey>('tx');
-  const rowsOf = (key: ScenarioKey) => (stand === 'clusters' ? ratings[key]?.clusters : ratings[key]?.data) ?? [];
+  const [chosen, setChosen] = useState<Stand>(stands[0]);
+  const rowsIn = (stand: Stand, key: ScenarioKey) => (stand === 'clusters' ? ratings[key]?.clusters : ratings[key]?.data) ?? [];
+  const offered = STANDS.filter((s) => stands.includes(s.id) && SCENARIOS.some((sc) => rowsIn(s.id, sc.key).length > 0));
+  const stand = offered.find((s) => s.id === chosen)?.id ?? offered[0]?.id ?? stands[0];
+  const rowsOf = (key: ScenarioKey) => rowsIn(stand, key);
   const shown = SCENARIOS.filter((s) => rowsOf(s.key).length > 0);
   const scenario = shown.find((s) => s.key === picked)?.key ?? shown[0]?.key;
   if (!scenario) {
@@ -55,12 +67,22 @@ export function TopBoard({more, stand = 'single'}: {more: {href: string; label: 
   const rows = rowsOf(scenario);
   const metric = ratings[scenario]?.metric ?? null;
   const lower = metric?.higher_is_better === false;
-  const longest = Math.max(...shown.map((s) => rowsOf(s.key).length));
+  // The tallest tab of every stand offered, so neither switch moves the page below.
+  const longest = Math.max(...offered.flatMap((st) => SCENARIOS.map((s) => rowsIn(st.id, s.key).length)));
   const best = rows[0].value;
   const latest = lastRun(rows);
   return (
     <div className="board">
       <div className="board__head">
+        {offered.length > 1 && (
+          <div className="board__tabs board__tabs--stand" role="group" aria-label="Stand">
+            {offered.map((s) => (
+              <button key={s.id} type="button" aria-pressed={s.id === stand} onClick={() => setChosen(s.id)}>
+                {s.label}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="board__tabs" role="group" aria-label="Workload">
           {shown.map((s) => (
             <button key={s.key} type="button" aria-pressed={s.key === scenario} onClick={() => setPicked(s.key)}>

@@ -59,13 +59,11 @@ export type Metric = {key: string; title: string; unit: string; higher_is_better
 
 /**
  * One scenario: its rows on the single-machine stand, best first, its metric,
- * and apart from them its rows on MPP clusters, which are never ranked with a
- * single machine.
+ * and apart from them its rows on a cluster (several machines: nodes,
+ * replicas, a proxy, MPP segment hosts), which are never ranked with a single
+ * machine.
  */
 export type Rating = {data: RatingRow[]; metric: Metric | null; clusters: RatingRow[]};
-
-/** Greenplum-family engines: always a coordinator and segment hosts, never a single machine. */
-const MPP = new Set(['greenplum', 'greengage', 'warehousepg', 'opengpdb', 'cloudberry']);
 
 /** The stand alone: one machine of the stand's size, nothing beside it. */
 const onStand = ({machines}: RatingRow['hardware']) =>
@@ -81,14 +79,21 @@ function topClass(rows: RatingRow[]): RatingRow[] {
   for (const r of rows) classes.set(r.hardware.key, [...(classes.get(r.hardware.key) ?? []), r]);
   const runs = (rs: RatingRow[]) => rs.reduce((n, r) => n + r.runs, 0);
   const [chosen] = [...classes.values()].sort((a, b) => runs(b) - runs(a) || lastRun(b).localeCompare(lastRun(a)));
-  return (chosen ?? []).map((r, i) => ({...r, rank: i + 1}));
+  // One row per database, version and topology: the API can list a setup
+  // twice (another workload size), and its first row is its best.
+  const seen = new Set<string>();
+  const best = (chosen ?? []).filter((r) => {
+    const id = `${r.db_kind} ${r.db_version} ${topology(r)}`;
+    return seen.has(id) ? false : (seen.add(id), true);
+  });
+  return best.map((r, i) => ({...r, rank: i + 1}));
 }
 
 /** The single-machine stand's rows. */
-export const standRows = (all: RatingRow[]) => topClass(all.filter((r) => !MPP.has(r.db_kind) && onStand(r.hardware)));
+export const standRows = (all: RatingRow[]) => topClass(all.filter((r) => onStand(r.hardware)));
 
-/** The MPP clusters' rows. */
-export const clusterRows = (all: RatingRow[]) => topClass(all.filter((r) => MPP.has(r.db_kind)));
+/** Everything on more than one machine: clusters, replicas behind a proxy, MPP segment hosts. */
+export const clusterRows = (all: RatingRow[]) => topClass(all.filter((r) => !onStand(r.hardware)));
 
 const ENGINES: Record<string, string> = {
   postgres: 'PostgreSQL',
@@ -104,6 +109,7 @@ const ENGINES: Record<string, string> = {
   opengpdb: 'OpenGPDB',
   cloudberry: 'Cloudberry',
   haproxy: 'HAProxy',
+  proxysql: 'ProxySQL',
   pgbouncer: 'PgBouncer',
   odyssey: 'Odyssey',
   patroni: 'Patroni',
@@ -112,17 +118,25 @@ const ENGINES: Record<string, string> = {
 
 export const engine = (kind: string) => ENGINES[kind] ?? kind;
 
-/** What stood behind the number apart from the database itself: "replica, HAProxy", "coordinator + 4 segment hosts". */
+/**
+ * How the database stood: "single node", "3 nodes · ProxySQL",
+ * "primary + 2 replicas · HAProxy · 3× etcd", "coordinator + 4 segment hosts".
+ */
 export function topology(row: RatingRow): string {
-  const segments = row.topology.nodes.find((n) => n.role === 'db')?.count ?? 0;
-  if (row.topology.nodes.some((n) => n.role === 'coordinator')) return `coordinator + ${segments} segment hosts`;
+  const count = (role: string) => row.topology.nodes.filter((n) => n.role === role).reduce((a, n) => a + n.count, 0);
+  const db = count('db'),
+    replicas = count('db-replica');
+  const head = count('coordinator')
+    ? `coordinator + ${db} segment hosts`
+    : db > 1
+      ? `${db} nodes`
+      : replicas
+        ? `primary + ${replicas} ${replicas === 1 ? 'replica' : 'replicas'}`
+        : 'single node';
   const extra = row.topology.nodes
-    .filter((n) => n.role !== 'db' && n.role !== 'runner')
-    .map((n) => {
-      const name = n.role === 'db-replica' ? 'replica' : engine(n.engine);
-      return n.count > 1 ? `${n.count}× ${name}` : name;
-    });
-  return extra.length ? `+ ${extra.join(', ')}` : 'single node';
+    .filter((n) => n.count > 0 && !['db', 'db-replica', 'coordinator', 'runner'].includes(n.role))
+    .map((n) => (n.count > 1 ? `${n.count}× ${engine(n.engine)}` : engine(n.engine)));
+  return [head, ...extra].join(' · ');
 }
 
 const DISKS: Record<string, string> = {

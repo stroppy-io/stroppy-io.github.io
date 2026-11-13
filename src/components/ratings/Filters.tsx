@@ -1,5 +1,6 @@
 import {KIND_LABELS, type Kind} from './score';
 import {MIN_OPTIONS} from './state';
+import Select from './Select';
 
 export type FilterValue = {kind: Kind | null; min: number; clean: boolean; bench: boolean};
 
@@ -19,25 +20,25 @@ export default function Filters({kind, kinds, min, clean, bench, shown, total, o
       {kinds.length > 1 && (
         <label>
           Kind{' '}
-          <select value={kind ?? ''} onChange={(ev) => onChange({kind: kinds.find((k) => k === ev.target.value) ?? null})}>
+          <Select value={kind ?? ''} onChange={(ev) => onChange({kind: kinds.find((k) => k === ev.target.value) ?? null})}>
             <option value="">every kind</option>
             {kinds.map((k) => (
               <option key={k} value={k}>
                 {KIND_LABELS[k]}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       )}
       <label>
         Compatibility at least{' '}
-        <select value={min} onChange={(ev) => onChange({min: Number(ev.target.value)})}>
+        <Select value={min} onChange={(ev) => onChange({min: Number(ev.target.value)})}>
           {MIN_OPTIONS.map((v) => (
             <option key={v} value={v}>
               {v ? v.toFixed(1) : 'any'}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
       <label>
         <input type="checkbox" checked={clean} onChange={(ev) => onChange({clean: ev.target.checked})} /> nothing broken

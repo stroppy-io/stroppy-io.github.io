@@ -134,8 +134,9 @@ src/client/theme-cookie.ts  the theme shared with Stroppy Cloud through the stro
 src/client/theme-color.ts   <meta name="theme-color"> following the shown theme (the navbar's colour)
 src/pages/index.tsx       landing page in one 1120px column (html.home-page narrows the bar and the
                           footer too), carried by text rather than charts: the claim (pick a database
-                          on evidence) beside the whole rating (a tab per scenario with runs: TPC-C,
-                          TPC-C procedures, TPC-H, TPC-DS; the machine as tags), then what the
+                          on evidence) beside the whole rating (single node or cluster, then a tab per
+                          scenario with runs: TPC-C, TPC-C procedures, TPC-H, TPC-DS; the machine as
+                          tags), then what the
                           project is with its numbers, how compatible the PostgreSQL-compatible
                           engines are (CompatSpread), the four tools, the problems of choosing a
                           database each answered with one measured number. Numbers are counted from
@@ -155,8 +156,8 @@ src/pages/ratings.tsx     databases rated against the original they replace, per
                           filters, a table of compatibility, TPC-C speed and analytics (TPC-H, TPC-DS:
                           relative query speed, the baseline's time over the engine's, not a TPC score)
                           out of 10 with the baseline (the original) on top, an engine's parts in a side
-                          panel (src/css/ratings.css); under the PostgreSQL table, MPP clusters on their
-                          own board (TopBoard stand="clusters"), never ranked against the single machine;
+                          panel (src/css/ratings.css); under the table, clusters on their own board
+                          (TopBoard stands={['clusters']}), never ranked against the single machine;
                           every choice in the query string (?proto=mysql&sort=speed&bench&db=<id>), so
                           the Benchmarks menu links into it
 src/components/ratings/   score.ts: conformity rows joined with rating runs (DB_KINDS maps Stroppy Cloud's
@@ -164,7 +165,8 @@ src/components/ratings/   score.ts: conformity rows joined with rating runs (DB_
                           call, transactional, analytical, search or proxy), the parts, categories,
                           baseline and picks; state.ts: the query string, also used by the Benchmarks
                           menu (src/components/nav/menu.ts), whose items are the page's filters;
-                          the table, picks, filters and panel
+                          the table, picks, filters, panel, and Select (every select on the page, a
+                          pill with a drawn chevron); the protocol switch is the line under the title
 src/pages/tools/          a page per tool: stroppy, conformity, graphene, cloud (src/css/tools.css); the
                           Tools menu links into their sections by id, and to the manual where one
                           covers it (/docs for Stroppy, graphene-ci.github.io/docs for Graphene CI)
@@ -179,15 +181,19 @@ src/pages/vendors.tsx     for database vendors, a SectionPage: add your database
 src/components/vendors/   vendors.ts: the two issue forms opened in stroppy-io/stroppy (add a database,
                           report an error) and CORRECTIONS, the published list of results we changed;
                           add a correction there when a reported error is confirmed
-src/components/landing/   published-data pieces: the leaderboard (places in gold, silver and bronze; both
-                          TPC-C ratings through useRatings, shared with /ratings), the compatibility
+src/components/landing/   published-data pieces: the leaderboard (places in gold, silver and bronze; every
+                          scenario through useRatings, shared with /ratings; a switch between the single
+                          machine and clusters, ranked apart; its height fixed to the tallest tab, so no
+                          switch moves the page), the compatibility
                           spread (CompatSpread: a protocol's engines, a bar each, the line at 80), the
                           client-speed plot from blog data (Charts, evidence.tsx), the rating client
 plugins/cloud-rating.ts   copies Stroppy Cloud's public rating into the build for the hero and /ratings:
-                          every scenario in SCENARIOS (src/components/landing/rating.ts), each on one
-                          32 vCPU · 128 GB machine alone (clusters, MPP included, never), the class
-                          (platform, disk) with the most rated runs, as the cloud's board; a row is a configuration's best run in 30 days, ranked by the
-                          scenario's own metric, whose unit and direction come from the API
+                          every scenario in SCENARIOS (src/components/landing/rating.ts), split into the
+                          single 32 vCPU · 128 GB machine and clusters (anything on more machines:
+                          nodes, replicas behind a proxy, MPP segment hosts); in each, the hardware class
+                          (platform, disk) with the most rated runs, as the cloud's board; a row is a
+                          configuration's best run in 30 days, one per database, version and topology,
+                          ranked by the scenario's own metric, whose unit and direction come from the API
 plugins/conformity.ts     every engine's overall score per protocol, for the landing's numbers and spread
 src/css/landing.css       the landing and the published-data pieces (board, spread, plot)
 plans/                    agreed plans of work, not published

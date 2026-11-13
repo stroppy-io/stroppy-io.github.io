@@ -338,18 +338,23 @@
   margin-bottom: 0.75rem;
 }
 
-/* What the numbers were measured on, as short tags. */
+/* What the numbers were measured on, as short tags. Room for two rows of
+   them always, so a tab whose tags wrap does not move the page below. */
 .board__tags {
+  --tag-h: calc(1.25rem + 2px);
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: 0.35rem;
+  min-height: calc(2 * var(--tag-h) + 0.35rem);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .board__tags li {
-  padding: 0.1rem 0.5rem;
+  padding: 0 0.5rem;
+  line-height: 1.25rem;
   border: 1px solid var(--st-line);
   border-radius: var(--st-radius-pill);
   font-size: 0.75rem;
@@ -492,8 +497,12 @@
   min-width: 0;
 }
 
+/* One line, so every row is as tall as a blank one and no tab moves the page. */
 .board__db {
+  overflow: hidden;
   font-weight: var(--st-font-weight-medium);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .board__setup {
@@ -840,6 +849,11 @@
 @media (max-width: 996px) {
   .home-hero {
     padding: 3rem 0;
+  }
+
+  /* A narrow board fits fewer tags a row: room for three. */
+  .board__tags {
+    min-height: calc(3 * var(--tag-h) + 2 * 0.35rem);
   }
 
   .home-hero__inner,
