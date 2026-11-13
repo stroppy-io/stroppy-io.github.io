@@ -65,7 +65,7 @@ function viewFacts(st: State): string[] {
 
 export default function RatingsPage() {
   const ratings = useRatings();
-  const all = useMemo(() => engines(compat, ratings.rating, ratings.procs), [ratings]);
+  const all = useMemo(() => engines(compat, ratings.tx, ratings.procs), [ratings]);
   const location = useLocation();
   const history = useHistory();
   // The URL is read after hydration, so the server's HTML and the first client render agree.

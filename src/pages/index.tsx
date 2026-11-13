@@ -25,13 +25,13 @@ type Numbers = {engines: number; protocols: string[]; runs: number; pg: number; 
 /** The project's numbers, counted from the data the site is built with. */
 function useNumbers(): Numbers {
   const {summary} = usePluginData('conformity') as {summary: ConformitySummary | null};
-  const {rating, procs} = useRatings();
+  const ratings = useRatings();
   const protocols = summary?.protocols ?? [];
   const pg = protocols.find((p) => p.protocol === 'pgwire')?.scores ?? [];
   return {
     engines: new Set(protocols.flatMap((p) => p.scores.map((s) => s.target))).size,
     protocols: protocols.map((p) => protocolShort(p.protocol)),
-    runs: [...(rating?.data ?? []), ...(procs?.data ?? [])].reduce((sum, r) => sum + r.runs, 0),
+    runs: Object.values(ratings).reduce((sum, r) => sum + (r?.data.reduce((n, row) => n + row.runs, 0) ?? 0), 0),
     pg: pg.length,
     pgUnder: pg.filter((s) => s.score < COMPATIBLE).length,
   };
@@ -91,7 +91,7 @@ function About({n}: {n: Numbers}) {
           </div>
           <div>
             <dt>{n.runs}</dt>
-            <dd>TPC-C runs behind the public rating in the last 30 days</dd>
+            <dd>runs behind the public rating in the last 30 days</dd>
           </div>
           <div>
             <dt>{TOOLS.length}</dt>

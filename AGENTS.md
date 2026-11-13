@@ -134,8 +134,8 @@ src/client/theme-cookie.ts  the theme shared with Stroppy Cloud through the stro
 src/client/theme-color.ts   <meta name="theme-color"> following the shown theme (the navbar's colour)
 src/pages/index.tsx       landing page in one 1120px column (html.home-page narrows the bar and the
                           footer too), carried by text rather than charts: the claim (pick a database
-                          on evidence) beside the whole TPC-C rating (transactions or stored
-                          procedures), then what the project is with its numbers, the problems of
+                          on evidence) beside the whole rating (a tab per scenario with runs: TPC-C,
+                          TPC-C procedures, TPC-H, TPC-DS; the machine as tags), then what the project is with its numbers, the problems of
                           choosing a database each answered with one measured number, how compatible
                           the PostgreSQL-compatible engines are (CompatSpread), the four tools. Numbers are counted from the plugins' data or quoted from a
                           published post
@@ -179,8 +179,11 @@ src/components/landing/   published-data pieces: the leaderboard (places in gold
                           TPC-C ratings through useRatings, shared with /ratings), the compatibility
                           spread (CompatSpread: a protocol's engines, a bar each, the line at 80), the
                           client-speed plot from blog data (Charts, evidence.tsx), the rating client
-plugins/cloud-rating.ts   copies Stroppy Cloud's public rating (TPC-C, and TPC-C with stored procedures)
-                          on one 32 vCPU · 128 GB node into the build for the hero and /ratings
+plugins/cloud-rating.ts   copies Stroppy Cloud's public rating into the build for the hero and /ratings:
+                          every scenario in SCENARIOS (src/components/landing/rating.ts), each on one
+                          32 vCPU · 128 GB machine alone (clusters, MPP included, never), the class
+                          (platform, disk) with the most rated runs, as the cloud's board; a row is a configuration's best run in 30 days, ranked by the
+                          scenario's own metric, whose unit and direction come from the API
 plugins/conformity.ts     every engine's overall score per protocol, for the landing's numbers and spread
 src/css/landing.css       the landing and the published-data pieces (board, spread, plot)
 plans/                    agreed plans of work, not published

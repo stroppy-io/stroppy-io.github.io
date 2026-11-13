@@ -338,8 +338,21 @@
   margin-bottom: 0.75rem;
 }
 
-.board__workload {
-  font-size: 0.875rem;
+/* What the numbers were measured on, as short tags. */
+.board__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board__tags li {
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-pill);
+  font-size: 0.75rem;
   color: var(--st-muted);
 }
 

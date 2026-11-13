@@ -5,17 +5,25 @@
 
 export const CLOUD = 'https://cloud.stroppy.io';
 
-// The board compares like with like: one scenario (a round trip per
-// statement; stored procedures run another scenario at about twice the speed)
-// on one stand, a single 32-core node. A hardware class also names the
-// platform and the data disk ("1x32c128g:standard-v3:network-ssd-nonreplicated"),
-// which change when the nightly moves; the board takes the class of that
-// stand with the most configurations, the latest run breaking a tie.
-export const SCENARIO = 'tpcc/tx';
-/** TPC-C with stored procedures: one round trip per transaction. */
-export const SCENARIO_PROCS = 'tpcc/procs';
+// The board compares like with like: one scenario, on one stand, a single
+// 32-core node. A hardware class also names the platform and the data disk
+// ("1x32c128g:standard-v3:network-ssd-nonreplicated"), which change when the
+// runs move; per scenario the board takes the stand's class with the most
+// rated runs, the latest run breaking a tie. Each scenario ranks by its
+// own metric (tpmC for TPC-C, the queries' geometric mean time for TPC-H and
+// TPC-DS), and the page says its unit and which way is better.
+
+/** The scenarios the site shows, in tab order; `key` names one in the build's copy (plugins/cloud-rating.ts). */
+export const SCENARIOS = [
+  {key: 'tx', scenario: 'tpcc/tx', label: 'TPC-C'},
+  {key: 'procs', scenario: 'tpcc/procs', label: 'TPC-C procedures'},
+  {key: 'tpch', scenario: 'tpch/tx', label: 'TPC-H'},
+  {key: 'tpcds', scenario: 'tpcds', label: 'TPC-DS'},
+] as const;
+export type ScenarioKey = (typeof SCENARIOS)[number]['key'];
+
 /** The stand every number on the site is measured on: one database machine, 32 vCPU, 128 GB. */
-export const STAND = '1x32c128g';
+const STAND = {cpu: 32, memory_gb: 128};
 /** The period a configuration's runs are taken from; the landing says "the last 30 days". */
 const PERIOD = '30d';
 const ratingUrl = (scenario: string) => `${CLOUD}/api/v1/public/rating?scenario=${scenario}&period=${PERIOD}`;
@@ -33,6 +41,7 @@ export type RatingRow = {
   value: number;
   median: number;
   runs: number;
+  metric: string;
   unit: string;
   db_kind: string;
   db_version: string;
@@ -45,16 +54,26 @@ export type RatingRow = {
   share_token?: string;
 };
 
-export type Rating = {data: RatingRow[]};
+/** What a scenario ranks by: its unit and which way is better. */
+export type Metric = {key: string; title: string; unit: string; higher_is_better: boolean};
 
-/** The stand's own class: its key is the stand's, alone or with a platform and a disk after it. */
-const onStand = (key: string) => key === STAND || key.startsWith(`${STAND}:`);
+/** One scenario's rows on the stand, best first, and its metric. */
+export type Rating = {data: RatingRow[]; metric: Metric | null};
 
-/** The stand's class with the most configurations, the latest run breaking a tie; ranked within it. */
+/** The stand alone: one machine of the stand's size, nothing beside it. */
+const onStand = ({machines}: RatingRow['hardware']) =>
+  machines.length === 1 && machines[0].count === 1 && machines[0].cpu === STAND.cpu && machines[0].memory_gb === STAND.memory_gb;
+
+/**
+ * The stand's class with the most rated runs (the cloud's board picks its
+ * default class the same way, so both show the same hardware), the latest run
+ * breaking a tie; ranked within it, in the API's order.
+ */
 export function standRows(all: RatingRow[]): RatingRow[] {
   const classes = new Map<string, RatingRow[]>();
-  for (const r of all.filter((r) => onStand(r.hardware.key))) classes.set(r.hardware.key, [...(classes.get(r.hardware.key) ?? []), r]);
-  const [chosen] = [...classes.values()].sort((a, b) => b.length - a.length || lastRun(b).localeCompare(lastRun(a)));
+  for (const r of all.filter((r) => onStand(r.hardware))) classes.set(r.hardware.key, [...(classes.get(r.hardware.key) ?? []), r]);
+  const runs = (rows: RatingRow[]) => rows.reduce((n, r) => n + r.runs, 0);
+  const [chosen] = [...classes.values()].sort((a, b) => runs(b) - runs(a) || lastRun(b).localeCompare(lastRun(a)));
   return (chosen ?? []).map((r, i) => ({...r, rank: i + 1}));
 }
 
@@ -92,19 +111,31 @@ const DISKS: Record<string, string> = {
   'network-hdd': 'HDD',
 };
 
-/** The database machine: "32 vCPU · 128 GB · non-replicated SSD". */
-export function machine(row: RatingRow): string {
+/** Platforms by the CPU behind them, as the cloud's provider catalog names them; the class is a tag of its own. */
+const PLATFORMS: Record<string, string[]> = {
+  'standard-v1': ['Intel Broadwell'],
+  'standard-v2': ['Intel Cascade Lake'],
+  'standard-v3': ['Intel Ice Lake'],
+  'highfreq-v3': ['Intel Ice Lake', 'compute-optimized'],
+  'standard-v4a': ['AMD Zen 4'],
+  'highfreq-v4a': ['AMD Zen 4', 'compute-optimized'],
+  'amd-v1': ['AMD Zen 3'],
+};
+
+/** The database machine as short tags: ["32 vCPU", "128 GB", "Intel Ice Lake", "non-replicated SSD"]. */
+export function machineTags(row: RatingRow): string[] {
   const m = row.hardware.machines[0];
-  if (!m) return row.hardware.key;
-  const disk = m.disk_type ? ` · ${DISKS[m.disk_type] ?? m.disk_type}` : '';
-  return `${m.cpu} vCPU · ${m.memory_gb} GB${disk}`;
+  if (!m) return [row.hardware.key];
+  return [
+    `${m.cpu} vCPU`,
+    `${m.memory_gb} GB`,
+    ...(m.platform ? (PLATFORMS[m.platform] ?? [m.platform]) : []),
+    ...(m.disk_type ? [DISKS[m.disk_type] ?? m.disk_type] : []),
+  ];
 }
 
 /** When the board last changed: the latest run of any of its configurations. */
 export const lastRun = (rows: RatingRow[]) => rows.reduce((a, r) => (r.last_run_at > a ? r.last_run_at : a), rows[0]?.last_run_at ?? '');
-
-/** The workload the rows share, without the per-database suffix: "TPC-C 100 WH · 128 VU · 10 min". */
-export const workload = (row: RatingRow) => row.workload_name.replace(/\s*\([^)]*\)\s*$/, '');
 
 export const shareUrl = (row: RatingRow) => (row.share_token ? `${CLOUD}/s/${row.share_token}` : `${CLOUD}/leaderboard`);
 
@@ -112,6 +143,8 @@ export async function fetchRating(scenario: string, signal?: AbortSignal): Promi
   const url = ratingUrl(scenario);
   const res = await fetch(url, {signal, headers: {accept: 'application/json'}});
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
-  const page = (await res.json()) as Rating;
-  return {data: standRows(page.data)};
+  const page = (await res.json()) as {data: RatingRow[]; metrics?: Metric[]};
+  const data = standRows(page.data);
+  const key = data[0]?.metric;
+  return {data, metric: page.metrics?.find((m) => m.key === key) ?? null};
 }

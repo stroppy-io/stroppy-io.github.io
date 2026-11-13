@@ -1,12 +1,4 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  type MouseEvent,
-  type ReactNode,
-} from 'react';
+import {useEffect, useId, useRef, useState, useSyncExternalStore, type MouseEvent, type ReactNode} from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import {useLocation} from '@docusaurus/router';
@@ -14,7 +6,8 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 import {usePluginData} from '@docusaurus/useGlobalData';
 import {useNavbarMobileSidebar} from '@docusaurus/theme-common/internal';
 import ThemedImage from '@theme/ThemedImage';
-import {engine, type Rating} from '@site/src/components/landing/rating';
+import {engine} from '@site/src/components/landing/rating';
+import type {CloudRating} from '@site/plugins/cloud-rating';
 import {MENU, type MenuColumn, type MenuItem, type MenuPromo, type MenuSection} from './menu';
 
 // A navbar item that opens a panel under the navbar (navbar item type
@@ -71,7 +64,12 @@ const subscribe = (l: () => void) => {
   return () => listeners.delete(l);
 };
 
-const useOpen = () => useSyncExternalStore(subscribe, () => open, () => null);
+const useOpen = () =>
+  useSyncExternalStore(
+    subscribe,
+    () => open,
+    () => null,
+  );
 
 /** A plain left click, not one that opens the link in a new tab or window. */
 const plainClick = (e: MouseEvent) => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
@@ -87,8 +85,8 @@ const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
 
 /** The top three of the leaderboard, from the build's copy of the rating. */
 function TopThree() {
-  const {rating} = usePluginData('cloud-rating') as {rating: Rating | null};
-  const rows = rating?.data.slice(0, 3) ?? [];
+  const {tx} = usePluginData('cloud-rating') as CloudRating;
+  const rows = tx?.data.slice(0, 3) ?? [];
   if (rows.length === 0) return null;
   return (
     <ol className="mega__board">
@@ -301,9 +299,7 @@ function Mobile({s}: {s: MenuSection}) {
   const {pathname} = useLocation();
   const sidebar = useNavbarMobileSidebar();
   const path = sectionPath(s);
-  const [expanded, setExpanded] = useState(
-    () => window.matchMedia(WIDE_DRAWER).matches || (path !== null && pathname.startsWith(path)),
-  );
+  const [expanded, setExpanded] = useState(() => window.matchMedia(WIDE_DRAWER).matches || (path !== null && pathname.startsWith(path)));
   const onPick = () => sidebar.shown && sidebar.toggle();
   return (
     <li className="mmenu">
@@ -323,9 +319,7 @@ function Mobile({s}: {s: MenuSection}) {
                   ))}
               </details>
             ))
-          : s.columns
-              .flatMap((c) => c.items)
-              .map((i) => <MobileItem key={i.label} i={i} onPick={onPick} />)}
+          : s.columns.flatMap((c) => c.items).map((i) => <MobileItem key={i.label} i={i} onPick={onPick} />)}
         {s.strip?.links.map((l) => (
           <Link key={l.label} className="mmenu__link" to={l.href} onClick={onPick}>
             <span className="mega__label">{l.label}</span>
