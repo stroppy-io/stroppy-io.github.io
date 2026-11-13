@@ -31,7 +31,10 @@ function useNumbers(): Numbers {
   return {
     engines: new Set(protocols.flatMap((p) => p.scores.map((s) => s.target))).size,
     protocols: protocols.map((p) => protocolShort(p.protocol)),
-    runs: Object.values(ratings).reduce((sum, r) => sum + (r?.data.reduce((n, row) => n + row.runs, 0) ?? 0), 0),
+    runs: Object.values(ratings).reduce(
+      (sum, r) => sum + [...(r?.data ?? []), ...(r?.clusters ?? [])].reduce((n, row) => n + row.runs, 0),
+      0,
+    ),
     pg: pg.length,
     pgUnder: pg.filter((s) => s.score < COMPATIBLE).length,
   };

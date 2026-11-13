@@ -5,6 +5,9 @@ import compatJson from '@site/static/data/conformity/compat.json';
 import type {Compat} from '@site/src/components/conformity/types';
 import {day, protocolShort, protocolsOf} from '@site/src/components/conformity/data';
 import useRatings from '@site/src/components/landing/useRatings';
+import {TopBoard} from '@site/src/components/landing/Leaderboard';
+import {CLOUD} from '@site/src/components/landing/rating';
+import '../css/landing.css';
 import Picks from '@site/src/components/ratings/Picks';
 import Filters from '@site/src/components/ratings/Filters';
 import RatingsTable from '@site/src/components/ratings/RatingsTable';
@@ -65,7 +68,7 @@ function viewFacts(st: State): string[] {
 
 export default function RatingsPage() {
   const ratings = useRatings();
-  const all = useMemo(() => engines(compat, ratings.tx, ratings.procs), [ratings]);
+  const all = useMemo(() => engines(compat, ratings), [ratings]);
   const location = useLocation();
   const history = useHistory();
   // The URL is read after hydration, so the server's HTML and the first client render agree.
@@ -88,7 +91,7 @@ export default function RatingsPage() {
     (e) =>
       (!st.min || (average(CATEGORIES[0], e, base) ?? 0) >= st.min) &&
       (!st.clean || e.breaks === 0) &&
-      (!st.bench || Boolean(e.tx || e.procs)),
+      (!st.bench || Boolean(e.tx || e.procs || e.tpch || e.tpcds)),
   );
   const key = (e: Engine) =>
     st.sort === 'score'
@@ -120,7 +123,7 @@ export default function RatingsPage() {
   return (
     <Layout
       title="Database ratings"
-      description="Databases rated against the original they claim to replace: compatibility and TPC-C speed, measured the same way.">
+      description="Databases rated against the original they claim to replace: compatibility, TPC-C speed and analytics, measured the same way.">
       <main className="rt">
         <div className="rt-top">
           <h1>{viewTitle(st, name)}</h1>
@@ -143,7 +146,8 @@ export default function RatingsPage() {
           </p>
         )}
         <p className="rt-dataset">
-          Conformity: dataset of {day(compat.dataset.audited_at)} · TPC-C: Stroppy Cloud, one 32 vCPU · 128 GB node, latest run
+          Conformity: dataset of {day(compat.dataset.audited_at)} · TPC-C, TPC-H, TPC-DS: Stroppy Cloud, one 32 vCPU · 128 GB machine, each
+          configuration’s best run in 30 days
         </p>
         {/* Keyed on what the menu switches, so a jump from it replays the entry. */}
         <div key={`picks-${st.proto}-${st.kind}`} className="page-enter">
@@ -177,10 +181,20 @@ export default function RatingsPage() {
           />
         </div>
         <p className="rt-foot">
-          Score: the mean of the categories that were run, out of 10; “1 of 2” says how many. The baseline is the original every engine is
+          Score: the mean of the categories that were run, out of 10; “1 of 3” says how many. The baseline is the original every engine is
           compared with, so it scores 10 by definition. {CATEGORIES.map((c) => `${c.label}: ${c.how}.`).join(' ')} Hover a cell for its
           parts; open a row for all of them.
         </p>
+        {st.proto === 'pgwire' && (
+          <section className="rt-mpp" aria-labelledby="rt-mpp">
+            <h2 id="rt-mpp">MPP clusters</h2>
+            <p>
+              Greenplum-family engines on a coordinator and four segment hosts. A cluster is ranked only against clusters, never against the
+              single machine above.
+            </p>
+            <TopBoard stand="clusters" more={{href: `${CLOUD}/leaderboard`, label: 'Stroppy Cloud leaderboard'}} />
+          </section>
+        )}
       </main>
       {open && (
         <EnginePanel

@@ -483,6 +483,22 @@
   color: var(--st-disabled);
 }
 
+/* MPP clusters: their own board under the table, never ranked with it. */
+.rt-mpp {
+  max-width: 44rem;
+  margin-top: 3rem;
+}
+
+.rt-mpp h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.rt-mpp p {
+  margin: 0.5rem 0 1.25rem;
+  color: var(--st-muted);
+}
+
 /* ---------- One engine ---------- */
 
 .rt-panel {

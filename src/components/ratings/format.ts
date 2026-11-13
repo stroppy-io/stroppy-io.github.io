@@ -1,4 +1,4 @@
-import {share, type Engine, type PartId, type View} from './score';
+import {share, type CategoryId, type Engine, type PartId, type View} from './score';
 
 export const pct = (v: number) => `${Number.isInteger(v) ? v : v.toFixed(1)}%`;
 /** A run's value in its own unit: "175,084 tpmC". */
@@ -17,7 +17,9 @@ export function rawPart(id: PartId, e: Engine, base: Engine | undefined): string
     case 'stab':
       return e.breaks ? `${e.breaks} ${e.breaks === 1 ? 'break' : 'breaks'}` : 'nothing broke';
     case 'tx':
-    case 'procs': {
+    case 'procs':
+    case 'tpch':
+    case 'tpcds': {
       const run = e[id];
       return run ? `${speed(run)}${ofBase(share(e, base, id))}` : '';
     }
@@ -29,8 +31,14 @@ export function rawPart(id: PartId, e: Engine, base: Engine | undefined): string
  * compatibility average has none: it is a mean of parts in different units,
  * so only its score stands for it.
  */
-export function rawCell(category: 'compat' | 'speed', view: View, e: Engine, base: Engine | undefined): string {
+export function rawCell(category: CategoryId, view: View, e: Engine, base: Engine | undefined): string {
   if (view !== 'avg') return rawPart(view, e, base);
-  if (category === 'compat') return '';
-  return e.tx ? rawPart('tx', e, base) : rawPart('procs', e, base);
+  switch (category) {
+    case 'compat':
+      return '';
+    case 'speed':
+      return e.tx ? rawPart('tx', e, base) : rawPart('procs', e, base);
+    case 'analytics':
+      return e.tpch ? rawPart('tpch', e, base) : rawPart('tpcds', e, base);
+  }
 }

@@ -86,6 +86,8 @@ export default function EnginePanel({engine: e, base, protocolName, awards, onCl
         {e.conf && <Link to={mapUrl({engine: e.original ? undefined : e.id, protocol: e.protocol})}>Every conformity check</Link>}
         {e.tx && <a href={shareUrl(e.tx)}>The TPC-C run</a>}
         {e.procs && <a href={shareUrl(e.procs)}>The run with procedures</a>}
+        {e.tpch && <a href={shareUrl(e.tpch)}>The TPC-H run</a>}
+        {e.tpcds && <a href={shareUrl(e.tpcds)}>The TPC-DS run</a>}
         <a href={`${CLOUD}/register`}>Run it on your workload</a>
       </div>
     </aside>

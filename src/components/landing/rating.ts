@@ -57,25 +57,38 @@ export type RatingRow = {
 /** What a scenario ranks by: its unit and which way is better. */
 export type Metric = {key: string; title: string; unit: string; higher_is_better: boolean};
 
-/** One scenario's rows on the stand, best first, and its metric. */
-export type Rating = {data: RatingRow[]; metric: Metric | null};
+/**
+ * One scenario: its rows on the single-machine stand, best first, its metric,
+ * and apart from them its rows on MPP clusters, which are never ranked with a
+ * single machine.
+ */
+export type Rating = {data: RatingRow[]; metric: Metric | null; clusters: RatingRow[]};
+
+/** Greenplum-family engines: always a coordinator and segment hosts, never a single machine. */
+const MPP = new Set(['greenplum', 'greengage', 'warehousepg', 'opengpdb', 'cloudberry']);
 
 /** The stand alone: one machine of the stand's size, nothing beside it. */
 const onStand = ({machines}: RatingRow['hardware']) =>
   machines.length === 1 && machines[0].count === 1 && machines[0].cpu === STAND.cpu && machines[0].memory_gb === STAND.memory_gb;
 
 /**
- * The stand's class with the most rated runs (the cloud's board picks its
- * default class the same way, so both show the same hardware), the latest run
- * breaking a tie; ranked within it, in the API's order.
+ * Of the rows given, the hardware class with the most rated runs (the cloud's
+ * board picks its default class the same way, so both show the same hardware),
+ * the latest run breaking a tie; ranked within it, in the API's order.
  */
-export function standRows(all: RatingRow[]): RatingRow[] {
+function topClass(rows: RatingRow[]): RatingRow[] {
   const classes = new Map<string, RatingRow[]>();
-  for (const r of all.filter((r) => onStand(r.hardware))) classes.set(r.hardware.key, [...(classes.get(r.hardware.key) ?? []), r]);
-  const runs = (rows: RatingRow[]) => rows.reduce((n, r) => n + r.runs, 0);
+  for (const r of rows) classes.set(r.hardware.key, [...(classes.get(r.hardware.key) ?? []), r]);
+  const runs = (rs: RatingRow[]) => rs.reduce((n, r) => n + r.runs, 0);
   const [chosen] = [...classes.values()].sort((a, b) => runs(b) - runs(a) || lastRun(b).localeCompare(lastRun(a)));
   return (chosen ?? []).map((r, i) => ({...r, rank: i + 1}));
 }
+
+/** The single-machine stand's rows. */
+export const standRows = (all: RatingRow[]) => topClass(all.filter((r) => !MPP.has(r.db_kind) && onStand(r.hardware)));
+
+/** The MPP clusters' rows. */
+export const clusterRows = (all: RatingRow[]) => topClass(all.filter((r) => MPP.has(r.db_kind)));
 
 const ENGINES: Record<string, string> = {
   postgres: 'PostgreSQL',
@@ -84,6 +97,12 @@ const ENGINES: Record<string, string> = {
   mariadb: 'MariaDB',
   picodata: 'Picodata',
   ydb: 'YDB',
+  cockroach: 'CockroachDB',
+  greenplum: 'Greenplum',
+  greengage: 'Greengage',
+  warehousepg: 'WarehousePG',
+  opengpdb: 'OpenGPDB',
+  cloudberry: 'Cloudberry',
   haproxy: 'HAProxy',
   pgbouncer: 'PgBouncer',
   odyssey: 'Odyssey',
@@ -93,8 +112,10 @@ const ENGINES: Record<string, string> = {
 
 export const engine = (kind: string) => ENGINES[kind] ?? kind;
 
-/** What stood behind the number apart from the database itself: "replica, HAProxy". */
+/** What stood behind the number apart from the database itself: "replica, HAProxy", "coordinator + 4 segment hosts". */
 export function topology(row: RatingRow): string {
+  const segments = row.topology.nodes.find((n) => n.role === 'db')?.count ?? 0;
+  if (row.topology.nodes.some((n) => n.role === 'coordinator')) return `coordinator + ${segments} segment hosts`;
   const extra = row.topology.nodes
     .filter((n) => n.role !== 'db' && n.role !== 'runner')
     .map((n) => {
@@ -127,7 +148,7 @@ export function machineTags(row: RatingRow): string[] {
   const m = row.hardware.machines[0];
   if (!m) return [row.hardware.key];
   return [
-    `${m.cpu} vCPU`,
+    m.count > 1 ? `${m.count} × ${m.cpu} vCPU` : `${m.cpu} vCPU`,
     `${m.memory_gb} GB`,
     ...(m.platform ? (PLATFORMS[m.platform] ?? [m.platform]) : []),
     ...(m.disk_type ? [DISKS[m.disk_type] ?? m.disk_type] : []),
@@ -145,6 +166,7 @@ export async function fetchRating(scenario: string, signal?: AbortSignal): Promi
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   const page = (await res.json()) as {data: RatingRow[]; metrics?: Metric[]};
   const data = standRows(page.data);
-  const key = data[0]?.metric;
-  return {data, metric: page.metrics?.find((m) => m.key === key) ?? null};
+  const clusters = clusterRows(page.data);
+  const key = (data[0] ?? clusters[0])?.metric;
+  return {data, metric: page.metrics?.find((m) => m.key === key) ?? null, clusters};
 }

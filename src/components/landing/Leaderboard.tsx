@@ -37,10 +37,11 @@ function Rank({rank}: {rank: number}): ReactNode {
  * for a lower-is-better metric), the first three in gold, silver and bronze.
  * A row opens its best run's report in Stroppy Cloud.
  */
-export function TopBoard({more}: {more: {href: string; label: string}}) {
+export function TopBoard({more, stand = 'single'}: {more: {href: string; label: string}; stand?: 'single' | 'clusters'}) {
   const ratings = useRatings();
   const [picked, setPicked] = useState<ScenarioKey>('tx');
-  const shown = SCENARIOS.filter((s) => (ratings[s.key]?.data.length ?? 0) > 0);
+  const rowsOf = (key: ScenarioKey) => (stand === 'clusters' ? ratings[key]?.clusters : ratings[key]?.data) ?? [];
+  const shown = SCENARIOS.filter((s) => rowsOf(s.key).length > 0);
   const scenario = shown.find((s) => s.key === picked)?.key ?? shown[0]?.key;
   if (!scenario) {
     return (
@@ -51,9 +52,10 @@ export function TopBoard({more}: {more: {href: string; label: string}}) {
       </div>
     );
   }
-  const {data: rows, metric} = ratings[scenario] ?? {data: [], metric: null};
+  const rows = rowsOf(scenario);
+  const metric = ratings[scenario]?.metric ?? null;
   const lower = metric?.higher_is_better === false;
-  const longest = Math.max(...shown.map((s) => ratings[s.key]?.data.length ?? 0));
+  const longest = Math.max(...shown.map((s) => rowsOf(s.key).length));
   const best = rows[0].value;
   const latest = lastRun(rows);
   return (

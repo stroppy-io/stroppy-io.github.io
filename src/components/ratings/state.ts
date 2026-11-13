@@ -1,4 +1,4 @@
-import {CATEGORIES, KINDS, PARTS, type CategoryId, type Kind, type View} from './score';
+import {AVERAGES, CATEGORIES, KINDS, PARTS, type CategoryId, type Kind, type View} from './score';
 
 // What /ratings shows, all of it in the query string so any view is a link:
 // ?proto=mysql&kind=oltp&sort=speed&dir=asc&compat=types&speed=tx&min=8&clean&bench&refs&db=<engine id>.
@@ -37,7 +37,7 @@ export function defaults(protocols: string[]): State {
     kind: null,
     sort: 'score',
     dir: -1,
-    view: {compat: 'avg', speed: 'avg'},
+    view: {...AVERAGES},
     min: 0,
     clean: false,
     bench: false,

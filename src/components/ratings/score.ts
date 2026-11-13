@@ -1,8 +1,10 @@
 import type {Compat, Row} from '../conformity/types';
+import type {CloudRating} from '../../../plugins/cloud-rating';
 import type {Rating, RatingRow} from '../landing/rating';
 
 // How /ratings reads the data: one engine per conformity row, joined with its
-// TPC-C runs from Stroppy Cloud, then scored out of 10. Every score is a
+// runs from Stroppy Cloud (TPC-C, and TPC-H and TPC-DS on the single
+// machine), then scored out of 10. Every score is a
 // plain conversion of one measure, written next to it on the page; nothing
 // is weighed by hand. The baseline is the original a protocol is measured
 // against, so it scores 10 by definition.
@@ -82,9 +84,18 @@ export type Engine = {
   /** Crashes, hangs, unresponsive sessions and broken protocol messages during the conformity checks. */
   breaks?: number;
   findings: string[];
-  tx?: RatingRow;
-  procs?: RatingRow;
+  tx?: Run;
+  procs?: Run;
+  tpch?: Run;
+  tpcds?: Run;
 };
+
+/** The scenarios an engine is scored on, by the key the build's copy uses. */
+export type RunKey = 'tx' | 'procs' | 'tpch' | 'tpcds';
+const RUN_KEYS: RunKey[] = ['tx', 'procs', 'tpch', 'tpcds'];
+
+/** A rating row and which way its metric is better (TPC-C tpmC up, query times down). */
+export type Run = RatingRow & {higher: boolean};
 
 // Stroppy Cloud's db_kind as conformity knows it: the protocol it speaks, the
 // conformity export's engine name, and a display name for a run with no
@@ -102,8 +113,8 @@ const breaksOf = (r: Row) => r.severe.crash + r.severe.hang + r.severe.unrespons
 const sameVersion = (claims: string, version: string) =>
   claims === version || claims.startsWith(`${version}.`) || claims.startsWith(`${version} `);
 
-/** Conformity rows and TPC-C runs as engines; a run with no conformity row is an engine of its own. */
-export function engines(compat: Compat, tx: Rating | null, procs: Rating | null): Engine[] {
+/** Conformity rows and rating runs as engines; a run with no conformity row is an engine of its own. */
+export function engines(compat: Compat, ratings: CloudRating): Engine[] {
   const out: Engine[] = compat.rows
     .filter((r) => r.role !== 'control' && !r.variant)
     .map((r) => ({
@@ -117,7 +128,8 @@ export function engines(compat: Compat, tx: Rating | null, procs: Rating | null)
       breaks: breaksOf(r),
       findings: r.top_findings.map((f) => f.summary),
     }));
-  const attach = (rating: Rating | null, key: 'tx' | 'procs') => {
+  const attach = (rating: Rating | null, key: RunKey) => {
+    const higher = rating?.metric?.higher_is_better !== false;
     for (const run of rating?.data ?? []) {
       const kind = DB_KINDS[run.db_kind];
       if (!kind) continue;
@@ -140,11 +152,10 @@ export function engines(compat: Compat, tx: Rating | null, procs: Rating | null)
         };
         out.push(e);
       }
-      e[key] = run;
+      e[key] = {...run, higher};
     }
   };
-  attach(tx, 'tx');
-  attach(procs, 'procs');
+  for (const key of RUN_KEYS) attach(ratings[key], key);
   return out;
 }
 
@@ -156,8 +167,8 @@ export function baseline(all: Engine[], protocol: string): Engine | undefined {
 
 /* ---------- parts and categories ---------- */
 
-export type PartId = 'frames' | 'types' | 'bulk' | 'stab' | 'tx' | 'procs';
-export type CategoryId = 'compat' | 'speed';
+export type PartId = 'frames' | 'types' | 'bulk' | 'stab' | RunKey;
+export type CategoryId = 'compat' | 'speed' | 'analytics';
 /** What a category column shows: the mean of its parts, or one of them. */
 export type View = 'avg' | PartId;
 
@@ -170,6 +181,13 @@ export const PARTS: Part[] = [
   {id: 'stab', category: 'compat', label: 'Stability', how: '10, minus 2 per crash, hang or broken message'},
   {id: 'tx', category: 'speed', label: 'TPC-C', how: 'TPC-C tpmC as a share of the baseline’s, × 10; as fast or faster is 10'},
   {id: 'procs', category: 'speed', label: 'Procedures', how: 'TPC-C with stored procedures, as a share of the baseline’s, × 10'},
+  {
+    id: 'tpch',
+    category: 'analytics',
+    label: 'TPC-H',
+    how: 'the baseline’s TPC-H query time (geometric mean) ÷ the engine’s, × 10; as fast or faster is 10',
+  },
+  {id: 'tpcds', category: 'analytics', label: 'TPC-DS', how: 'the same for TPC-DS'},
 ];
 
 export type Category = {id: CategoryId; label: string; how: string; parts: Part[]};
@@ -184,16 +202,26 @@ const categoryOf = (id: CategoryId, label: string, how: string): Category => ({
 export const CATEGORIES: Category[] = [
   categoryOf('compat', 'Compatibility', 'the mean of protocol, types, bulk load and stability'),
   categoryOf('speed', 'Speed', 'the mean of TPC-C and TPC-C with procedures, against the baseline'),
+  categoryOf(
+    'analytics',
+    'Analytics',
+    'relative query speed on TPC-H and TPC-DS against the baseline on the same machine; not a TPC score',
+  ),
 ];
 
 export const r1 = (x: number) => Math.round(x * 10) / 10;
 const mean = (xs: number[]) => r1(xs.reduce((a, b) => a + b, 0) / xs.length);
 
-/** A run's value as a share of the baseline's run of the same scenario. */
-export function share(e: Engine, base: Engine | undefined, key: 'tx' | 'procs'): number | undefined {
-  const mine = e[key]?.value,
-    theirs = base?.[key]?.value;
-  return mine !== undefined && theirs ? mine / theirs : undefined;
+/**
+ * A run against the baseline's run of the same scenario, as a speed ratio:
+ * the engine's tpmC over the baseline's, or the baseline's query time over
+ * the engine's. Undefined when either has no run: no fallback baseline.
+ */
+export function share(e: Engine, base: Engine | undefined, key: RunKey): number | undefined {
+  const mine = e[key],
+    theirs = base?.[key];
+  if (!mine || !theirs || !mine.value || !theirs.value) return undefined;
+  return mine.higher ? mine.value / theirs.value : theirs.value / mine.value;
 }
 
 /** A part out of 10, or undefined when it was not run. */
@@ -208,7 +236,9 @@ export function part(id: PartId, e: Engine, base: Engine | undefined): number | 
     case 'stab':
       return e.breaks === undefined ? undefined : Math.max(0, 10 - 2 * e.breaks);
     case 'tx':
-    case 'procs': {
+    case 'procs':
+    case 'tpch':
+    case 'tpcds': {
       const s = share(e, base, id);
       return s === undefined ? undefined : r1(Math.min(10, s * 10));
     }
@@ -233,7 +263,7 @@ export function score(e: Engine, base: Engine | undefined, views: Record<Categor
   return s.length ? {value: mean(s), of: CATEGORIES.length, measured: s.length} : null;
 }
 
-export const AVERAGES: Record<CategoryId, View> = {compat: 'avg', speed: 'avg'};
+export const AVERAGES: Record<CategoryId, View> = {compat: 'avg', speed: 'avg', analytics: 'avg'};
 
 /* ---------- picks ---------- */
 

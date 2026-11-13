@@ -152,11 +152,14 @@ src/components/conformity/ Explorer: which databases really speak the protocol t
                           CompatMap, Drawer, About, and data.ts (the five states, groups, protocols)
 static/data/conformity/   the dataset as exported: compat.json and details/<row id>.json
 src/pages/ratings.tsx     databases rated against the original they replace, per protocol: four picks,
-                          filters, a table of compatibility and TPC-C speed out of 10 with the baseline
-                          (the original) on top, an engine's parts in a side panel (src/css/ratings.css);
+                          filters, a table of compatibility, TPC-C speed and analytics (TPC-H, TPC-DS:
+                          relative query speed, the baseline's time over the engine's, not a TPC score)
+                          out of 10 with the baseline (the original) on top, an engine's parts in a side
+                          panel (src/css/ratings.css); under the PostgreSQL table, MPP clusters on their
+                          own board (TopBoard stand="clusters"), never ranked against the single machine;
                           every choice in the query string (?proto=mysql&sort=speed&bench&db=<id>), so
                           the Benchmarks menu links into it
-src/components/ratings/   score.ts: conformity rows joined with TPC-C runs (DB_KINDS maps Stroppy Cloud's
+src/components/ratings/   score.ts: conformity rows joined with rating runs (DB_KINDS maps Stroppy Cloud's
                           db_kind to conformity's engine), each engine's kind (ENGINE_KIND: the site's
                           call, transactional, analytical, search or proxy), the parts, categories,
                           baseline and picks; state.ts: the query string, also used by the Benchmarks
