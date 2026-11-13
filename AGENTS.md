@@ -135,10 +135,11 @@ src/client/theme-color.ts   <meta name="theme-color"> following the shown theme 
 src/pages/index.tsx       landing page in one 1120px column (html.home-page narrows the bar and the
                           footer too), carried by text rather than charts: the claim (pick a database
                           on evidence) beside the whole rating (a tab per scenario with runs: TPC-C,
-                          TPC-C procedures, TPC-H, TPC-DS; the machine as tags), then what the project is with its numbers, the problems of
-                          choosing a database each answered with one measured number, how compatible
-                          the PostgreSQL-compatible engines are (CompatSpread), the four tools. Numbers are counted from the plugins' data or quoted from a
-                          published post
+                          TPC-C procedures, TPC-H, TPC-DS; the machine as tags), then what the
+                          project is with its numbers, how compatible the PostgreSQL-compatible
+                          engines are (CompatSpread), the four tools, the problems of choosing a
+                          database each answered with one measured number. Numbers are counted from
+                          the plugins' data or quoted from a published post
 src/pages/how.tsx         how Stroppy Cloud works, a screen at a time (src/css/how.css); a link to a
                           screen opens the product diagram on its story (#suites, #share)
 src/components/how/       the /how diagrams: Diagram.tsx and their data (product model, architecture)

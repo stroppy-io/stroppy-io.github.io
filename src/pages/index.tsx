@@ -13,11 +13,11 @@ import {TOOLS} from '@site/src/components/tools/tools';
 import '../css/landing.css';
 
 // The landing says one thing: Stroppy is an open project that helps you pick
-// a database by measurement. The claim beside the live TPC-C rating, then
-// prose: what the project is, with its numbers; the problems of choosing a
-// database and how each is answered, with one measured number each; how
-// compatible the PostgreSQL-compatible engines are; the tools behind the
-// numbers. The numbers come from the data
+// a database by measurement. The claim beside the live rating, then prose:
+// what the project is, with its numbers; how compatible the
+// PostgreSQL-compatible engines are; the tools behind the numbers; the
+// problems of choosing a database and how each is answered, with one measured
+// number each. The numbers come from the data
 // (plugins/conformity.ts, plugins/cloud-rating.ts) or a published post.
 
 type Numbers = {engines: number; protocols: string[]; runs: number; pg: number; pgUnder: number};
@@ -246,9 +246,9 @@ export default function Home(): ReactNode {
         <main className="home">
           <Hero n={n} />
           <About n={n} />
-          <Problems n={n} />
           <Compatibility n={n} />
           <Tools />
+          <Problems n={n} />
         </main>
       </Layout>
     </HtmlClassNameProvider>
