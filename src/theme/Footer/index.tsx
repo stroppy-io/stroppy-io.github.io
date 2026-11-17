@@ -22,10 +22,7 @@ const sectionColumn = (s: MenuSection): FooterColumn => ({
   href: s.href,
   groups: [
     {
-      links: [
-        ...('parts' in s ? s.parts : sectionItems(s).slice(0, 6)).map(({label, href}) => ({label, href})),
-        ...(s.strip?.links ?? []),
-      ],
+      links: [...('parts' in s ? s.parts : sectionItems(s).slice(0, 6)).map(({label, href}) => ({label, href})), ...(s.strip?.links ?? [])],
     },
   ],
 });
@@ -67,6 +64,16 @@ function ThemeSwitch() {
       respectPrefersColorScheme={respectPrefersColorScheme}
     />
   );
+}
+
+/**
+ * Reopens the consent choice (src/client/analytics.ts runs the banner). The
+ * library is the one already loaded; importing it on the click keeps it out of
+ * the server render, and its data-cc attribute would not reach a button React
+ * renders after the banner starts.
+ */
+function openCookieSettings(): void {
+  import('vanilla-cookieconsent').then((cc) => cc.showPreferences()).catch(() => undefined);
 }
 
 export default function Footer(): ReactNode {
@@ -117,7 +124,12 @@ export default function Footer(): ReactNode {
       </div>
 
       <div className="site-footer__bottom">
-        <span>{footer?.copyright}</span>
+        <span>
+          {footer?.copyright} ·{' '}
+          <button type="button" className="site-footer__cookies" onClick={openCookieSettings}>
+            Cookie settings
+          </button>
+        </span>
         <ThemeSwitch />
       </div>
     </footer>

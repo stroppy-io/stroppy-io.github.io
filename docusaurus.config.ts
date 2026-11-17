@@ -36,13 +36,16 @@ const config: Config = {
   },
 
   themes: [
-    ['@easyops-cn/docusaurus-search-local', {
-      indexDocs: true,
-      indexBlog: true,
-      indexPages: false,
-      hashed: true,
-      language: ['en'],
-    }],
+    [
+      '@easyops-cn/docusaurus-search-local',
+      {
+        indexDocs: true,
+        indexBlog: true,
+        indexPages: false,
+        hashed: true,
+        language: ['en'],
+      },
+    ],
   ],
 
   plugins: ['docusaurus-plugin-llms', './plugins/cloud-rating.ts', './plugins/conformity.ts'],
@@ -53,11 +56,16 @@ const config: Config = {
     {
       tagName: 'script',
       attributes: {},
-      innerHTML:
-        `try{var m=document.cookie.match(/(?:^|; )stroppy-theme=(dark|light)/);if(m)localStorage.setItem('${themeStorageKey}',m[1])}catch(e){}`,
+      innerHTML: `try{var m=document.cookie.match(/(?:^|; )stroppy-theme=(dark|light)/);if(m)localStorage.setItem('${themeStorageKey}',m[1])}catch(e){}`,
     },
   ],
-  clientModules: ['./src/client/theme-cookie.ts', './src/client/theme-color.ts'],
+  clientModules: ['./src/client/theme-cookie.ts', './src/client/theme-color.ts', './src/client/analytics.ts'],
+
+  // Google Tag Manager's container for stroppy.io; loaded only with the
+  // visitor's consent, only in a production build (src/client/analytics.ts).
+  customFields: {
+    gtm: 'GTM-TX4WF3KJ',
+  },
 
   presets: [
     [

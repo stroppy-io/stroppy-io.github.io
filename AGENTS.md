@@ -128,10 +128,16 @@ src/theme/DocSidebar/     the docs version switch (src/components/nav/VersionSwi
 src/theme/Navbar/MobileSidebar/  the mobile drawer, full screen: search, the menu's sections, the account
                           and community links at its bottom (PrimaryMenu); closed by Escape
 src/theme/SearchBar/      the local search with a close button: on a phone the open field takes the bar
-src/theme/Footer/         the site footer: a site map built from the top menu, copyright, theme switch
+src/theme/Footer/         the site footer: a site map built from the top menu, copyright, "Cookie settings"
+                          (reopens the consent choice), theme switch
 src/css/footer.css        the footer's styles
 src/client/theme-cookie.ts  the theme shared with Stroppy Cloud through the stroppy-theme cookie
 src/client/theme-color.ts   <meta name="theme-color"> following the shown theme (the navbar's colour)
+src/client/analytics.ts   a consent banner (vanilla-cookieconsent, on the kit's colours in src/css/consent.css);
+                          Google Tag Manager (customFields.gtm in docusaurus.config.ts) loads only after the
+                          visitor allows analytics, only in a production build; taking consent back clears
+                          Google's cookies and reloads. The banner hides from automated browsers
+                          (navigator.webdriver), so test it with that flag overridden
 src/pages/index.tsx       landing page in one 1120px column (html.home-page narrows the bar and the
                           footer too), carried by text rather than charts: the claim (pick a database
                           on evidence) beside the whole rating (single node or cluster, then a tab per
