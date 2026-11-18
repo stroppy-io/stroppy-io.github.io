@@ -48,6 +48,8 @@ export type RatingRow = {
   topology: {nodes: {role: string; engine: string; count: number}[]};
   hardware: {key: string; machines: Machine[]};
   workload_name: string;
+  /** The one scale every segment of the workload agrees on; absent when none sets it or they differ. */
+  scale_factor?: number;
   scenario: string;
   run_at: string;
   last_run_at: string;
@@ -169,18 +171,18 @@ export function machineTags(row: RatingRow): string[] {
   ];
 }
 
-/** When the board last changed: the latest run of any of its configurations. */
 /**
  * What a board ranks by, short: the unit, "lower is better" when it is, and
- * the scale factor for a score named per scale ("QphDS@SF" over a TPC-DS SF10
- * workload reads "QphDS@SF10").
+ * the scale factor for a score named per scale ("QphDS@SF" at scale_factor 10
+ * reads "QphDS@SF10").
  */
 export function metricLabel(metric: Metric, row: RatingRow): string {
-  const sf = /\bSF\s?(\d+)/.exec(row.workload_name)?.[1];
-  const unit = metric.title.endsWith('@SF') && sf ? `${metric.unit}@SF${sf}` : metric.unit;
+  const sf = row.scale_factor;
+  const unit = metric.title.endsWith('@SF') && sf !== undefined ? `${metric.unit}@SF${sf}` : metric.unit;
   return metric.higher_is_better ? unit : `${unit}, lower is better`;
 }
 
+/** When the board last changed: the latest run of any of its configurations. */
 export const lastRun = (rows: RatingRow[]) => rows.reduce((a, r) => (r.last_run_at > a ? r.last_run_at : a), rows[0]?.last_run_at ?? '');
 
 export const shareUrl = (row: RatingRow) => (row.share_token ? `${CLOUD}/s/${row.share_token}` : `${CLOUD}/leaderboard`);
