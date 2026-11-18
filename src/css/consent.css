@@ -11,11 +11,12 @@
   --cc-primary-color: var(--st-text);
   --cc-secondary-color: var(--st-muted);
   --cc-link-color: var(--st-primary-text);
+  /* Text on primary is white, as on the site's buttons (custom.css): the kit has no colour for it. */
   --cc-btn-primary-bg: var(--st-primary);
-  --cc-btn-primary-color: var(--st-canvas);
+  --cc-btn-primary-color: #fff;
   --cc-btn-primary-border-color: var(--st-primary);
   --cc-btn-primary-hover-bg: var(--st-primary);
-  --cc-btn-primary-hover-color: var(--st-canvas);
+  --cc-btn-primary-hover-color: #fff;
   --cc-btn-primary-hover-border-color: var(--st-primary);
   --cc-btn-secondary-bg: var(--st-raised);
   --cc-btn-secondary-color: var(--st-text);
@@ -50,6 +51,19 @@
 
 [data-theme='light'] #cc-main {
   color-scheme: light;
+}
+
+/* A hairline like the site's panels instead of the library's drop shadow;
+   buttons in the site's weight. */
+#cc-main .cm,
+#cc-main .pm {
+  border: 1px solid var(--st-line);
+  box-shadow: none;
+}
+
+#cc-main .cm__btn,
+#cc-main .pm__btn {
+  font-weight: var(--st-font-weight-medium);
 }
 
 /* The footer's link that reopens the settings, styled like the copyright beside it. */

@@ -170,6 +170,17 @@ export function machineTags(row: RatingRow): string[] {
 }
 
 /** When the board last changed: the latest run of any of its configurations. */
+/**
+ * What a board ranks by, short: the unit, "lower is better" when it is, and
+ * the scale factor for a score named per scale ("QphDS@SF" over a TPC-DS SF10
+ * workload reads "QphDS@SF10").
+ */
+export function metricLabel(metric: Metric, row: RatingRow): string {
+  const sf = /\bSF\s?(\d+)/.exec(row.workload_name)?.[1];
+  const unit = metric.title.endsWith('@SF') && sf ? `${metric.unit}@SF${sf}` : metric.unit;
+  return metric.higher_is_better ? unit : `${unit}, lower is better`;
+}
+
 export const lastRun = (rows: RatingRow[]) => rows.reduce((a, r) => (r.last_run_at > a ? r.last_run_at : a), rows[0]?.last_run_at ?? '');
 
 export const shareUrl = (row: RatingRow) => (row.share_token ? `${CLOUD}/s/${row.share_token}` : `${CLOUD}/leaderboard`);

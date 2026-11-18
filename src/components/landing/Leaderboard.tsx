@@ -1,6 +1,6 @@
 import {useState, type CSSProperties, type ReactNode} from 'react';
 import Link from '@docusaurus/Link';
-import {CLOUD, engine, lastRun, machineTags, SCENARIOS, shareUrl, topology, type ScenarioKey} from './rating';
+import {CLOUD, engine, lastRun, machineTags, metricLabel, SCENARIOS, shareUrl, topology, type ScenarioKey} from './rating';
 import useRatings from './useRatings';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
@@ -94,7 +94,7 @@ export function TopBoard({more, stands = STANDS.map((s) => s.id)}: {more: {href:
           {machineTags(rows[0]).map((t) => (
             <li key={t}>{t}</li>
           ))}
-          {metric && <li title={metric.title}>{lower ? `${metric.unit}, lower is better` : metric.unit}</li>}
+          {metric && <li title={metric.title}>{metricLabel(metric, rows[0])}</li>}
         </ul>
       </div>
       <ol className="board__rows" key={scenario}>
