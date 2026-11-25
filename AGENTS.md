@@ -153,23 +153,32 @@ src/components/conformity/ Explorer: which databases really speak the protocol t
                           engines × feature groups, an engine's findings in a drawer, "About this data"
                           in a side panel (src/css/conformity.css); what is open is in the query string
                           (?map=<protocol>&engine=<row id>&about, built by mapUrl in data.ts); reads
-                          static/data/conformity/compat.json at build, fetches details on open.
-                          CompatMap, Drawer, About, and data.ts (the five states, groups, protocols)
-static/data/conformity/   the dataset as exported: compat.json and details/<row id>.json
-src/pages/ratings.tsx     databases rated against the original they replace, per protocol: four picks,
-                          filters, a table of compatibility, TPC-C speed and analytics (TPC-H, TPC-DS:
-                          relative query speed, the baseline's time over the engine's, not a TPC score)
-                          out of 10 with the baseline (the original) on top, an engine's parts in a side
-                          panel (src/css/ratings.css); under the table, the whole rating (TopBoard);
-                          every choice in the query string (?proto=mysql&sort=speed&bench&db=<id>), so
+                          static/data/conformity/compat.json at build, fetches details on open; a
+                          protocol with nothing published lists what was held back and why.
+                          CompatMap, Drawer, About, Errata and Unpublished (shared with /ratings and
+                          /vendors, src/css/notes.css), and data.ts (the five states, read from the
+                          export's legend.feature_codes, never from fixed code numbers; groups, protocols)
+static/data/conformity/   the audited dataset as exported, put there by scripts/import-conformity.mjs:
+                          compat.json (rows, legend, clients, forks, families, storage engines, what is
+                          held back), errata.json and details/<row id>.json; committed, so the build has it
+src/pages/ratings.tsx     which database can replace the one your clients speak to: "Replace PostgreSQL
+                          without breaking your tools", a card per protocol (engines, how many
+                          compatible), then views of that protocol as tabs: Engines, Speed (TopBoard),
+                          Forks, Storage engines, Not published, Corrections. Engines: the reader's
+                          tools as chips (the export's clients), every engine grouped by what it means
+                          for them, a column per tool (how many of its features answered like the
+                          original, the worst state's glyph) or per part of the score when none is
+                          picked, the score with a tick at 80, its runs (TPC-C, TPC-H, TPC-DS), crashes
+                          and hangs; a row opens in place: every tool on it, the parts, findings,
+                          provenance, run reports (src/css/ratings.css). Every choice in the query
+                          string (?proto=mysql&view=forks&tool=psycopg&tool=pg_dump&db=<row id>), so
                           the Benchmarks menu links into it
-src/components/ratings/   score.ts: conformity rows joined with rating runs (DB_KINDS maps Stroppy Cloud's
-                          db_kind to conformity's engine), each engine's kind (ENGINE_KIND: the site's
-                          call, transactional, analytical, search or proxy), the parts, categories,
-                          baseline and picks; state.ts: the query string, also used by the Benchmarks
-                          menu (src/components/nav/menu.ts), whose items are the page's filters;
-                          the table, picks, filters, panel, and Select (every select on the page, a
-                          pill with a drawn chevron); the protocol switch is the line under the title
+src/components/ratings/   fit.ts: a protocol's tools and engines, a tool's fit on an engine, the bands,
+                          an engine's runs from Stroppy Cloud (DB_KINDS maps its db_kind to conformity's
+                          engine; a run matches by the version the server reports or the product's
+                          own, builds.sut.claimed); state.ts: the query string, also used by the
+                          Benchmarks menu (src/components/nav/menu.ts); Ask (protocol cards, tools),
+                          FitTable, EngineDetail, Sections (forks, storage engines)
 src/pages/tools/          a page per tool: stroppy, conformity, graphene, cloud (src/css/tools.css); the
                           Tools menu links into their sections by id, and to the manual where one
                           covers it (/docs for Stroppy, graphene-ci.github.io/docs for Graphene CI)
@@ -182,8 +191,7 @@ src/pages/vendors.tsx     for database vendors, a SectionPage: add your database
                           build, how we keep it fair, reproduce a result, report an error, corrections,
                           talk to us; the Vendors menu links to its sections
 src/components/vendors/   vendors.ts: the two issue forms opened in stroppy-io/stroppy (add a database,
-                          report an error) and CORRECTIONS, the published list of results we changed;
-                          add a correction there when a reported error is confirmed
+                          report an error); the corrections section lists the dataset's errata.json
 src/components/landing/   published-data pieces: the rating board (TopBoard: a variant picker, the
                           workload across the top, then topology, CPU, disk and scale two a line, each
                           "Name: value" over a segmented control of every option the workload has, the
@@ -201,15 +209,16 @@ plugins/cloud-rating.ts   copies Stroppy Cloud's public rating into the build fo
                           beside the database such as a proxy do not split groups) and one scale; a row
                           is a configuration's best run in 30 days, one per database, version and
                           topology, ranked by the scenario's own metric, whose unit and direction come
-                          from the API; /ratings scores engines on the single 32 vCPU · 128 GB group with
-                          the most runs
+                          from the API; /ratings reads TPC-C against the original on the single
+                          32 vCPU · 128 GB group with the most runs
 plugins/conformity.ts     every engine's overall score per protocol, for the landing's numbers and spread
 src/css/landing.css       the landing and the published-data pieces (board, spread, plot)
 plans/                    agreed plans of work, not published
 src/prism-stroppy.ts      code highlighting on the kit's variables, both modes
 kit.json                  pinned UI kit release: version and archive sha256
-scripts/                  changelog and UI kit synchronization, changelog slicing; extract-conformity.mjs
-                          re-extracts the conformity dataset from a report.html (interim)
+scripts/                  changelog and UI kit synchronization, changelog slicing; import-conformity.mjs
+                          takes an audited dataset from a stroppy-conformity export's site/ directory
+                          (tar --zstd -xf rolling-<id>.tar.zst; node scripts/import-conformity.mjs site)
 ```
 
 ## Touch and small screens

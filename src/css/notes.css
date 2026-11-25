@@ -1,0 +1,53 @@
+/* Lists of notes from the conformity export: corrections (Errata.tsx) and
+   what was measured and not published (Unpublished.tsx). */
+
+.notes {
+  max-width: 52rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notes li {
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--st-line);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--st-text) 80%, var(--st-muted));
+}
+
+.notes__when {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--st-muted);
+}
+
+.notes__fix {
+  color: var(--st-muted);
+}
+
+.notes b {
+  color: var(--st-text);
+  font-weight: var(--st-font-weight-medium);
+}
+
+.notes__more {
+  margin-top: 0.35rem;
+}
+
+.notes__more summary {
+  width: fit-content;
+  color: var(--st-primary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.notes__more p {
+  margin: 0.5rem 0 0;
+}
+
+.notes__more summary:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 2px;
+}

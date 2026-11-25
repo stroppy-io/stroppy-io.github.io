@@ -1,711 +1,768 @@
-/* /ratings: databases rated against the original they claim to replace
-   (src/pages/ratings.tsx, components under src/components/ratings).
-   Kit colours only. A category's colour names the category (compatibility,
-   speed, analytics); quality is told by the score chip's tone (good, fair, poor). */
+/* /ratings: the reader's question, the answer, the engines grouped by what
+   they mean for the reader's tools, then the sections under the table. The
+   tool cells share the conformity map's language (compat-map.css): a state's
+   tint and glyph. Colours from the kit only. */
 
-/* The engine panel sits outside .rt, so the palette is set on both. */
-.rt,
-.rt-panel {
-  --rt-compat: var(--st-series-3);
-  --rt-speed: var(--st-series-1);
-  --rt-analytics: var(--st-series-4);
-  --rt-good: var(--st-success);
-  --rt-fair: var(--st-warning);
-  --rt-poor: var(--st-error);
-}
-
-/* min-width 0: in Docusaurus's flex column the table would widen the page. */
-.rt {
+/* min-width 0: the page sits in Docusaurus's flex column, which would
+   otherwise let the wide table stretch it past the screen. */
+.rp {
   width: 100%;
   min-width: 0;
-  max-width: calc(1240px + 4rem);
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 1.5rem 2rem 3rem;
-  font-size: 14px;
+  padding: 2.5rem 1rem 5rem;
 }
 
-.rt a:focus-visible,
-.rt button:focus-visible,
-.rt select:focus-visible,
-.rt input:focus-visible,
-.rt [tabindex]:focus-visible,
-.rt-panel button:focus-visible,
-.rt-panel a:focus-visible {
+/* ---------- The question ---------- */
+
+.rp-title {
+  margin: 0 0 1.5rem;
+  font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+  letter-spacing: -0.02em;
+}
+
+/* A card per protocol: its name and what is known about it. */
+.rp-protos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.rp-proto {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-md);
+  background: var(--st-panel);
+  color: var(--st-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rp-proto__name {
+  font-size: 1rem;
+  font-weight: var(--st-font-weight-medium);
+}
+
+.rp-proto__facts {
+  font-size: 0.8125rem;
+  color: var(--st-muted);
+}
+
+.rp-proto__facts b {
+  color: var(--st-text);
+  font-weight: var(--st-font-weight-medium);
+}
+
+.rp-proto.is-on {
+  border-color: var(--st-primary);
+  box-shadow: inset 0 0 0 1px var(--st-primary);
+  background: color-mix(in srgb, var(--st-primary) 10%, var(--st-panel));
+}
+
+.rp-proto:focus-visible {
   outline: 2px solid var(--st-primary);
   outline-offset: 2px;
 }
 
-.rt button,
-.rt-panel button {
-  font: inherit;
-  cursor: pointer;
-}
-
-/* A select as a pill with a drawn chevron (components/ratings/Select.tsx);
-   the native control stays underneath for the keyboard and screen readers. */
-.rt-select {
-  position: relative;
-  display: inline-flex;
-}
-
-.rt-select select {
-  appearance: none;
-  padding: 0.2rem 1.6rem 0.2rem 0.7rem;
-  border: 1px solid var(--st-line);
-  border-radius: var(--st-radius-pill);
-  background: var(--st-panel);
-  color: var(--st-text);
-  font: inherit;
-  font-size: 12px;
-  line-height: 1.4;
-  cursor: pointer;
-}
-
-.rt-select::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: 0.7rem;
-  width: 0.35rem;
-  height: 0.35rem;
-  border-right: 1.5px solid var(--st-muted);
-  border-bottom: 1.5px solid var(--st-muted);
-  transform: translateY(-70%) rotate(45deg);
-  pointer-events: none;
-}
-
 @media (hover: hover) and (pointer: fine) {
-  .rt-select select:hover {
+  .rp-proto:not(.is-on):hover {
     border-color: var(--st-line-strong);
   }
 }
 
-/* ---------- Title and protocol ---------- */
-
-.rt-title {
-  margin: 0;
-  font-size: clamp(1.375rem, 1.1rem + 0.8vw, 1.75rem);
-}
-
-.rt-proto {
+/* The views of one protocol, a line of tabs over what they show. */
+.rp-views {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.9rem;
-  margin: 0.9rem 0 0.5rem;
-  font-size: 14px;
-  color: var(--st-muted);
-}
-
-.rt-seg {
-  display: inline-flex;
-  max-width: 100%;
+  gap: 0.25rem;
+  margin: 1.75rem 0 1.5rem;
   overflow-x: auto;
-  border: 1px solid var(--st-line);
-  border-radius: var(--st-radius-md);
+  overflow-y: hidden;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--st-line);
 }
 
-.rt-seg button {
+.rp-views button {
   flex: none;
-  background: var(--st-panel);
-  color: var(--st-muted);
+  margin-bottom: -1px;
+  padding: 0.55rem 0.85rem;
   border: 0;
-  padding: 0.45rem 1rem;
-  font-size: 14px;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--st-muted);
+  font: inherit;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.rp-views button span {
+  margin-left: 0.4rem;
+  font-size: 0.8125rem;
+  color: var(--st-muted);
+}
+
+.rp-views button.is-on {
+  border-bottom-color: var(--st-primary);
+  color: var(--st-text);
+}
+
+.rp-views button:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: -2px;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .rt-seg button:hover {
+  .rp-views button:hover {
     color: var(--st-text);
   }
 }
 
-.rt-seg button + button {
-  border-left: 1px solid var(--st-line);
+@media (pointer: coarse) {
+  .rp-views button {
+    min-height: 2.5rem;
+  }
 }
 
-.rt-seg button[aria-selected='true'] {
-  background: var(--st-raised);
-  color: var(--st-text);
-}
-
-.rt-view {
-  margin: 0.35rem 0 0;
-  font-size: 14px;
-  color: var(--st-text);
-}
-
-.rt-dataset {
-  margin: 0.25rem 0 1rem;
-  font-size: 12px;
+.rp-view > p {
+  max-width: 46rem;
+  margin: 0 0 1.25rem;
+  font-size: 0.9375rem;
   color: var(--st-muted);
 }
 
-/* ---------- Picks ---------- */
+/* The reader's tools: chips, a button that opens the list of them all. */
+.rp-mytools {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
 
-.rt-box {
+.rp-mytools__label {
+  margin-right: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--st-muted);
+}
+
+.rp-chip,
+.rp-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--st-line-strong);
+  border-radius: var(--st-radius-pill);
   background: var(--st-panel);
-  border: 1px solid var(--st-line);
-  border-radius: var(--st-radius-lg);
-  padding: 0.75rem 0.9rem;
-  margin-bottom: 1rem;
+  color: var(--st-text);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
 }
 
-.rt-box__title {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin: 0 0 0.5rem;
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.rp-chip span {
   color: var(--st-muted);
 }
 
-.rt-box__title span {
-  text-transform: none;
-  letter-spacing: 0;
-  font-weight: 400;
-  color: var(--st-disabled);
+.rp-add {
+  border-style: dashed;
+  border-color: var(--st-primary);
+  background: none;
+  color: var(--st-primary);
 }
 
-.rt-picks {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
+.rp-add[aria-expanded='true'] {
+  border-style: solid;
+  background: color-mix(in srgb, var(--st-primary) 14%, transparent);
 }
 
-/* One column, top to bottom: award, name, then the score beside its reason.
-   An empty pick has no score, so nothing depends on a second column. */
-.rt-pick {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 0;
-  padding: 0.5rem 0.65rem;
-  border: 1px solid var(--st-line);
+.rp-chip:focus-visible,
+.rp-add:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rp-chip:hover {
+    border-color: var(--st-error);
+  }
+
+  .rp-chip:hover span {
+    color: var(--st-error);
+  }
+
+  .rp-add:hover {
+    border-style: solid;
+  }
+}
+
+@media (pointer: coarse) {
+  .rp-chip,
+  .rp-add {
+    min-height: 2.5rem;
+  }
+}
+
+/* Every tool the checks cover, searchable; it opens over the answer. */
+.rp-tools {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: min(44rem, 100%);
+  padding: 0.9rem;
+  background: var(--st-panel);
+  border: 1px solid var(--st-line-strong);
+  border-radius: var(--st-radius-lg);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--st-canvas) 70%, transparent);
+}
+
+.rp-tools__search {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--st-line-strong);
   border-radius: var(--st-radius-md);
   background: var(--st-canvas);
   color: var(--st-text);
-  text-align: left;
+  font: inherit;
+  font-size: 0.9375rem;
 }
 
-.rt-pick__award {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.rp-tools__search:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 1px;
 }
 
-.rt-pick__who {
-  font-size: 16px;
-  font-weight: 600;
-  overflow-wrap: anywhere;
+.rp-tools__list {
+  max-height: 18rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  columns: 3 12rem;
+  column-gap: 1rem;
 }
 
-.rt-pick__line {
+.rp-tools__list li {
+  break-inside: avoid;
+}
+
+.rp-tools__list label {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin-top: 0.15rem;
-}
-
-.rt-pick__why {
-  min-width: 0;
-  font-size: 12px;
-  color: var(--st-muted);
-}
-
-.rt-pick--empty .rt-pick__who {
-  color: var(--st-disabled);
-}
-
-.rt-pick--top .rt-pick__award,
-.rt-badge--top {
-  --rt-award: var(--st-mark);
-}
-
-.rt-pick--runner .rt-pick__award,
-.rt-badge--runner {
-  --rt-award: var(--st-series-1);
-}
-
-.rt-pick--fast .rt-pick__award,
-.rt-badge--fast {
-  --rt-award: var(--st-series-5);
-}
-
-.rt-pick--warn .rt-pick__award,
-.rt-badge--warn {
-  --rt-award: var(--st-error);
-}
-
-.rt-pick__award {
-  color: var(--rt-award);
-}
-
-.rt-rules {
-  margin: 0.5rem 0 0;
-  font-size: 11px;
-  color: var(--st-disabled);
-}
-
-.rt-rules b {
-  font-weight: 500;
-}
-
-/* ---------- Score chip, tags and badges ---------- */
-
-.rt-score {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  white-space: nowrap;
-}
-
-.rt-score b {
-  font-family: var(--st-font-mono);
-  font-size: 17px;
-  font-weight: 600;
-  padding: 1px 6px;
+  gap: 0.5rem;
+  padding: 0.3rem 0.25rem;
   border-radius: var(--st-radius-sm);
-}
-
-.rt-score small {
-  font-size: 11px;
-  color: var(--st-muted);
-}
-
-.rt-tone--good {
-  --rt-tone: var(--rt-good);
-}
-
-.rt-tone--fair {
-  --rt-tone: var(--rt-fair);
-}
-
-.rt-tone--poor {
-  --rt-tone: var(--rt-poor);
-}
-
-.rt-score b {
-  color: var(--rt-tone);
-  background: color-mix(in srgb, var(--rt-tone) 18%, transparent);
-}
-
-.rt-tag {
-  font-size: 10px;
-  padding: 0 6px;
-  border-radius: var(--st-radius-pill);
-  border: 1px solid var(--st-line-strong);
-  color: var(--st-muted);
-  margin-left: 6px;
-  vertical-align: 1px;
-  white-space: nowrap;
-}
-
-.rt-tag--base {
-  border-color: var(--st-primary);
-  color: var(--st-primary-text);
-}
-
-.rt-badge {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 1px 6px;
-  border-radius: var(--st-radius-pill);
-  margin-left: 6px;
-  vertical-align: 1px;
-  white-space: nowrap;
-  color: var(--rt-award);
-  background: color-mix(in srgb, var(--rt-award) 18%, transparent);
-}
-
-.rt-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  vertical-align: 1px;
-}
-
-.rt-dot--compat,
-.rt-cell--compat {
-  --rt-cat: var(--rt-compat);
-}
-
-.rt-dot--speed,
-.rt-cell--speed {
-  --rt-cat: var(--rt-speed);
-}
-
-.rt-dot--analytics,
-.rt-cell--analytics {
-  --rt-cat: var(--rt-analytics);
-}
-
-.rt-dot {
-  background: var(--rt-cat);
-}
-
-.rt-na {
-  font-size: 12px;
-  color: var(--st-disabled);
-}
-
-.rt-breaks {
-  color: var(--st-error);
-}
-
-/* ---------- Filters ---------- */
-
-.rt-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 1.25rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--st-line);
-  font-size: 13px;
-  color: var(--st-muted);
-}
-
-.rt-filters label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
+  font-size: 0.875rem;
   cursor: pointer;
 }
 
-.rt-filters__count {
-  margin-left: auto;
+.rp-tools__list input {
+  accent-color: var(--st-primary);
 }
 
-.rt-filters button,
-.rt-more button {
-  background: none;
+.rp-tools__none {
+  color: var(--st-muted);
+  font-size: 0.875rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rp-tools__list label:hover {
+    background: var(--st-raised);
+  }
+}
+
+@media (pointer: coarse) {
+  .rp-tools__search {
+    font-size: 16px;
+  }
+
+  .rp-tools__list label {
+    min-height: 2.5rem;
+  }
+}
+
+/* ---------- The answer ---------- */
+
+.rp-answer {
+  max-width: 50rem;
+  margin: 1.25rem 0 0.35rem;
+  font-size: 1.1875rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--st-text) 82%, var(--st-muted));
+}
+
+.rp-answer b {
+  color: var(--st-text);
+  font-weight: var(--st-font-weight-bold);
+}
+
+.rp-meta {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--st-muted);
+}
+
+.rp-link {
+  padding: 0 0.25rem;
   border: 0;
-  padding: 0;
-  color: var(--st-primary-text);
-  font-size: 13px;
+  background: none;
+  color: var(--st-primary);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
 }
 
-/* ---------- Table: a wide one scrolls in its own box ---------- */
+/* ---------- The engines ---------- */
 
-.rt-scroll {
+/* Sideways in its own box on a narrow screen; positioned for the .sr texts. */
+.rp-table-box {
   position: relative;
+  margin-top: 2.25rem;
   overflow-x: auto;
 }
 
-.rt-table {
+/* Infima styles every table (a block, borders, striped rows): none of it here. */
+.rp-table {
   display: table;
   width: 100%;
-  border-collapse: collapse;
   margin: 0;
+  border-collapse: separate;
+  border-spacing: 3px;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
 }
 
-.rt-table tr,
-.rt-table tr:nth-child(2n) {
+.rp-table thead,
+.rp-table tr,
+.rp-table th,
+.rp-table td {
+  padding: 0;
+  border: 0;
   background: none;
-  border: 0;
 }
 
-.rt-table th,
-.rt-table td {
-  border: 0;
-  border-bottom: 1px solid var(--st-line);
-  padding: 0.45rem 0.5rem;
-  white-space: nowrap;
+.rp-table thead th {
+  padding: 0 0.4rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: var(--st-font-weight-regular);
+  color: var(--st-muted);
+  text-align: center;
+  vertical-align: bottom;
+}
+
+.rp-table thead .rp-table__engine,
+.rp-table thead .rp-table__score,
+.rp-table thead .rp-table__speed {
   text-align: left;
 }
 
-.rt-table th {
-  vertical-align: bottom;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--st-muted);
-  border-bottom-color: var(--st-line-strong);
+.rp-table__col {
+  min-width: 5.5rem;
+  max-width: 8rem;
 }
 
-.rt-table th button {
-  background: none;
+/* The engine names stay in view while the table scrolls sideways. */
+.rp-table__engine {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 15rem;
+  min-width: 11rem;
+  background: var(--st-canvas);
+  text-align: left;
+}
+
+.rp-table tbody .rp-table__engine button {
+  display: grid;
+  width: 100%;
+  padding: 0.45rem 0.5rem;
   border: 0;
-  padding: 0;
-  color: inherit;
-  font-weight: 500;
-}
-
-.rt-table th .rt-select {
-  display: flex;
-  width: fit-content;
-  margin-top: 6px;
-}
-
-.rt-sep {
-  border-left: 1px solid var(--st-line) !important;
-}
-
-.rt-row {
+  border-radius: var(--st-radius-sm);
+  background: none;
+  color: var(--st-text);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
-.rt-row--original td {
-  background: color-mix(in srgb, var(--st-panel) 60%, transparent);
+.rp-row__name {
+  font-size: 0.9375rem;
+  font-weight: var(--st-font-weight-medium);
 }
 
-.rt-row--sel td {
-  background: var(--st-panel);
-}
-
-.rt-row--sel td:first-child {
-  box-shadow: inset 2px 0 0 var(--st-mark);
-}
-
-.rt-rank {
-  width: 1.5rem;
-  color: var(--st-muted);
-  font-family: var(--st-font-mono);
-}
-
-.rt-name {
-  font-weight: 500;
-}
-
-.rt-cell {
-  display: grid;
-  grid-template-columns: 8.5rem 6rem 1.75rem;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-/* No number to lead with (the compatibility average): the bar takes its place. */
-.rt-cell--bare {
-  grid-template-columns: 6rem 1.75rem;
-}
-
-.rt-cell__raw {
-  font-family: var(--st-font-mono);
-  font-size: 13px;
-}
-
-.rt-cell__bar {
-  height: 6px;
-  border-radius: 3px;
-  background: var(--st-raised);
-  overflow: hidden;
-}
-
-.rt-cell__bar i {
+.rp-row__ver {
   display: block;
-  height: 100%;
-  border-radius: 3px;
-  background: var(--rt-cat);
-}
-
-.rt-cell__score {
-  font-family: var(--st-font-mono);
-  font-size: 12px;
+  overflow: hidden;
+  font-size: 0.75rem;
   color: var(--st-muted);
-  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.rt-more td,
-.rt-band td {
-  padding-top: 0.6rem;
+.rp-row.is-open .rp-table__engine button,
+.rp-table tbody .rp-table__engine button:focus-visible {
+  background: var(--st-raised);
 }
 
-.rt-band td {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--st-muted);
+.rp-table tbody .rp-table__engine button:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: -2px;
 }
-
-.rt-foot {
-  margin-top: 0.75rem;
-  font-size: 12px;
-  color: var(--st-disabled);
-}
-
-/* Clusters: their own board under the table, never ranked with it. */
-.rt-mpp {
-  max-width: 44rem;
-  margin-top: 3rem;
-}
-
-.rt-mpp h2 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
-.rt-mpp p {
-  margin: 0.5rem 0 1.25rem;
-  color: var(--st-muted);
-}
-
-/* ---------- One engine ---------- */
-
-.rt-panel {
-  position: fixed;
-  top: var(--ifm-navbar-height);
-  right: 0;
-  bottom: 0;
-  z-index: 50;
-  width: min(460px, 100vw);
-  overflow: auto;
-  padding: 1.1rem 1.25rem 1.75rem;
-  background: var(--st-panel);
-  border-left: 1px solid var(--st-line-strong);
-  box-shadow: -12px 0 32px rgb(0 0 0 / 0.35);
-  font-size: 14px;
-}
-
-.rt-panel h2 {
-  margin: 0 2.5rem 0.25rem 0;
-  font-size: 20px;
-}
-
-.rt-panel__close {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  width: 2rem;
-  height: 2rem;
-  background: none;
-  border: 1px solid var(--st-line);
-  border-radius: var(--st-radius-md);
-  color: var(--st-muted);
-}
-
-.rt-panel__sub {
-  margin: 0;
-  font-size: 12px;
-  color: var(--st-muted);
-}
-
-.rt-panel__score {
-  margin-top: 0.6rem;
-}
-
-.rt-panel h3 {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin: 1rem 0 0.4rem;
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--st-muted);
-}
-
-.rt-panel h3 b {
-  margin-left: auto;
-  font-family: var(--st-font-mono);
-  color: var(--st-text);
-}
-
-.rt-part {
-  display: grid;
-  grid-template-columns: 6rem minmax(0, 1fr) 2.5rem;
-  gap: 0.15rem 0.6rem;
-  align-items: center;
-  padding: 0.2rem 0;
-  font-size: 13px;
-}
-
-.rt-part__score {
-  font-family: var(--st-font-mono);
-  text-align: right;
-}
-
-.rt-part__raw {
-  grid-column: 2 / 4;
-  font-size: 11px;
-  color: var(--st-muted);
-}
-
-.rt-findings {
-  margin: 0.4rem 0 0;
-  padding-left: 1.1rem;
-  font-size: 12px;
-  color: var(--st-muted);
-}
-
-.rt-panel__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.rt-panel__links a {
-  font-size: 12px;
-  border: 1px solid var(--st-line);
-  border-radius: var(--st-radius-md);
-  padding: 0.3rem 0.6rem;
-  text-decoration: none;
-}
-
-/* ---------- Hover only where it does not stick after a tap ---------- */
 
 @media (hover: hover) and (pointer: fine) {
-  .rt-pick:not(.rt-pick--empty):hover {
+  .rp-table tbody .rp-table__engine button:hover {
+    background: var(--st-raised);
+  }
+}
+
+/* A tool on an engine: the state's glyph in its colour and how many features answered alike; no fill. */
+.rp-tool {
+  padding: 0 0.4rem;
+  font-size: 0.875rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.rp-tool .c__glyph {
+  margin-right: 0.35rem;
+  color: var(--tone);
+  font-weight: var(--st-font-weight-bold);
+}
+
+.rp-tool.c--none {
+  color: var(--st-muted);
+}
+
+.rp-table__part {
+  padding: 0 0.4rem;
+  color: color-mix(in srgb, var(--st-text) 80%, var(--st-muted));
+  text-align: center;
+}
+
+.rp-table__fail {
+  width: 4.5rem;
+  padding: 0 0.4rem;
+  color: var(--st-muted);
+  text-align: center;
+}
+
+.rp-table__fail.is-bad {
+  color: var(--st-error);
+  font-weight: var(--st-font-weight-medium);
+}
+
+.rp-table__score,
+.rp-table__speed {
+  padding: 0 0.75rem;
+  white-space: nowrap;
+}
+
+/* The engine's runs, one a line. */
+.rp-runs {
+  display: grid;
+  gap: 0.1rem;
+  font-size: 0.8125rem;
+}
+
+.rp-runs__what,
+.rp-runs__unit,
+.rp-runs__share {
+  color: var(--st-muted);
+}
+
+.rp-none {
+  font-size: 0.75rem;
+  color: var(--st-muted);
+}
+
+/* The score: its number and a bar as long, a tick where we call an engine compatible. */
+.rp-score {
+  display: inline-grid;
+  grid-template-columns: 2.6rem 7rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rp-score b {
+  font-weight: var(--st-font-weight-medium);
+  text-align: right;
+}
+
+.rp-score__track {
+  position: relative;
+  height: 6px;
+  border-radius: var(--st-radius-pill);
+  background: var(--st-raised);
+}
+
+.rp-score__track::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--v) * 1%);
+  border-radius: inherit;
+  background: var(--st-primary);
+}
+
+.rp-score__track::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: -3px;
+  bottom: -3px;
+  left: 80%;
+  width: 1px;
+  background: var(--st-text);
+  opacity: 0.55;
+}
+
+/* A band: what the engines under it mean for the reader, its count after. */
+.rp-band__head th {
+  padding: 1.75rem 0.5rem 0.45rem;
+  font-size: 1rem;
+  font-weight: var(--st-font-weight-medium);
+  text-align: left;
+}
+
+.rp-band:first-of-type .rp-band__head th {
+  padding-top: 0.75rem;
+}
+
+.rp-band__head th::before {
+  content: '';
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-right: 0.55rem;
+  border-radius: 50%;
+  background: var(--band);
+}
+
+.rp-band__n {
+  margin-left: 0.35rem;
+  font-weight: var(--st-font-weight-regular);
+  color: var(--st-muted);
+}
+
+.rp-band--same {
+  --band: var(--st-success);
+}
+
+.rp-band--differs {
+  --band: var(--st-warning);
+}
+
+.rp-band--breaks {
+  --band: var(--st-error);
+}
+
+.rp-band--unknown {
+  --band: var(--st-muted);
+}
+
+/* ---------- An engine, opened ---------- */
+
+.rp-detail-row > td {
+  padding: 0;
+}
+
+.rp-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 0.8fr);
+  gap: 1.5rem 2rem;
+  margin: 0.25rem 0 1rem;
+  padding: 1.25rem 1.4rem;
+  background: var(--st-panel);
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-lg);
+}
+
+.rp-detail h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: var(--st-font-weight-medium);
+}
+
+.rp-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: var(--st-radius-pill);
+  background: color-mix(in srgb, var(--tone) 13%, var(--st-panel));
+  color: var(--st-text);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.rp-pill.is-on {
+  border-color: var(--st-primary);
+}
+
+.rp-pill:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 1px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rp-pill:hover {
     border-color: var(--st-line-strong);
   }
-
-  .rt-row:hover td {
-    background: var(--st-panel);
-  }
-
-  .rt-table th button:hover {
-    color: var(--st-text);
-  }
 }
-
-/* ---------- Touch: controls at least 40px, fields at 16px ---------- */
 
 @media (pointer: coarse) {
-  .rt-seg button,
-  .rt-filters label,
-  .rt-filters button,
-  .rt-more button,
-  .rt-table th button {
+  .rp-pill {
     min-height: 2.5rem;
-  }
-
-  .rt-select select {
-    font-size: 16px;
-    min-height: 2.5rem;
-  }
-
-  .rt-panel__close {
-    width: 2.5rem;
-    height: 2.5rem;
   }
 }
 
-/* ---------- Small screens ---------- */
+.rp-parts {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+}
 
-@media (max-width: 1100px) {
-  .rt-picks {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+.rp-parts dt {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.rp-parts dt b {
+  font-weight: var(--st-font-weight-medium);
+}
+
+.rp-parts dd {
+  margin: 0.1rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--st-muted);
+}
+
+.rp-findings {
+  display: grid;
+  gap: 0.45rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.rp-findings li {
+  display: grid;
+  grid-template-columns: 1.1rem minmax(0, 1fr);
+}
+
+.rp-detail__facts p {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--st-muted);
+}
+
+.rp-detail__links {
+  display: grid;
+  gap: 0.35rem;
+}
+
+/* ---------- Under the table ---------- */
+
+.rp-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rp-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 16rem;
+  align-items: center;
+  gap: 1rem 2rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--st-line);
+  font-size: 0.9375rem;
+}
+
+.rp-list__what b {
+  font-weight: var(--st-font-weight-medium);
+}
+
+.rp-list__note {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--st-muted);
+}
+
+.rp-share {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 3.5rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rp-share b {
+  font-weight: var(--st-font-weight-medium);
+  text-align: right;
+}
+
+.rp-share__track {
+  position: relative;
+  height: 6px;
+  border-radius: var(--st-radius-pill);
+  background: var(--st-raised);
+}
+
+.rp-share__track::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--v) * 1%);
+  border-radius: inherit;
+  background: var(--st-primary);
+}
+
+@media (max-width: 996px) {
+  .rp {
+    padding-top: 2.25rem;
+  }
+
+  .rp-detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rp-list li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
   }
 }
 
-@media (max-width: 600px) {
-  .rt {
-    padding-inline: 1rem;
+@media (max-width: 480px) {
+  .rp-answer {
+    font-size: 1.0625rem;
   }
 
-  .rt-picks {
-    grid-template-columns: 1fr;
+  .rp-table__engine {
+    width: 9.5rem;
+    min-width: 9.5rem;
   }
 
-  .rt-filters__count {
-    margin-left: 0;
+  .rp-score {
+    grid-template-columns: 2.4rem 4.5rem;
   }
 }

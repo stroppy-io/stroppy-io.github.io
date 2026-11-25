@@ -37,17 +37,3 @@ export const issueUrl = (f: IssueForm) => {
   const body = f.fields.map((x) => `**${x.name}:** ${x.hint}`).join('\n');
   return `${REPOS.stroppy}/issues/new?${new URLSearchParams({title: f.title, body}).toString()}`;
 };
-
-/** A published result we got wrong and changed. Newest first. */
-export type Correction = {
-  /** ISO date the correction was published. */
-  date: string;
-  /** The result, as a reader finds it: "CockroachDB · pgwire · Types". */
-  result: string;
-  /** What was published, what it is now, and why. */
-  change: string;
-  /** The issue that reported it. */
-  issue: string;
-};
-
-export const CORRECTIONS: Correction[] = [];

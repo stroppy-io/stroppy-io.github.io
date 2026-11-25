@@ -1,5 +1,5 @@
-// The shapes of stroppy-conformity's site export (schema 1), as far as this
-// page reads them: compat.json and details/<row id>.json. The contract is
+// The shapes of stroppy-conformity's site export (schema 1), as far as the
+// site reads them: compat.json, errata.json and details/<row id>.json. The contract is
 // docs/site-export.md in stroppy-io/stroppy-conformity; fields are only ever
 // added within schema 1, so everything not listed here is ignored.
 
@@ -45,7 +45,77 @@ export type Row = {
   note?: string;
   details: string;
   feature_cells: FeatureCell[];
+  /** The builds measured: `sut.claimed` is the product's own version (Greenplum 7.1.0), where `claims` is what the server reports (12.12). */
+  builds?: {sut?: {claimed?: string}};
 };
+
+/** A storage engine, table access method or index extension, measured against the same build on its default (heap, InnoDB). */
+export type AccessMethodRow = Row & {
+  access_method: {
+    table: string;
+    version: string;
+    pg_major?: string;
+    extensions?: Record<string, string>;
+    index?: string[];
+    recall?: number;
+  };
+};
+
+/** A client or tool of a protocol and the features (indexes into `features`) it relies on. */
+export type ClientNeed = {client: string; declared: string[]; features: number[]};
+
+/** A member of a product family against the family's own baseline (Greengage 6 against Greenplum 6). */
+export type FamilyRow = {
+  family: string;
+  baseline: string;
+  baseline_row: string;
+  row: string;
+  target: string;
+  engine: string;
+  protocol: string;
+  claims: string;
+  /** Checks both rows judged, and how many of them answered alike or differently. */
+  cells: number;
+  same: number;
+  differ: number;
+  same_share: number;
+  stated: {claims?: {text: string; quote?: string; source: string}[]};
+};
+
+/** A fork and what it forked from; `base` is the row of the upstream it is compared with. */
+export type ForkRow = {
+  row: string;
+  target: string;
+  engine: string;
+  protocol: string;
+  claims: string;
+  upstream: string;
+  base?: string;
+  same_major: boolean;
+  compared: boolean;
+  lineage?: string;
+};
+
+/** A target measured and not published, and why. */
+export type Unpublished = {target: string; protocol: string; role: Role; reason: string; engine: string};
+
+/** errata.json: what a published result got wrong and what was done. */
+export type Erratum = {
+  id: string;
+  date: string;
+  dataset: string;
+  targets: string[];
+  protocol: string;
+  what: string;
+  /** Whose side the error was on: "ours" (the measurement) or the engine's. */
+  cause: string;
+  cause_detail: string;
+  fix_title?: string;
+  corrected_in: string;
+  note?: string;
+};
+
+export type Errata = {schema: number; kind: string; entries: Erratum[]};
 
 export type OutcomeInfo = {label: string; meaning: string; severity: number; counted: string};
 export type FeatureCode = {code: number; outcome: string; label: string; color: string; meaning: string};
@@ -76,6 +146,13 @@ export type Compat = {
   feature_sets: Record<string, number[]>;
   legend: Legend;
   rows: Row[];
+  /** Per protocol, the clients and tools whose features the checks cover. */
+  clients: Record<string, ClientNeed[]>;
+  families: {rows: FamilyRow[]};
+  forks: {rows: ForkRow[]};
+  access_methods: {rows: AccessMethodRow[]};
+  withheld: Unpublished[];
+  not_measured: Unpublished[];
 };
 
 export type Suite = {
@@ -121,6 +198,14 @@ export type Details = {
   run: {id: string; status: string; started: string; finished: string; tool_version: string; image: string; image_digest: string};
   suites: Suite[];
   root_causes: RootCause[];
-  reproduce: {command: string; check_command: string; golden: string; tool_version: string; image_digest: string; baseline: string; run_id: string};
+  reproduce: {
+    command: string;
+    check_command: string;
+    golden: string;
+    tool_version: string;
+    image_digest: string;
+    baseline: string;
+    run_id: string;
+  };
   harness_note?: string;
 };

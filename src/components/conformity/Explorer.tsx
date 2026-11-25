@@ -5,6 +5,7 @@ import CompatMap from './CompatMap';
 import Drawer from './Drawer';
 import About, {AboutButton} from './About';
 import {StatesLegend} from './Cell';
+import Unpublished from './Unpublished';
 import {day, protocolName, protocolShort, protocolsOf} from './data';
 import type {Compat} from './types';
 import '../../css/conformity.css';
@@ -101,9 +102,17 @@ export default function Explorer() {
         <div key={p} id={`cf-panel-${p}`} role="tabpanel" aria-labelledby={`cf-tab-${p}`} hidden={p !== view.protocol} className="panel">
           <h3 className="panel__title">
             {protocolName(p)}
-            <span>{engines(p)} engines, best first. Pick an engine for what differs; pick a column for its features.</span>
+            <span>
+              {engines(p) > 0
+                ? `${engines(p)} engines, best first. Pick an engine for what differs; pick a column for its features.`
+                : 'No engine published yet: each was measured and is held back, for the reason given.'}
+            </span>
           </h3>
-          <CompatMap data={data} protocol={p} onOpen={(id) => set({engine: id})} />
+          {engines(p) > 0 ? (
+            <CompatMap data={data} protocol={p} onOpen={(id) => set({engine: id})} />
+          ) : (
+            <Unpublished rows={[...data.not_measured, ...data.withheld].filter((u) => u.protocol === p)} />
+          )}
         </div>
       ))}
       <p className="cf-caveat">

@@ -1,6 +1,7 @@
 import type {CSSProperties} from 'react';
 import clsx from 'clsx';
 import {STATES, percent, stateInfo, stateOfCode, type Cell} from './data';
+import type {Legend} from './types';
 import '../../css/compat-map.css';
 
 // The compatibility map's visual language (Explorer.tsx, CompatMap.tsx,
@@ -9,7 +10,7 @@ import '../../css/compat-map.css';
 // src/css/compat-map.css.
 
 /** One map cell, as a table cell. `where` names it for the tooltip and screen readers. */
-export function StateCell({cell, where}: {cell: Cell; where: string}) {
+export function StateCell({cell, where, legend}: {cell: Cell; where: string; legend: Legend}) {
   if (!cell) {
     return (
       <td className="c c--blank" title={`${where}: not measured`}>
@@ -17,7 +18,7 @@ export function StateCell({cell, where}: {cell: Cell; where: string}) {
       </td>
     );
   }
-  const state = stateOfCode(cell.code);
+  const state = stateOfCode(legend, cell.code);
   const info = stateInfo(state);
   // Rounded down, so a cell that is not all matches never reads 100%.
   const share = cell.total > 0 ? Math.floor((cell.matched / cell.total) * 100) : null;

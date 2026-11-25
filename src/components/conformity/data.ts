@@ -1,4 +1,4 @@
-import type {Compat, Feature, FeatureCell, Row} from './types';
+import type {Compat, Feature, FeatureCell, Legend, Row} from './types';
 
 // Reading the export for the conformity map and plugins/conformity.ts: protocol
 // names, the five plain states the map shows (from the export's outcome
@@ -21,7 +21,7 @@ export function mapUrl({protocol, engine}: {protocol?: string; engine?: string} 
 }
 
 /** Tabs in this order, PostgreSQL first; a protocol the export adds goes after. */
-export const PROTOCOL_ORDER = ['pgwire', 'mysql', 'mongo', 'elastic'];
+export const PROTOCOL_ORDER = ['pgwire', 'mysql', 'mongo', 'elastic', 'redis', 's3'];
 
 /** Short names for tabs, and the original engine each protocol is measured against. */
 export const PROTOCOLS: Record<string, {short: string; full: string}> = {
@@ -29,6 +29,8 @@ export const PROTOCOLS: Record<string, {short: string; full: string}> = {
   mysql: {short: 'MySQL', full: 'MySQL client/server protocol'},
   mongo: {short: 'MongoDB', full: 'MongoDB wire protocol'},
   elastic: {short: 'Elasticsearch', full: 'Elasticsearch REST API'},
+  redis: {short: 'Redis', full: 'Redis serialization protocol (RESP)'},
+  s3: {short: 'S3', full: 'Amazon S3 API'},
 };
 
 export const protocolShort = (p: string) => PROTOCOLS[p]?.short ?? p;
@@ -65,13 +67,13 @@ export const STATES: {id: State; glyph: string; label: string; meaning: string}[
 
 export const stateInfo = (s: State) => STATES.find((x) => x.id === s)!;
 
-/** The export's feature-map code (legend.feature_codes) as one of the five states. */
-export function stateOfCode(code: number): State {
-  if (code === 0) return 'same';
-  if (code === 3) return 'refused';
-  if (code === 4) return 'differs';
-  if (code >= 5) return 'breaks';
-  return 'none';
+/**
+ * A feature-map code as one of the five states, by the outcome the export's
+ * own legend gives it (legend.feature_codes): the numbering is the export's
+ * and changes between tool versions, the outcome names do not.
+ */
+export function stateOfCode(legend: Legend, code: number): State {
+  return stateOfOutcome(legend.feature_codes.find((c) => c.code === code)?.outcome ?? '');
 }
 
 /** An outcome name (legend.outcomes) as one of the five states. */

@@ -1,74 +1,62 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
+import clsx from 'clsx';
 import Layout from '@theme/Layout';
+import Link from '@docusaurus/Link';
 import {useHistory, useLocation} from '@docusaurus/router';
 import compatJson from '@site/static/data/conformity/compat.json';
-import type {Compat} from '@site/src/components/conformity/types';
+import errataJson from '@site/static/data/conformity/errata.json';
+import type {Compat, Errata as ErrataFile} from '@site/src/components/conformity/types';
 import {day, protocolShort, protocolsOf} from '@site/src/components/conformity/data';
 import useRatings from '@site/src/components/landing/useRatings';
 import {TopBoard} from '@site/src/components/landing/Leaderboard';
 import {CLOUD} from '@site/src/components/landing/rating';
+import {COMPATIBLE} from '@site/src/components/landing/CompatSpread';
+import {Protocols, Tools, toolsInWords, type ProtocolCard} from '@site/src/components/ratings/Ask';
+import FitTable, {type Fit} from '@site/src/components/ratings/FitTable';
+import EngineDetail from '@site/src/components/ratings/EngineDetail';
+import {Families, StorageEngines} from '@site/src/components/ratings/Sections';
+import Unpublished from '@site/src/components/conformity/Unpublished';
+import Errata from '@site/src/components/conformity/Errata';
+import {bandOf, fitShare, originalTpcc, partsOf, runsOf, subjectsOf, toolFit, toolsOf, type Band} from '@site/src/components/ratings/fit';
+import {parse, serialize, type State, type View} from '@site/src/components/ratings/state';
 import '../css/landing.css';
-import Picks from '@site/src/components/ratings/Picks';
-import Filters from '@site/src/components/ratings/Filters';
-import RatingsTable from '@site/src/components/ratings/RatingsTable';
-import EnginePanel from '@site/src/components/ratings/EnginePanel';
-import {
-  AVERAGES,
-  CATEGORIES,
-  KIND_LABELS,
-  KINDS,
-  PICKS,
-  average,
-  baseline,
-  category,
-  engines,
-  score,
-  winners,
-  type Engine,
-  type Kind,
-  type PickId,
-} from '@site/src/components/ratings/score';
-import {parse, serialize, type State} from '@site/src/components/ratings/state';
 import '../css/ratings.css';
 
-// Databases rated against the original they claim to replace: conformity
-// (static/data/conformity, read at build) and TPC-C from Stroppy Cloud (a
-// copy taken at build by plugins/cloud-rating.ts, refreshed in the browser).
-// Everything the reader picks lives in the query string (components/ratings/state.ts).
+// Which database can replace the one your clients speak to, and what breaks.
+// The reader picks the protocol (a card each, with what is known about it)
+// and names their tools; every engine that claims the protocol answers,
+// grouped by what it means for those tools, with its speed where Stroppy
+// Cloud ran it. Beside the engines, as views of the same protocol: speed by
+// where it ran, forks against what they forked, storage engines, what was not
+// published, what we corrected. Data: the conformity export
+// (static/data/conformity) and Stroppy Cloud's rating. Everything the reader
+// picks lives in the query string (ratings/state.ts).
 
 const compat = compatJson as unknown as Compat;
+const errata = errataJson as unknown as ErrataFile;
 const PROTOCOLS = protocolsOf(compat);
+const PARTS = partsOf(compat);
 
-const KIND_TITLE: Record<Kind, string> = {
-  oltp: 'Transactional databases',
-  analytics: 'Analytical databases',
-  search: 'Search engines',
-  proxy: 'Proxies and poolers',
-};
+const unpublishedOf = (proto: string) => [...compat.not_measured, ...compat.withheld].filter((u) => u.protocol === proto);
 
-/** The heading names the view, so a jump from the menu visibly lands somewhere. */
-function viewTitle(st: State, name: string): string {
-  if (st.min >= 9 && st.clean) return `Drop-in replacements for ${name} clients`;
-  if (st.bench && st.sort === 'speed') return `The fastest databases for ${name} clients`;
-  if (st.kind) return `${KIND_TITLE[st.kind]} for ${name} clients`;
-  return `Databases for ${name} clients, rated`;
-}
+const CARDS: ProtocolCard[] = PROTOCOLS.map((proto) => {
+  const subjects = subjectsOf(compat, proto);
+  return {
+    proto,
+    engines: subjects.length,
+    compatible: subjects.filter((r) => (r.scores.overall ?? 0) >= COMPATIBLE).length,
+    held: unpublishedOf(proto).length,
+  };
+});
 
-/** What narrows or orders the view, in words; empty for the plain view. */
-function viewFacts(st: State): string[] {
-  const sortLabel = CATEGORIES.find((c) => c.id === st.sort)?.label.toLowerCase();
-  return [
-    st.kind && KIND_LABELS[st.kind].toLowerCase(),
-    st.min > 0 && `compatibility ${st.min.toFixed(1)} or more`,
-    st.clean && 'nothing broken',
-    st.bench && 'with a TPC-C run',
-    sortLabel && `by ${sortLabel}`,
-  ].filter((f): f is string => typeof f === 'string');
+/** The band an engine is in when no tool is picked: its own score. Crashes are counted in the row. */
+function bandByScore(overall: number | null | undefined): Band {
+  if (typeof overall !== 'number') return 'unknown';
+  return overall >= COMPATIBLE ? 'same' : 'differs';
 }
 
 export default function RatingsPage() {
   const ratings = useRatings();
-  const all = useMemo(() => engines(compat, ratings), [ratings]);
   const location = useLocation();
   const history = useHistory();
   // The URL is read after hydration, so the server's HTML and the first client render agree.
@@ -80,131 +68,172 @@ export default function RatingsPage() {
     [history],
   );
 
-  const base = baseline(all, st.proto);
-  const others = all
-    .filter((e) => e.protocol === st.proto && e.original && e !== base)
-    .sort((a, b) => b.name.localeCompare(a.name, undefined, {numeric: true}));
-  const ofProto = all.filter((e) => e.protocol === st.proto && !e.original);
-  const kinds = KINDS.filter((k) => ofProto.some((e) => e.kind === k));
-  const alts = ofProto.filter((e) => st.kind === null || e.kind === st.kind);
-  const shown = alts.filter(
-    (e) =>
-      (!st.min || (average(CATEGORIES[0], e, base) ?? 0) >= st.min) &&
-      (!st.clean || e.breaks === 0) &&
-      (!st.bench || Boolean(e.tx || e.procs || e.tpch || e.tpcds)),
-  );
-  const key = (e: Engine) =>
-    st.sort === 'score'
-      ? score(e, base, st.view)?.value
-      : category(CATEGORIES.find((c) => c.id === st.sort) ?? CATEGORIES[0], e, base, st.view[st.sort]);
-  // Unmeasured last; ties go to the engine with more categories run, then by name.
-  shown.sort((a, b) => {
-    const x = key(a),
-      y = key(b);
-    if ((x === undefined) !== (y === undefined)) return x === undefined ? 1 : -1;
-    return (
-      ((x ?? 0) - (y ?? 0)) * st.dir ||
-      (score(b, base, AVERAGES)?.measured ?? 0) - (score(a, base, AVERAGES)?.measured ?? 0) ||
-      a.name.localeCompare(b.name)
-    );
-  });
+  const original = protocolShort(st.proto);
+  const tools = useMemo(() => toolsOf(compat, st.proto), [st.proto]);
+  const picked = st.tools.filter((t) => tools.some((x) => x.name === t));
+  const pickedTools = picked.map((name) => tools.find((t) => t.name === name)).filter((t) => t !== undefined);
+  const base = originalTpcc(compat, st.proto, ratings);
 
-  const won = winners(all, st.proto, st.kind);
-  const awards = new Map<string, PickId[]>();
-  for (const p of PICKS) {
-    const e = won[p.id];
-    if (e) awards.set(e.id, [...(awards.get(e.id) ?? []), p.id]);
-  }
-  const open = all.find((e) => e.id === st.db);
-  const name = protocolShort(st.proto);
-  const facts = viewFacts(st);
-  const close = useCallback(() => set({db: null}), [set]);
+  const fits: Fit[] = subjectsOf(compat, st.proto).map((row) => {
+    const cells = pickedTools.map((t) => toolFit(compat.legend, row, t));
+    const runs = runsOf(row, ratings);
+    const tx = runs.find((r) => r.label === 'TPC-C')?.run;
+    return {
+      row,
+      cells,
+      runs,
+      band: pickedTools.length ? bandOf(cells.map((c) => c.state)) : bandByScore(row.scores.overall),
+      share: tx && base?.value && ratings.tx?.data.includes(tx) ? tx.value / base.value : undefined,
+    };
+  });
+  // Within a band, the engine closest to the original for the reader's tools first; the export's order breaks a tie.
+  if (pickedTools.length) fits.sort((a, b) => fitShare(b.cells) - fitShare(a.cells));
+  const count = (b: Band) => fits.filter((f) => f.band === b).length;
+  const words = toolsInWords(picked);
+  const bands: {band: Band; title: string}[] = pickedTools.length
+    ? [
+        {band: 'same', title: `Run ${words} like ${original}`},
+        {band: 'differs', title: 'Answer some of it differently'},
+        {band: 'breaks', title: 'Break on some of it'},
+        {band: 'unknown', title: 'Not measured for these tools'},
+      ]
+    : [
+        {band: 'same', title: `Compatible: ${COMPATIBLE} or more`},
+        {band: 'differs', title: `Partly compatible: under ${COMPATIBLE}`},
+        {band: 'unknown', title: 'No score'},
+      ];
+
+  const families = compat.families.rows.filter((f) => f.protocol === st.proto);
+  const storage = compat.access_methods.rows.filter((r) => r.protocol === st.proto && r.role === 'subject');
+  const unpublished = unpublishedOf(st.proto);
+  const corrections = errata.entries.filter((e) => e.protocol === st.proto);
+  const ran = fits.filter((f) => f.runs.length > 0).length;
+
+  // A view per thing beside the engines, shown only where the protocol has it.
+  const views: {id: View; label: string; n?: number}[] = [
+    {id: 'engines', label: 'Engines', n: fits.length},
+    {id: 'speed', label: 'Speed', n: ran || undefined},
+    ...(families.length ? [{id: 'forks' as const, label: 'Forks', n: families.length}] : []),
+    ...(storage.length ? [{id: 'storage' as const, label: 'Storage engines', n: storage.length}] : []),
+    ...(unpublished.length ? [{id: 'held' as const, label: 'Not published', n: unpublished.length}] : []),
+    ...(corrections.length ? [{id: 'errata' as const, label: 'Corrections', n: corrections.length}] : []),
+  ];
+  const view = views.some((v) => v.id === st.view) ? st.view : 'engines';
 
   return (
     <Layout
-      title="Database ratings"
-      description="Databases rated against the original they claim to replace: compatibility, TPC-C speed and analytics, measured the same way.">
-      <main className="rt">
-        <h1 className="rt-title">{viewTitle(st, name)}</h1>
-        {/* The page's first choice, on its own line: every table, pick and score below depends on it. */}
-        <div className="rt-proto">
-          <span id="rt-proto">Your clients speak</span>
-          <div className="rt-seg" role="tablist" aria-labelledby="rt-proto">
-            {PROTOCOLS.map((p) => (
-              <button
-                key={p}
-                type="button"
-                role="tab"
-                aria-selected={p === st.proto}
-                onClick={() => set({proto: p, kind: null, db: null, refs: false})}>
-                {protocolShort(p)}
-              </button>
-            ))}
-          </div>
-        </div>
-        {facts.length > 0 && (
-          <p className="rt-view">
-            {facts.join(' · ')} · {shown.length} of {ofProto.length}
-          </p>
+      title="Replace a database without breaking your tools"
+      description="Every engine that claims to speak PostgreSQL, MySQL, MongoDB, Elasticsearch, Redis or S3, checked against the original: what works for your tools, what breaks, and how fast.">
+      <main className="rp">
+        <h1 className="rp-title">Replace {original} without breaking your tools</h1>
+        <Protocols cards={CARDS} value={st.proto} onPick={(p) => set({proto: p, tools: [], db: null, view: 'engines'})} />
+
+        <nav className="rp-views" aria-label={`About ${original}`}>
+          {views.map((v) => (
+            <button
+              key={v.id}
+              type="button"
+              aria-current={v.id === view ? 'page' : undefined}
+              className={clsx(v.id === view && 'is-on')}
+              onClick={() => set({view: v.id})}>
+              {v.label}
+              {v.n !== undefined && <span>{v.n}</span>}
+            </button>
+          ))}
+        </nav>
+
+        {view === 'engines' && (
+          <section aria-label={`Engines that claim ${original}`}>
+            <Tools proto={st.proto} tools={tools} picked={picked} onTools={(t) => set({tools: t})} />
+            <p className="rp-answer">
+              {fits.length === 0 ? (
+                <>No engine that claims {original} is published yet. What was measured, and why it is held back, is under Not published.</>
+              ) : pickedTools.length ? (
+                <>
+                  <b>
+                    {count('same')} of {fits.length}
+                  </b>{' '}
+                  run {words} the way {original} does; {count('differs')} answer some of it differently, {count('breaks')} break on it.
+                </>
+              ) : (
+                <>
+                  <b>
+                    {count('same')} of {fits.length}
+                  </b>{' '}
+                  answer at least {COMPATIBLE}% of our checks the way {original} does. Pick your tools to see what works for them.
+                </>
+              )}
+            </p>
+            <p className="rp-meta">
+              Each engine against the {original} version it reports, checked {day(compat.dataset.audited_at)}.{' '}
+              <Link to="/tools/conformity">How the checks work</Link>
+            </p>
+            {fits.length > 0 && (
+              <FitTable
+                original={original}
+                tools={picked}
+                parts={PARTS}
+                fits={fits}
+                bands={bands}
+                open={st.db}
+                onOpen={(id) => set({db: id})}
+                detail={(f) => (
+                  <EngineDetail
+                    fit={f}
+                    legend={compat.legend}
+                    original={original}
+                    tools={tools}
+                    picked={picked}
+                    parts={PARTS}
+                    fork={compat.forks.rows.find((k) => k.row === f.row.id)}
+                    onTool={(name) => set({tools: picked.includes(name) ? picked.filter((t) => t !== name) : [...picked, name]})}
+                  />
+                )}
+              />
+            )}
+          </section>
         )}
-        <p className="rt-dataset">
-          Conformity: dataset of {day(compat.dataset.audited_at)} · TPC-C, TPC-H, TPC-DS: Stroppy Cloud, one 32 vCPU · 128 GB machine, each
-          configuration’s best run in 30 days
-        </p>
-        {/* Keyed on what the menu switches, so a jump from it replays the entry. */}
-        <div key={`picks-${st.proto}-${st.kind}`} className="page-enter">
-          <Picks winners={won} base={base} onOpen={(id) => set({db: id})} />
-        </div>
-        <Filters
-          kind={st.kind}
-          kinds={kinds}
-          min={st.min}
-          clean={st.clean}
-          bench={st.bench}
-          shown={shown.length}
-          total={ofProto.length}
-          onChange={(f) => set(f)}
-        />
-        <div key={`table-${st.proto}-${st.kind}`} className="page-enter">
-          <RatingsTable
-            base={base}
-            others={others}
-            showRefs={st.refs}
-            rows={shown}
-            views={st.view}
-            sort={st.sort}
-            dir={st.dir}
-            awards={awards}
-            selected={st.db}
-            onSort={(s) => set({sort: s, dir: st.sort === s ? (st.dir < 0 ? 1 : -1) : -1})}
-            onView={(c, v) => set({view: {...st.view, [c]: v}})}
-            onToggleRefs={() => set({refs: !st.refs})}
-            onOpen={(id) => set({db: id})}
-          />
-        </div>
-        <p className="rt-foot">
-          Score: the mean of the categories that were run, out of 10; “1 of 3” says how many. The baseline is the original every engine is
-          compared with, so it scores 10 by definition. {CATEGORIES.map((c) => `${c.label}: ${c.how}.`).join(' ')} Hover a cell for its
-          parts; open a row for all of them.
-        </p>
-        <section className="rt-mpp" aria-labelledby="rt-mpp">
-          <h2 id="rt-mpp">Every run, by where it ran</h2>
-          <p>
-            Each table is one workload on one topology, one kind of hardware and one scale: a cluster is ranked only against the same
-            cluster, never against a single machine.
-          </p>
-          <TopBoard more={{href: `${CLOUD}/leaderboard`, label: 'Stroppy Cloud leaderboard'}} />
-        </section>
+
+        {view === 'speed' && (
+          <section className="rp-view" aria-label="Speed, by where it ran">
+            <p>
+              Each table is one workload on one topology, one kind of hardware and one scale, never mixed. Every row opens the report of its
+              run.
+            </p>
+            <TopBoard more={{href: `${CLOUD}/leaderboard`, label: 'Stroppy Cloud leaderboard'}} />
+          </section>
+        )}
+
+        {view === 'forks' && (
+          <section className="rp-view" aria-label="Forks against the product they forked">
+            <p>The same checks on the fork and on the product it came from: of the checks both answered, how many alike.</p>
+            <Families rows={families} />
+          </section>
+        )}
+
+        {view === 'storage' && (
+          <section className="rp-view" aria-label="Storage engines and extensions">
+            <p>Each against the same build on its default storage, so the score is what the storage engine or extension changes.</p>
+            <StorageEngines rows={storage} />
+          </section>
+        )}
+
+        {view === 'held' && (
+          <section className="rp-view" aria-label="Measured, not published yet">
+            <p>Measured and held back, each with the reason. None of it says anything about the engine.</p>
+            <Unpublished rows={unpublished} />
+          </section>
+        )}
+
+        {view === 'errata' && (
+          <section className="rp-view" aria-label="What we corrected">
+            <p>
+              Results we published and then changed, and why. <Link to="/vendors#dispute">Report an error</Link>
+            </p>
+            <Errata entries={corrections} />
+          </section>
+        )}
       </main>
-      {open && (
-        <EnginePanel
-          engine={open}
-          base={baseline(all, open.protocol)}
-          protocolName={protocolShort(open.protocol)}
-          awards={awards.get(open.id) ?? []}
-          onClose={close}
-        />
-      )}
     </Layout>
   );
 }

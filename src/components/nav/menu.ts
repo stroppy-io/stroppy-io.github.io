@@ -6,8 +6,7 @@
 // inside a section. `strip` is a line of links along the panel's bottom.
 
 import {PROTOCOL_ORDER, mapUrl, protocolShort} from '../conformity/data';
-import {KIND_LABELS, type Kind} from '../ratings/score';
-import {defaults, serialize, type State} from '../ratings/state';
+import {serialize, type State} from '../ratings/state';
 import {DOCS, REPOS, TOOLS} from '../tools/tools';
 import {VENDORS} from '../vendors/vendors';
 
@@ -41,26 +40,10 @@ export const sectionItems = (s: MenuSection): MenuItem[] =>
 
 const item = (label: string, desc: string, href: string): MenuItem => ({label, desc, href});
 
-// Benchmarks is /ratings: every item is one of the page's filters, so the
-// menu offers what the page can show and nothing else. The query is built by
-// the page's own serializer (src/components/ratings/state.ts).
-const ratings = (s: Partial<State> = {}) => `/ratings${serialize({...defaults(PROTOCOL_ORDER), ...s}, PROTOCOL_ORDER)}`;
-
-/**
- * The kinds a protocol's engines come in, as the page's Kind filter offers
- * them; MongoDB and Elasticsearch engines are each of one kind, so no filter.
- */
-const KINDS_BY_PROTOCOL: {proto: string; kinds: Kind[]}[] = [
-  {proto: 'pgwire', kinds: ['oltp', 'analytics', 'proxy']},
-  {proto: 'mysql', kinds: ['oltp', 'analytics', 'search', 'proxy']},
-];
-
-const KIND_DESC: Record<Kind, string> = {
-  oltp: 'Engines built for transactions',
-  analytics: 'Warehouses, time series, streaming',
-  search: 'Search engines with a SQL door',
-  proxy: 'Poolers and sharding layers',
-};
+// Benchmarks is /ratings: a protocol's engines against the original, and the
+// page's other views. The query is built by the page's own serializer
+// (src/components/ratings/state.ts).
+const ratings = (s: Partial<State> = {}) => `/ratings${serialize(s, PROTOCOL_ORDER)}`;
 
 export const MENU: MenuSection[] = [
   {
@@ -80,20 +63,15 @@ export const MENU: MenuSection[] = [
         ],
       },
       {
-        ...item('By kind', 'Like compared with like', ratings({kind: 'oltp'})),
-        columns: KINDS_BY_PROTOCOL.map((g) => ({
-          title: `${protocolShort(g.proto)}-compatible`,
-          items: g.kinds.map((k) => item(KIND_LABELS[k], KIND_DESC[k], ratings({proto: g.proto, kind: k}))),
-        })),
-      },
-      {
-        ...item('Shortlists', 'Filters and an order, set for you', ratings({min: 9, clean: true})),
+        ...item('Beside the engines', 'Speed, forks, storage engines', ratings({view: 'speed'})),
         columns: [
           {
-            title: 'Shortlists',
+            title: 'PostgreSQL, beside the engines',
             items: [
-              item('Drop-in replacements', 'Compatibility 9 or more, nothing broken', ratings({min: 9, clean: true})),
-              item('Fastest first', 'Engines with a TPC-C run, by speed', ratings({bench: true, sort: 'speed'})),
+              item('Forks', 'Each against the product it forked', ratings({view: 'forks'})),
+              item('Storage engines', 'Columnar, append-only, vector indexes', ratings({view: 'storage'})),
+              item('Speed', 'TPC-C, TPC-H and TPC-DS by where they ran', ratings({view: 'speed'})),
+              item('Not published yet', 'Measured, held back, and why', ratings({view: 'held'})),
             ],
           },
         ],
@@ -104,7 +82,7 @@ export const MENU: MenuSection[] = [
       links: [
         {label: 'Methodology', href: `${VENDORS}#fairness`},
         {label: 'Conformity map', href: mapUrl()},
-        {label: 'Corrections', href: `${VENDORS}#corrections`},
+        {label: 'Corrections', href: ratings({view: 'errata'})},
       ],
     },
     promo: {

@@ -118,7 +118,12 @@ export default function CompatMap({data, protocol, onOpen}: {data: Compat; proto
                 <span className="cmap__refnote">the original</span>
               </td>
               {cols.map((col) => (
-                <StateCell key={col.key} cell={mergeCells(refs.map((r) => cellFor(r, col)))} where={`Reference, ${col.title}`} />
+                <StateCell
+                  key={col.key}
+                  cell={mergeCells(refs.map((r) => cellFor(r, col)))}
+                  where={`Reference, ${col.title}`}
+                  legend={data.legend}
+                />
               ))}
             </tr>
           )}
@@ -141,7 +146,7 @@ export default function CompatMap({data, protocol, onOpen}: {data: Compat; proto
                   )}
                 </td>
                 {cols.map((col) => (
-                  <StateCell key={col.key} cell={cellFor(row, col)} where={`${row.target}, ${col.title}`} />
+                  <StateCell key={col.key} cell={cellFor(row, col)} where={`${row.target}, ${col.title}`} legend={data.legend} />
                 ))}
               </tr>
             );

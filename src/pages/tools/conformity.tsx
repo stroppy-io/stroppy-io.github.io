@@ -1,11 +1,36 @@
 import ToolPage from '@site/src/components/tools/ToolPage';
 import {DOCS, REPOS} from '@site/src/components/tools/tools';
 import Explorer from '@site/src/components/conformity/Explorer';
+import compatJson from '@site/static/data/conformity/compat.json';
+import type {Compat, Row} from '@site/src/components/conformity/types';
+import {protocolName, protocolsOf} from '@site/src/components/conformity/data';
 
 // Stroppy Conformity: facts and examples from its README and docs
 // (stroppy-io/stroppy-conformity: methodology, measure-your-build, agents),
-// the provenance example from the published dataset's cockroachdb row, and the
-// dataset itself as the map (conformity/Explorer.tsx), first.
+// and from the published dataset: the map (conformity/Explorer.tsx) first,
+// the protocols and the originals' versions it covers, and the provenance of
+// its best PostgreSQL engine.
+
+const compat = compatJson as unknown as Compat;
+const PROTOCOLS = protocolsOf(compat);
+
+/** "9.4" from "9.4.26", "18.6" from "18.6 (Debian 18.6-1.pgdg13+2)": what a reference reports, short. */
+const short = (claims: string) => /^\d+(\.\d+)?/.exec(claims)?.[0] ?? claims;
+
+/** The original's versions a protocol is checked against, lowest to highest. */
+function versions(protocol: string): string {
+  const v = [...new Set(compat.rows.filter((r) => r.protocol === protocol && r.role === 'reference').map((r) => short(r.claims)))].sort(
+    (a, b) => a.localeCompare(b, undefined, {numeric: true}),
+  );
+  return v.length > 1 ? `${v[0]} to ${v[v.length - 1]}` : (v[0] ?? '');
+}
+
+const NUMBERS = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight'];
+
+/** The provenance a row carries, as compat.json has it: the best-scoring PostgreSQL engine. */
+const example: Row | undefined = compat.rows
+  .filter((r) => r.protocol === 'pgwire' && r.role === 'subject')
+  .sort((a, b) => (b.scores.overall ?? 0) - (a.scores.overall ?? 0))[0];
 
 export default function ConformityToolPage() {
   return (
@@ -35,29 +60,15 @@ export default function ConformityToolPage() {
         {
           id: 'coverage',
           title: 'What it covers',
-          lead: 'Five protocols, each against its own releases, at every layer a client touches: connection and authentication, query flows, errors and cancel, the type contract, bulk load, replication, the catalog queries clients send, and the originals’ own test suites.',
+          lead: `${NUMBERS[PROTOCOLS.length - 1] ?? PROTOCOLS.length} protocols, each against its own releases, at every layer a client touches: connection and authentication, query flows, errors and cancel, the type contract, bulk load, replication, the catalog queries clients send, and the originals’ own test suites.`,
           example: (
             <ul className="tl-list">
-              <li>
-                <b>PostgreSQL wire</b>
-                <span>13 to 18</span>
-              </li>
-              <li>
-                <b>MySQL wire</b>
-                <span>5.7 to 9</span>
-              </li>
-              <li>
-                <b>MongoDB wire</b>
-                <span>6.0 to 8.0</span>
-              </li>
-              <li>
-                <b>Elasticsearch REST</b>
-                <span>7 to 9</span>
-              </li>
-              <li>
-                <b>Redis</b>
-                <span>7.2 and 8.2, RESP2 and RESP3</span>
-              </li>
+              {PROTOCOLS.map((p) => (
+                <li key={p}>
+                  <b>{protocolName(p)}</b>
+                  <span>{versions(p)}</span>
+                </li>
+              ))}
             </ul>
           ),
           links: [{label: 'Every engine and its image', href: DOCS.conformityDoc('targets.md')}],
@@ -71,18 +82,20 @@ export default function ConformityToolPage() {
             'A crash is charged only when the server is seen to go down or restart.',
             'Catalog queries come from the clients themselves: pgx, pgjdbc, psql, pg_dump, the mysql CLI, mongosh, Kibana and others.',
           ],
-          code: {
+          code: example && {
             language: 'json',
-            title: 'compat.json, dataset 45a7361f915b',
-            text: [
-              '{',
-              '  "id": "cockroachdb-pgwire",',
-              '  "claims": "18.0.0",',
-              '  "baseline": {"reference": "postgres-18"},',
-              '  "image_digest": "cockroachdb/cockroach@sha256:c26ade77…",',
-              '  "measured_at": "2026-10-23T13:09:30Z"',
-              '}',
-            ].join('\n'),
+            title: `compat.json, dataset ${compat.dataset.id}`,
+            text: JSON.stringify(
+              {
+                id: example.id,
+                claims: example.claims,
+                baseline: {reference: example.baseline.reference},
+                image_digest: example.image_digest,
+                measured_at: example.measured_at,
+              },
+              null,
+              2,
+            ),
           },
           links: [
             {label: 'Methodology', href: DOCS.conformityDoc('methodology.md')},

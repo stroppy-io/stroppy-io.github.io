@@ -1,11 +1,17 @@
 import SectionPage from '@site/src/components/tools/SectionPage';
 import {mapUrl} from '@site/src/components/conformity/data';
 import {DISCORD} from '@site/src/components/nav/menu';
-import {ADD_DATABASE, CORRECTIONS, REPORT_ERROR, issueUrl, type IssueForm} from '@site/src/components/vendors/vendors';
+import errataJson from '@site/static/data/conformity/errata.json';
+import type {Errata as ErrataFile} from '@site/src/components/conformity/types';
+import Errata from '@site/src/components/conformity/Errata';
+import {ADD_DATABASE, REPORT_ERROR, issueUrl, type IssueForm} from '@site/src/components/vendors/vendors';
+
+const ERRATA = (errataJson as unknown as ErrataFile).entries;
 
 // For database vendors: how to get measured, how the measurement stays fair,
-// how to reproduce and contest a result, and every correction made. Requests
-// are issues in Stroppy's public repository (src/components/vendors/vendors.ts).
+// how to reproduce and contest a result, and every correction made (the
+// conformity export's errata.json). Requests are issues in Stroppy's public
+// repository (src/components/vendors/vendors.ts).
 
 /** What the issue asks for, field by field. */
 function Fields({form}: {form: IssueForm}) {
@@ -18,23 +24,6 @@ function Fields({form}: {form: IssueForm}) {
         </li>
       ))}
     </ul>
-  );
-}
-
-function Corrections() {
-  return (
-    <ol className="tl-list">
-      {CORRECTIONS.map((c) => (
-        <li key={`${c.date}-${c.result}`}>
-          <b>
-            {c.date} · {c.result}
-          </b>
-          <span>
-            {c.change} <a href={c.issue}>Issue ↗</a>
-          </span>
-        </li>
-      ))}
-    </ol>
   );
 }
 
@@ -140,10 +129,10 @@ export default function VendorsPage() {
           id: 'corrections',
           title: 'Corrections',
           lead:
-            CORRECTIONS.length === 0
+            ERRATA.length === 0
               ? 'None yet. Each correction will be listed here with its date, what changed and why.'
-              : 'Every published result we changed, newest first.',
-          example: CORRECTIONS.length > 0 && <Corrections />,
+              : 'Every published conformity result we changed, newest first: what it said, whose error it was, what we did.',
+          example: <Errata entries={ERRATA} />,
         },
         {
           id: 'contact',
