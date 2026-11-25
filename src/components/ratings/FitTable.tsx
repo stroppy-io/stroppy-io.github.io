@@ -2,14 +2,15 @@ import {Fragment, type CSSProperties, type ReactNode} from 'react';
 import clsx from 'clsx';
 import {percent, stateInfo} from '../conformity/data';
 import type {Row} from '../conformity/types';
-import {breaksOf, partName, type Band, type EngineRun, type ToolFit} from './fit';
+import {breaksOf, type Band, type EngineRun, type ToolFit} from './fit';
 
 // Every engine that claims the protocol, grouped by what it means for the
 // reader: answers like the original, answers some of it differently, breaks
-// on some of it. Columns: the reader's tools (or the parts of the score when
-// no tool is picked), the score against the original, speed where Stroppy
-// Cloud ran the engine, and the crashes and hangs during the checks. A row
-// opens in place (EngineDetail).
+// on some of it. Columns: the reader's tools, the score against the
+// original, the engine's benchmarks where Stroppy Cloud ran it (a bar each
+// against the best run of that workload in the table), and the crashes and
+// hangs during the checks. A row opens in place (EngineDetail), with the
+// parts of its score.
 
 export type Fit = {
   row: Row;
@@ -24,7 +25,6 @@ export type Fit = {
 type Props = {
   original: string;
   tools: string[];
-  parts: string[];
   fits: Fit[];
   bands: {band: Band; title: string}[];
   open: string | null;
@@ -70,29 +70,54 @@ function ToolCell({fit, where}: {fit: ToolFit; where: string}) {
   );
 }
 
-/** The engine's runs, a line each: the workload, its number and unit; TPC-C against the original. */
-function Speed({fit, original}: {fit: Fit; original: string}) {
+/** The best run of each workload among the engines shown: the end of every speed bar. */
+export type Bests = Record<string, number>;
+
+export function bestsOf(fits: Fit[]): Bests {
+  const out: Bests = {};
+  for (const {runs} of fits)
+    for (const {label, run, higher} of runs) {
+      const was = out[label];
+      out[label] = was === undefined ? run.value : higher ? Math.max(was, run.value) : Math.min(was, run.value);
+    }
+  return out;
+}
+
+/**
+ * The engine's runs, a bar each against the best of that workload among
+ * the engines shown (the shortest time is the best where lower is better),
+ * the number and unit beside it; TPC-C also against the original.
+ */
+function Speed({fit, bests, original}: {fit: Fit; bests: Bests; original: string}) {
   if (fit.runs.length === 0) return <span className="rp-none">not run</span>;
   return (
     <span className="rp-runs">
-      {fit.runs.map(({label, run}) => (
-        <span key={label}>
-          <span className="rp-runs__what">{label}</span> {fmt(run.value)} <span className="rp-runs__unit">{run.unit}</span>
-          {label === 'TPC-C' && fit.share !== undefined && (
-            <span className="rp-runs__share">
-              {' '}
-              {Math.round(fit.share * 100)}% of {original}
+      {fit.runs.map(({label, run, higher}) => {
+        const best = bests[label] ?? run.value;
+        const share = higher ? run.value / best : best / run.value;
+        return (
+          <span key={label} className="rp-run" style={{'--v': share * 100} as CSSProperties}>
+            <span className="rp-run__what">{label}</span>
+            <span className="rp-run__track" aria-hidden="true" />
+            <span className="rp-run__value">
+              {fmt(run.value)} <span className="rp-run__unit">{run.unit}</span>
+              {label === 'TPC-C' && fit.share !== undefined && (
+                <span className="rp-run__unit">
+                  {' '}
+                  · {Math.round(fit.share * 100)}% of {original}
+                </span>
+              )}
             </span>
-          )}
-        </span>
-      ))}
+          </span>
+        );
+      })}
     </span>
   );
 }
 
-export default function FitTable({original, tools, parts, fits, bands, open, onOpen, detail}: Props) {
-  const columns = tools.length ? tools : parts;
-  const span = 4 + columns.length;
+export default function FitTable({original, tools, fits, bands, open, onOpen, detail}: Props) {
+  const bests = bestsOf(fits);
+  const span = 4 + tools.length;
   return (
     <div className="rp-table-box">
       <table className="rp-table">
@@ -101,16 +126,16 @@ export default function FitTable({original, tools, parts, fits, bands, open, onO
             <th scope="col" className="rp-table__engine">
               Engine
             </th>
-            {columns.map((c) => (
+            {tools.map((c) => (
               <th key={c} scope="col" className="rp-table__col">
-                {tools.length ? c : partName(c)}
+                {c}
               </th>
             ))}
             <th scope="col" className="rp-table__score">
               Like {original}
             </th>
             <th scope="col" className="rp-table__speed">
-              Speed
+              Benchmarks, against the best here
             </th>
             <th
               scope="col"
@@ -142,18 +167,14 @@ export default function FitTable({original, tools, parts, fits, bands, open, onO
                           <span className="rp-row__ver">{f.row.variant ? `${f.row.claims} · ${f.row.variant}` : f.row.claims}</span>
                         </button>
                       </th>
-                      {tools.length
-                        ? f.cells.map((c, i) => <ToolCell key={tools[i]} fit={c} where={`${tools[i]} on ${f.row.target}`} />)
-                        : parts.map((p) => (
-                            <td key={p} className="rp-table__part">
-                              {percent(f.row.scores[p])}
-                            </td>
-                          ))}
+                      {f.cells.map((c, i) => (
+                        <ToolCell key={tools[i]} fit={c} where={`${tools[i]} on ${f.row.target}`} />
+                      ))}
                       <td className="rp-table__score">
                         <Score value={f.row.scores.overall} />
                       </td>
                       <td className="rp-table__speed">
-                        <Speed fit={f} original={original} />
+                        <Speed fit={f} bests={bests} original={original} />
                       </td>
                       <td className={clsx('rp-table__fail', breaks > 0 && 'is-bad')}>{breaks || '—'}</td>
                     </tr>

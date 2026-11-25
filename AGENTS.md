@@ -163,14 +163,16 @@ static/data/conformity/   the audited dataset as exported, put there by scripts/
                           held back), errata.json and details/<row id>.json; committed, so the build has it
 src/pages/ratings.tsx     which database can replace the one your clients speak to: "Replace PostgreSQL
                           without breaking your tools", a card per protocol (engines, how many
-                          compatible), then views of that protocol as tabs: Engines, Speed (TopBoard),
-                          Forks, Storage engines, Not published, Corrections. Engines: the reader's
-                          tools as chips (the export's clients), every engine grouped by what it means
-                          for them, a column per tool (how many of its features answered like the
-                          original, the worst state's glyph) or per part of the score when none is
-                          picked, the score with a tick at 80, its runs (TPC-C, TPC-H, TPC-DS), crashes
-                          and hangs; a row opens in place: every tool on it, the parts, findings,
-                          provenance, run reports (src/css/ratings.css). Every choice in the query
+                          compatible), then views of that protocol as tabs, each with a line saying
+                          what it answers: Compatibility, Benchmarks (TopBoard), Forks, Storage engines,
+                          Held back, Corrections. Compatibility: the reader's tools as chips (the
+                          export's clients), every engine grouped by what it means for them in a table
+                          that scrolls in its own box under a held header: a column per tool (how many
+                          of its features answered like the original, the worst state's glyph), the
+                          score with a tick at 80, its runs (TPC-C, TPC-H, TPC-DS) as bars against the
+                          best run of that workload in the table, crashes and hangs; a row opens in
+                          place: every tool on it, the parts of the score, findings, provenance, run
+                          reports (src/css/ratings.css). Every choice in the query
                           string (?proto=mysql&view=forks&tool=psycopg&tool=pg_dump&db=<row id>), so
                           the Benchmarks menu links into it
 src/components/ratings/   fit.ts: a protocol's tools and engines, a tool's fit on an engine, the bands,

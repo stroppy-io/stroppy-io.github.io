@@ -107,16 +107,49 @@ export default function RatingsPage() {
   const storage = compat.access_methods.rows.filter((r) => r.protocol === st.proto && r.role === 'subject');
   const unpublished = unpublishedOf(st.proto);
   const corrections = errata.entries.filter((e) => e.protocol === st.proto);
-  const ran = fits.filter((f) => f.runs.length > 0).length;
 
-  // A view per thing beside the engines, shown only where the protocol has it.
-  const views: {id: View; label: string; n?: number}[] = [
-    {id: 'engines', label: 'Engines', n: fits.length},
-    {id: 'speed', label: 'Speed', n: ran || undefined},
-    ...(families.length ? [{id: 'forks' as const, label: 'Forks', n: families.length}] : []),
-    ...(storage.length ? [{id: 'storage' as const, label: 'Storage engines', n: storage.length}] : []),
-    ...(unpublished.length ? [{id: 'held' as const, label: 'Not published', n: unpublished.length}] : []),
-    ...(corrections.length ? [{id: 'errata' as const, label: 'Corrections', n: corrections.length}] : []),
+  // A view per question about the protocol, shown only where it has data; each says what it answers.
+  const views: {id: View; label: string; desc: string}[] = [
+    {
+      id: 'engines',
+      label: 'Compatibility',
+      desc: `Every engine that claims ${original}, checked against it: what works for your tools, how fast it ran.`,
+    },
+    {
+      id: 'speed',
+      label: 'Benchmarks',
+      desc: 'TPC-C, TPC-H and TPC-DS runs, one table per workload, topology, hardware and scale. A row opens the report of its run.',
+    },
+    ...(families.length
+      ? [{id: 'forks' as const, label: 'Forks', desc: 'A fork against the product it forked: of the checks both answered, how many alike.'}]
+      : []),
+    ...(storage.length
+      ? [
+          {
+            id: 'storage' as const,
+            label: 'Storage engines',
+            desc: 'A storage engine or extension against the same build on its default storage: what it alone changes.',
+          },
+        ]
+      : []),
+    ...(unpublished.length
+      ? [
+          {
+            id: 'held' as const,
+            label: 'Held back',
+            desc: 'Measured and not published, each with the reason. It says nothing about the engine.',
+          },
+        ]
+      : []),
+    ...(corrections.length
+      ? [
+          {
+            id: 'errata' as const,
+            label: 'Corrections',
+            desc: `${original} results we published and then changed, and why.`,
+          },
+        ]
+      : []),
   ];
   const view = views.some((v) => v.id === st.view) ? st.view : 'engines';
 
@@ -137,10 +170,10 @@ export default function RatingsPage() {
               className={clsx(v.id === view && 'is-on')}
               onClick={() => set({view: v.id})}>
               {v.label}
-              {v.n !== undefined && <span>{v.n}</span>}
             </button>
           ))}
         </nav>
+        <p className="rp-view-desc">{views.find((v) => v.id === view)?.desc}</p>
 
         {view === 'engines' && (
           <section aria-label={`Engines that claim ${original}`}>
@@ -172,7 +205,6 @@ export default function RatingsPage() {
               <FitTable
                 original={original}
                 tools={picked}
-                parts={PARTS}
                 fits={fits}
                 bands={bands}
                 open={st.db}
@@ -196,39 +228,32 @@ export default function RatingsPage() {
 
         {view === 'speed' && (
           <section className="rp-view" aria-label="Speed, by where it ran">
-            <p>
-              Each table is one workload on one topology, one kind of hardware and one scale, never mixed. Every row opens the report of its
-              run.
-            </p>
             <TopBoard more={{href: `${CLOUD}/leaderboard`, label: 'Stroppy Cloud leaderboard'}} />
           </section>
         )}
 
         {view === 'forks' && (
           <section className="rp-view" aria-label="Forks against the product they forked">
-            <p>The same checks on the fork and on the product it came from: of the checks both answered, how many alike.</p>
             <Families rows={families} />
           </section>
         )}
 
         {view === 'storage' && (
           <section className="rp-view" aria-label="Storage engines and extensions">
-            <p>Each against the same build on its default storage, so the score is what the storage engine or extension changes.</p>
             <StorageEngines rows={storage} />
           </section>
         )}
 
         {view === 'held' && (
           <section className="rp-view" aria-label="Measured, not published yet">
-            <p>Measured and held back, each with the reason. None of it says anything about the engine.</p>
             <Unpublished rows={unpublished} />
           </section>
         )}
 
         {view === 'errata' && (
           <section className="rp-view" aria-label="What we corrected">
-            <p>
-              Results we published and then changed, and why. <Link to="/vendors#dispute">Report an error</Link>
+            <p className="rp-meta">
+              Found an error? <Link to="/vendors#dispute">Report it</Link>
             </p>
             <Errata entries={corrections} />
           </section>

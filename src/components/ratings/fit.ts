@@ -135,7 +135,7 @@ const sameVersion = (claims: string, version: string) =>
 const versionOf = (row: Row, version: string) => sameVersion(row.claims, version) || sameVersion(row.builds?.sut?.claimed ?? '', version);
 
 /** An engine's run in one workload: the best of its configuration on the topology with the most runs. */
-export type EngineRun = {label: string; run: RatingRow; topology: string};
+export type EngineRun = {label: string; run: RatingRow; topology: string; higher: boolean};
 
 /** Every workload Stroppy Cloud ran an engine in, for its engine and version, in the board's workload order. */
 export function runsOf(row: Row, ratings: CloudRating): EngineRun[] {
@@ -144,7 +144,7 @@ export function runsOf(row: Row, ratings: CloudRating): EngineRun[] {
     for (const g of ratings[s.key]?.groups ?? []) {
       const run = g.rows.find((r) => DB_KINDS[r.db_kind] === row.engine && versionOf(row, r.db_version));
       if (run) {
-        out.push({label: s.label, run, topology: g.topology});
+        out.push({label: s.label, run, topology: g.topology, higher: ratings[s.key]?.metric?.higher_is_better !== false});
         break;
       }
     }

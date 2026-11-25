@@ -63,15 +63,15 @@ export const MENU: MenuSection[] = [
         ],
       },
       {
-        ...item('Beside the engines', 'Speed, forks, storage engines', ratings({view: 'speed'})),
+        ...item('Beside compatibility', 'Benchmarks, forks, storage engines', ratings({view: 'speed'})),
         columns: [
           {
             title: 'PostgreSQL, beside the engines',
             items: [
               item('Forks', 'Each against the product it forked', ratings({view: 'forks'})),
               item('Storage engines', 'Columnar, append-only, vector indexes', ratings({view: 'storage'})),
-              item('Speed', 'TPC-C, TPC-H and TPC-DS by where they ran', ratings({view: 'speed'})),
-              item('Not published yet', 'Measured, held back, and why', ratings({view: 'held'})),
+              item('Benchmarks', 'TPC-C, TPC-H and TPC-DS by where they ran', ratings({view: 'speed'})),
+              item('Held back', 'Measured, not published, and why', ratings({view: 'held'})),
             ],
           },
         ],

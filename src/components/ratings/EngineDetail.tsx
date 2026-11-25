@@ -63,7 +63,7 @@ export default function EngineDetail({fit, legend, original, tools, picked, part
               <dt>
                 {partName(p)} <b>{percent(row.scores[p])}</b>
               </dt>
-              <dd title={row.explain?.[p]}>{row.explain?.[p]?.split(";")[0]}</dd>
+              <dd title={row.explain?.[p]}>{row.explain?.[p]?.split(';')[0]}</dd>
             </div>
           ))}
         </dl>
