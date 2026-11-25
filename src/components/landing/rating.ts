@@ -5,20 +5,18 @@
 
 export const CLOUD = 'https://cloud.stroppy.io';
 
-// The board compares like with like: one scenario, on one stand, a single
-// 32-core node. A hardware class also names the platform and the data disk
-// ("1x32c128g:standard-v3:network-ssd-nonreplicated"), which change when the
-// runs move; per scenario the board takes the stand's class with the most
-// rated runs, the latest run breaking a tie. Each scenario ranks by its
-// own metric (tpmC for TPC-C, the queries' geometric mean time for TPC-H and
-// TPC-DS), and the page says its unit and which way is better.
+// The board compares like with like: one scenario, one topology, one kind of
+// database hardware (machines, CPU platform, disk) and one scale per table
+// (groupsOf). Each scenario ranks by its own metric (tpmC for TPC-C, the
+// queries' geometric mean time for TPC-H, QphDS for TPC-DS), and the page says
+// its unit and which way is better.
 
 /** The scenarios the site shows, in tab order; `key` names one in the build's copy (plugins/cloud-rating.ts). */
 export const SCENARIOS = [
-  {key: 'tx', scenario: 'tpcc/tx', label: 'TPC-C'},
-  {key: 'procs', scenario: 'tpcc/procs', label: 'TPC-C procedures'},
-  {key: 'tpch', scenario: 'tpch/tx', label: 'TPC-H'},
-  {key: 'tpcds', scenario: 'tpcds', label: 'TPC-DS'},
+  {key: 'tx', scenario: 'tpcc/tx', label: 'TPC-C', scale: (n: number) => `${n} warehouses`},
+  {key: 'procs', scenario: 'tpcc/procs', label: 'TPC-C procs', scale: (n: number) => `${n} warehouses`},
+  {key: 'tpch', scenario: 'tpch/tx', label: 'TPC-H', scale: (n: number) => `SF${n}`},
+  {key: 'tpcds', scenario: 'tpcds', label: 'TPC-DS', scale: (n: number) => `SF${n}`},
 ] as const;
 export type ScenarioKey = (typeof SCENARIOS)[number]['key'];
 
@@ -60,42 +58,101 @@ export type RatingRow = {
 export type Metric = {key: string; title: string; unit: string; higher_is_better: boolean};
 
 /**
- * One scenario: its rows on the single-machine stand, best first, its metric,
- * and apart from them its rows on a cluster (several machines: nodes,
- * replicas, a proxy, MPP segment hosts), which are never ranked with a single
- * machine.
+ * What one table ranks: one topology on one kind of database hardware (the
+ * database machines, their CPU, their disk) at one scale. Rows that differ in
+ * any of these are never ranked together; rows that differ only in the
+ * machines beside the database (a proxy, an MPP coordinator) are.
  */
-export type Rating = {data: RatingRow[]; metric: Metric | null; clusters: RatingRow[]};
+export type Group = {
+  /** `<topology>|<hardware>|<scale>`, unique within a scenario. */
+  key: string;
+  /** How the database stood: "1 node", "3 nodes", "1+2 replicas", "MPP 1+4". */
+  topology: string;
+  /** The database machines, their platform and disk: groups split on it. */
+  hardware: string;
+  /** The database machines' CPU, as a reader picks it: "standard" or "compute-optimized". */
+  cpu: string;
+  /** Their disk, as a reader picks it: "io-m3", "non-replicated". */
+  disk: string;
+  scaleFactor?: number;
+  /** Rated runs behind the group: every default is the choice with the most. */
+  runs: number;
+  /** Best first, ranked 1..n within the group, one row per database, version and topology. */
+  rows: RatingRow[];
+};
+
+/**
+ * One scenario: every group of its rows, most rated runs first, and its
+ * metric. `data` is the single-machine group with the most runs, which
+ * /ratings scores engines on.
+ */
+export type Rating = {data: RatingRow[]; metric: Metric | null; groups: Group[]};
 
 /** The stand alone: one machine of the stand's size, nothing beside it. */
 const onStand = ({machines}: RatingRow['hardware']) =>
   machines.length === 1 && machines[0].count === 1 && machines[0].cpu === STAND.cpu && machines[0].memory_gb === STAND.memory_gb;
 
-/**
- * Of the rows given, the hardware class with the most rated runs (the cloud's
- * board picks its default class the same way, so both show the same hardware),
- * the latest run breaking a tie; ranked within it, in the API's order.
- */
-function topClass(rows: RatingRow[]): RatingRow[] {
-  const classes = new Map<string, RatingRow[]>();
-  for (const r of rows) classes.set(r.hardware.key, [...(classes.get(r.hardware.key) ?? []), r]);
-  const runs = (rs: RatingRow[]) => rs.reduce((n, r) => n + r.runs, 0);
-  const [chosen] = [...classes.values()].sort((a, b) => runs(b) - runs(a) || lastRun(b).localeCompare(lastRun(a)));
-  // One row per database, version and topology: the API can list a setup
-  // twice (another workload size), and its first row is its best.
-  const seen = new Set<string>();
-  const best = (chosen ?? []).filter((r) => {
-    const id = `${r.db_kind} ${r.db_version} ${topology(r)}`;
-    return seen.has(id) ? false : (seen.add(id), true);
-  });
-  return best.map((r, i) => ({...r, rank: i + 1}));
+const sumRuns = (rows: RatingRow[]) => rows.reduce((n, r) => n + r.runs, 0);
+
+/** The database's own machines: the first group of a hardware class; the rest stand beside it. */
+const hardwareKey = (row: RatingRow) => {
+  const m = row.hardware.machines[0];
+  return m ? `${m.count}x${m.cpu}c${m.memory_gb}g:${m.platform ?? ''}:${m.disk_type ?? ''}` : row.hardware.key;
+};
+
+/** The rows split by topology, hardware and scale, each ranked within itself; most runs first, the latest run breaking a tie. */
+export function groupsOf(all: RatingRow[]): Group[] {
+  const byKey = new Map<string, RatingRow[]>();
+  for (const r of all) {
+    const key = `${topologyName(r)}|${hardwareKey(r)}|${r.scale_factor ?? ''}`;
+    byKey.set(key, [...(byKey.get(key) ?? []), r]);
+  }
+  return [...byKey.entries()]
+    .map(([key, rows]): Group => {
+      // Best first across the merged classes; a setup listed twice keeps its best row.
+      const seen = new Set<string>();
+      const unique = [...rows]
+        .sort((a, b) => a.rank - b.rank)
+        .filter((r) => {
+          const id = `${r.db_kind} ${r.db_version} ${topology(r)}`;
+          return seen.has(id) ? false : (seen.add(id), true);
+        });
+      return {
+        key,
+        topology: topologyName(rows[0]),
+        hardware: hardwareKey(rows[0]),
+        cpu: cpuOf(rows[0]),
+        disk: diskOf(rows[0]),
+        scaleFactor: rows[0].scale_factor,
+        runs: sumRuns(rows),
+        rows: unique.map((r, i) => ({...r, rank: i + 1})),
+      };
+    })
+    .sort((a, b) => b.runs - a.runs || lastRun(b.rows).localeCompare(lastRun(a.rows)));
 }
 
-/** The single-machine stand's rows. */
-export const standRows = (all: RatingRow[]) => topClass(all.filter((r) => onStand(r.hardware)));
+/**
+ * A topology's short name, from the database's own nodes: "1 node", "3 nodes",
+ * "1+2 replicas", "MPP 1+4". What stood beside them (a proxy, etcd) is in each
+ * row's own topology line.
+ */
+export function topologyName(row: RatingRow): string {
+  const count = (role: string) => row.topology.nodes.filter((n) => n.role === role).reduce((a, n) => a + n.count, 0);
+  const db = count('db'),
+    replicas = count('db-replica');
+  if (count('coordinator')) return `MPP 1+${db}`;
+  if (replicas) return `1+${replicas} ${replicas === 1 ? 'replica' : 'replicas'}`;
+  return db > 1 ? `${db} nodes` : '1 node';
+}
 
-/** Everything on more than one machine: clusters, replicas behind a proxy, MPP segment hosts. */
-export const clusterRows = (all: RatingRow[]) => topClass(all.filter((r) => !onStand(r.hardware)));
+/** The database machines' CPU in a word: "standard" or "compute-optimized". */
+const cpuOf = (row: RatingRow) => (row.hardware.machines[0]?.platform?.startsWith('highfreq') ? 'compute-optimized' : 'standard');
+
+/** Their disk in a word: "io-m3", "non-replicated". */
+function diskOf(row: RatingRow): string {
+  const disk = row.hardware.machines[0]?.disk_type;
+  return disk ? (DISKS[disk] ?? disk).replace(/ SSD$/, '') : 'any';
+}
 
 const ENGINES: Record<string, string> = {
   postgres: 'PostgreSQL',
@@ -192,8 +249,8 @@ export async function fetchRating(scenario: string, signal?: AbortSignal): Promi
   const res = await fetch(url, {signal, headers: {accept: 'application/json'}});
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   const page = (await res.json()) as {data: RatingRow[]; metrics?: Metric[]};
-  const data = standRows(page.data);
-  const clusters = clusterRows(page.data);
-  const key = (data[0] ?? clusters[0])?.metric;
-  return {data, metric: page.metrics?.find((m) => m.key === key) ?? null, clusters};
+  const groups = groupsOf(page.data);
+  const data = groups.find((g) => onStand(g.rows[0].hardware))?.rows ?? [];
+  const key = groups[0]?.rows[0]?.metric;
+  return {data, metric: page.metrics?.find((m) => m.key === key) ?? null, groups};
 }

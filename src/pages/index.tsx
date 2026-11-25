@@ -13,14 +13,15 @@ import {TOOLS} from '@site/src/components/tools/tools';
 import '../css/landing.css';
 
 // The landing says one thing: Stroppy is an open project that helps you pick
-// a database by measurement. The claim beside the live rating, then prose:
+// a database by measurement. The claim and what the project is beside the
+// live rating, then prose:
 // what the project is, with its numbers; how compatible the
 // PostgreSQL-compatible engines are; the tools behind the numbers; the
 // problems of choosing a database and how each is answered, with one measured
 // number each. The numbers come from the data
 // (plugins/conformity.ts, plugins/cloud-rating.ts) or a published post.
 
-type Numbers = {engines: number; protocols: string[]; workloads: number; runs: number; pg: number; pgUnder: number};
+type Numbers = {engines: number; protocols: string[]; runs: number; pg: number; pgUnder: number};
 
 /** The project's numbers, counted from the data the site is built with. */
 function useNumbers(): Numbers {
@@ -31,17 +32,37 @@ function useNumbers(): Numbers {
   return {
     engines: new Set(protocols.flatMap((p) => p.scores.map((s) => s.target))).size,
     protocols: protocols.map((p) => protocolShort(p.protocol)),
-    workloads: Object.values(ratings).filter((r) => (r?.data.length ?? 0) + (r?.clusters.length ?? 0) > 0).length,
-    runs: Object.values(ratings).reduce(
-      (sum, r) => sum + [...(r?.data ?? []), ...(r?.clusters ?? [])].reduce((n, row) => n + row.runs, 0),
-      0,
-    ),
+    runs: Object.values(ratings).reduce((sum, r) => sum + (r?.groups ?? []).reduce((n, g) => n + g.runs, 0), 0),
     pg: pg.length,
     pgUnder: pg.filter((s) => s.score < COMPATIBLE).length,
   };
 }
 
-function Hero({n}: {n: Numbers}) {
+/** The project in four numbers, one panel. */
+function NumbersPanel({n}: {n: Numbers}) {
+  return (
+    <dl className="home-numbers">
+      <div>
+        <dt>{n.engines}</dt>
+        <dd>engines checked for protocol compatibility</dd>
+      </div>
+      <div>
+        <dt>{n.protocols.length}</dt>
+        <dd>protocols: {n.protocols.join(', ')}</dd>
+      </div>
+      <div>
+        <dt>{n.runs}</dt>
+        <dd>runs behind the public rating in the last 30 days</dd>
+      </div>
+      <div>
+        <dt>{TOOLS.length}</dt>
+        <dd>tools behind the numbers</dd>
+      </div>
+    </dl>
+  );
+}
+
+function Hero() {
   return (
     <header className="home-hero">
       <div className="container home-hero__inner">
@@ -52,12 +73,10 @@ function Hero({n}: {n: Numbers}) {
           <p className="home-hero__lead">
             We want a database choice anyone can check: the same open tests for every engine, every result public.
           </p>
-          <ul className="home-facts">
-            <li>{n.engines} engines checked</li>
-            <li>{n.protocols.length} protocols</li>
-            <li>{n.workloads} workloads</li>
-            <li>Open source</li>
-          </ul>
+          <p className="home-about">
+            <b>Stroppy is an open project that measures databases the same way and publishes every result.</b> We run the workloads, check
+            protocol compatibility against the original engine, and link every number to the run behind it.
+          </p>
           <div className="home-actions">
             <Link className="button button--primary button--lg" to="/ratings">
               Find your database
@@ -80,28 +99,7 @@ function About({n}: {n: Numbers}) {
   return (
     <section className="home-block">
       <div className="container">
-        <p className="home-about">
-          <b>Stroppy is an open project that measures databases the same way and publishes every result.</b> We run the workloads, check
-          protocol compatibility against the original engine, and link every number to the run behind it.
-        </p>
-        <dl className="home-numbers">
-          <div>
-            <dt>{n.engines}</dt>
-            <dd>engines checked for protocol compatibility</dd>
-          </div>
-          <div>
-            <dt>{n.protocols.length}</dt>
-            <dd>protocols: {n.protocols.join(', ')}</dd>
-          </div>
-          <div>
-            <dt>{n.runs}</dt>
-            <dd>runs behind the public rating in the last 30 days</dd>
-          </div>
-          <div>
-            <dt>{TOOLS.length}</dt>
-            <dd>tools behind the numbers</dd>
-          </div>
-        </dl>
+        <NumbersPanel n={n} />
       </div>
     </section>
   );
@@ -248,7 +246,7 @@ export default function Home(): ReactNode {
         title="Pick a database on evidence"
         description="An open project that measures every database the same way, speed and protocol compatibility, and publishes the results.">
         <main className="home">
-          <Hero n={n} />
+          <Hero />
           <About n={n} />
           <Compatibility n={n} />
           <Tools />

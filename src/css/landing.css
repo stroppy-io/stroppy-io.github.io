@@ -24,12 +24,12 @@
   padding: 4.5rem 0 4rem;
 }
 
-/* Top-aligned: the rating's height changes with its tab (a scenario has as
-   many rows as it has runs), and the claim must not move with it. */
+/* The claim stands in the middle of the board's height, as the text beside
+   a picture does, so neither column leaves a hole under it. */
 .home-hero__inner {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: start;
+  align-items: center;
   gap: 3rem 4rem;
 }
 
@@ -48,23 +48,6 @@
   font-size: 1.1875rem;
   line-height: 1.55;
   color: color-mix(in srgb, var(--st-text) 80%, var(--st-muted));
-}
-
-.home-facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 1.5rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.home-facts li {
-  padding: 0.3rem 0.75rem;
-  border: 1px solid var(--st-line);
-  border-radius: var(--st-radius-pill);
-  font-size: 0.875rem;
-  color: color-mix(in srgb, var(--st-text) 85%, var(--st-muted));
 }
 
 .home-actions {
@@ -99,24 +82,34 @@
 
 /* ---------- What Stroppy is, and its numbers ---------- */
 
+/* What the project is, under the claim: set off by a rule, the first
+   sentence carrying it. */
 .home-about {
-  max-width: 50rem;
-  margin: 0;
-  font-size: 1.25rem;
+  margin: 1.75rem 0 0;
+  padding-left: 1.25rem;
+  border-left: 2px solid var(--st-primary);
+  font-size: 1.0625rem;
   line-height: 1.6;
-  color: color-mix(in srgb, var(--st-text) 80%, var(--st-muted));
+  color: var(--st-muted);
 }
 
 .home-about b {
+  display: block;
+  margin-bottom: 0.35rem;
   color: var(--st-text);
   font-weight: var(--st-font-weight-medium);
 }
 
+/* The numbers as one panel, not four loose figures. */
 .home-numbers {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 2rem;
-  margin: 2.5rem 0 0;
+  margin: 0;
+  padding: 1.75rem 2rem;
+  background: var(--st-panel);
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-lg);
 }
 
 .home-numbers dt {
@@ -191,7 +184,7 @@
 .home-split {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  align-items: start;
+  align-items: center;
   gap: 2rem 4rem;
 }
 
@@ -329,47 +322,78 @@
   border-radius: var(--st-radius-lg);
 }
 
+/* The variant picker, then a one-line summary of the machine and metric. */
 .board__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
-  margin-bottom: 0.75rem;
+  display: grid;
+  margin-bottom: 0.35rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--st-line);
 }
 
-/* What the numbers were measured on, as short tags. Room for two rows of
-   them always, so a tab whose tags wrap does not move the page below. */
-.board__tags {
-  --tag-h: calc(1.25rem + 2px);
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 0.35rem;
-  min-height: calc(2 * var(--tag-h) + 0.35rem);
+/* The shown picker and an unseen copy of every workload's share one cell,
+   so the head is as tall as the tallest of them whatever is chosen. */
+.board__shown,
+.board__sizer {
+  display: grid;
+  grid-area: 1 / 1;
+  align-content: start;
+  gap: 0.6rem;
+}
+
+.board__sizer {
+  visibility: hidden;
+}
+
+/* An attribute per block: "Topology: 1 node" over its options. Every option
+   of the workload is always there, so the picker keeps one shape. */
+.picker {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.picker__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 1rem;
+}
+
+@media (max-width: 480px) {
+  .picker__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.picker__attr {
+  min-width: 0;
   margin: 0;
   padding: 0;
-  list-style: none;
+  border: 0;
 }
 
-.board__tags li {
-  padding: 0 0.5rem;
-  line-height: 1.25rem;
-  border: 1px solid var(--st-line);
-  border-radius: var(--st-radius-pill);
+.picker__attr legend {
+  margin-bottom: 0.25rem;
+  padding: 0;
   font-size: 0.75rem;
   color: var(--st-muted);
 }
 
-/* Transactions or stored procedures: the same machine, another TPC-C. */
-.board__tabs {
+.picker__attr legend b {
+  font-weight: var(--st-font-weight-medium);
+  color: var(--st-text);
+}
+
+/* Options as a segmented control, the workload tabs' look: a frame, the
+   chosen option raised. It wraps inside the frame on a narrow board. */
+.picker__options {
   display: inline-flex;
+  flex-wrap: wrap;
+  max-width: 100%;
   padding: 2px;
   border: 1px solid var(--st-line);
   border-radius: var(--st-radius-md);
 }
 
-.board__tabs button {
+.picker__option {
   padding: 0.25rem 0.65rem;
   border: 0;
   border-radius: calc(var(--st-radius-md) - 2px);
@@ -377,38 +401,59 @@
   color: var(--st-muted);
   font: inherit;
   font-size: 0.8125rem;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.board__tabs button[aria-pressed='true'] {
+.picker__option[aria-pressed='true'] {
   background: var(--st-raised);
   color: var(--st-text);
 }
 
-.board__tabs button:focus-visible {
+/* Ruled out by the choices above: in place, but faint and inactive. */
+.picker__option:disabled {
+  color: var(--st-disabled);
+  text-decoration: line-through;
+  cursor: default;
+}
+
+.picker__option:focus-visible {
   outline: 2px solid var(--st-primary);
   outline-offset: 1px;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .board__tabs button:hover {
+  .picker__option:not(:disabled):hover {
     color: var(--st-text);
   }
 }
 
 @media (pointer: coarse) {
-  .board__tabs button {
+  .picker__option {
     min-height: 2.5rem;
   }
 }
 
+/* A phone: the four workloads still fit one line. */
+@media (max-width: 480px) {
+  .picker__option {
+    padding-inline: 0.5rem;
+  }
+}
+
+.board__summary {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--st-muted);
+}
+
 /* In the hero the board is the page's main thing: bigger numbers, more air. */
 .home-hero .board {
-  padding: 1.25rem 1.5rem 1rem;
+  padding: 1.1rem 1.5rem 0.9rem;
 }
 
 .home-hero .board__row {
-  padding-block: 0.7rem 0.75rem;
+  padding-block: 0.45rem 0.5rem;
 }
 
 .home-hero .board__db {
@@ -851,11 +896,6 @@
     padding: 3rem 0;
   }
 
-  /* A narrow board fits fewer tags a row: room for three. */
-  .board__tags {
-    min-height: calc(3 * var(--tag-h) + 2 * 0.35rem);
-  }
-
   .home-hero__inner,
   .home-cards,
   .home-split {
@@ -873,6 +913,8 @@
 
   .home-numbers {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 1.25rem;
+    padding: 1.25rem;
   }
 
   .home-block {
@@ -943,5 +985,9 @@
 @media (max-width: 480px) {
   .home-tools {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .board {
+    padding-inline: 1rem;
   }
 }

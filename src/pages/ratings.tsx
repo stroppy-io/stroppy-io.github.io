@@ -188,12 +188,12 @@ export default function RatingsPage() {
           parts; open a row for all of them.
         </p>
         <section className="rt-mpp" aria-labelledby="rt-mpp">
-          <h2 id="rt-mpp">Clusters</h2>
+          <h2 id="rt-mpp">Every run, by where it ran</h2>
           <p>
-            Engines on several machines: nodes or replicas behind a proxy, MPP segment hosts. A cluster is ranked only against the same
-            cluster, never against the single machine above.
+            Each table is one workload on one topology, one kind of hardware and one scale: a cluster is ranked only against the same
+            cluster, never against a single machine.
           </p>
-          <TopBoard stands={['clusters']} more={{href: `${CLOUD}/leaderboard`, label: 'Stroppy Cloud leaderboard'}} />
+          <TopBoard more={{href: `${CLOUD}/leaderboard`, label: 'Stroppy Cloud leaderboard'}} />
         </section>
       </main>
       {open && (

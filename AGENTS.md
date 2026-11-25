@@ -140,10 +140,8 @@ src/client/analytics.ts   a consent banner (vanilla-cookieconsent, on the kit's 
                           (navigator.webdriver), so test it with that flag overridden
 src/pages/index.tsx       landing page in one 1120px column (html.home-page narrows the bar and the
                           footer too), carried by text rather than charts: the claim (pick a database
-                          on evidence) beside the whole rating (single node or cluster, then a tab per
-                          scenario with runs: TPC-C, TPC-C procedures, TPC-H, TPC-DS; the machine as
-                          tags), then what the
-                          project is with its numbers, how compatible the PostgreSQL-compatible
+                          on evidence) and what the project is, centred on the whole rating
+                          (TopBoard), then the project's numbers in one panel, how compatible the PostgreSQL-compatible
                           engines are (CompatSpread), the four tools, the problems of choosing a
                           database each answered with one measured number. Numbers are counted from
                           the plugins' data or quoted from a published post
@@ -162,8 +160,7 @@ src/pages/ratings.tsx     databases rated against the original they replace, per
                           filters, a table of compatibility, TPC-C speed and analytics (TPC-H, TPC-DS:
                           relative query speed, the baseline's time over the engine's, not a TPC score)
                           out of 10 with the baseline (the original) on top, an engine's parts in a side
-                          panel (src/css/ratings.css); under the table, clusters on their own board
-                          (TopBoard stands={['clusters']}), never ranked against the single machine;
+                          panel (src/css/ratings.css); under the table, the whole rating (TopBoard);
                           every choice in the query string (?proto=mysql&sort=speed&bench&db=<id>), so
                           the Benchmarks menu links into it
 src/components/ratings/   score.ts: conformity rows joined with rating runs (DB_KINDS maps Stroppy Cloud's
@@ -187,19 +184,25 @@ src/pages/vendors.tsx     for database vendors, a SectionPage: add your database
 src/components/vendors/   vendors.ts: the two issue forms opened in stroppy-io/stroppy (add a database,
                           report an error) and CORRECTIONS, the published list of results we changed;
                           add a correction there when a reported error is confirmed
-src/components/landing/   published-data pieces: the leaderboard (places in gold, silver and bronze; every
-                          scenario through useRatings, shared with /ratings; a switch between the single
-                          machine and clusters, ranked apart; its height fixed to the tallest tab, so no
-                          switch moves the page), the compatibility
+src/components/landing/   published-data pieces: the rating board (TopBoard: a variant picker, the
+                          workload across the top, then topology, CPU, disk and scale two a line, each
+                          "Name: value" over a segmented control of every option the workload has, the
+                          ones the choices above rule out struck out; a line with the rest of the machine
+                          and the metric; each table one topology, hardware and scale, never mixed,
+                          defaulting to the choice with the most runs; places in gold, silver and
+                          bronze; one height whatever is chosen, down to a 360px phone; data through
+                          useRatings, shared with /ratings), the compatibility
                           spread (CompatSpread: a protocol's engines, a bar each, the line at 80), the
                           client-speed plot from blog data (Charts, evidence.tsx), the rating client
 plugins/cloud-rating.ts   copies Stroppy Cloud's public rating into the build for the hero and /ratings:
-                          every scenario in SCENARIOS (src/components/landing/rating.ts), split into the
-                          single 32 vCPU · 128 GB machine and clusters (anything on more machines:
-                          nodes, replicas behind a proxy, MPP segment hosts); in each, the hardware class
-                          (platform, disk) with the most rated runs, as the cloud's board; a row is a
-                          configuration's best run in 30 days, one per database, version and topology,
-                          ranked by the scenario's own metric, whose unit and direction come from the API
+                          every scenario in SCENARIOS (src/components/landing/rating.ts), its rows in
+                          groups (groupsOf): one topology ("1 node", "3 nodes", "1+2 replicas", "MPP
+                          1+4"), one kind of database hardware (machines, CPU platform, disk; machines
+                          beside the database such as a proxy do not split groups) and one scale; a row
+                          is a configuration's best run in 30 days, one per database, version and
+                          topology, ranked by the scenario's own metric, whose unit and direction come
+                          from the API; /ratings scores engines on the single 32 vCPU · 128 GB group with
+                          the most runs
 plugins/conformity.ts     every engine's overall score per protocol, for the landing's numbers and spread
 src/css/landing.css       the landing and the published-data pieces (board, spread, plot)
 plans/                    agreed plans of work, not published
