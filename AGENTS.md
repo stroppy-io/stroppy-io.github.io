@@ -166,13 +166,15 @@ src/pages/ratings.tsx     which database can replace the one your clients speak 
                           compatible), then views of that protocol as tabs, each with a line saying
                           what it answers: Compatibility, Benchmarks (TopBoard), Forks, Storage engines,
                           Held back, Corrections. Compatibility: the reader's tools as chips (the
-                          export's clients), every engine grouped by what it means for them in a table
-                          that scrolls in its own box under a held header: a column per tool (how many
-                          of its features answered like the original, the worst state's glyph), the
-                          score with a tick at 80, its runs (TPC-C, TPC-H, TPC-DS) as bars against the
-                          best run of that workload in the table, crashes and hangs; a row opens in
-                          place: every tool on it, the parts of the score, findings, provenance, run
-                          reports (src/css/ratings.css). Every choice in the query
+                          export's clients), a search, and every engine in a table laid out by Stroppy
+                          Cloud's tables guide (stroppy-cloud web/docs/tables-guide.md) in the old
+                          ratings' look: place, name and version, a column per tool (features answered
+                          like the original, the worst state's glyph), the score as a chip in its tone
+                          with a bar, TPC-C, TPC-H and TPC-DS as numbers with bars against the best in
+                          the table, crashes and hangs; every column sorts (off, ascending,
+                          descending); it scrolls in its own box under a held header; a row opens the
+                          conformity side panel (conformity/Drawer.tsx) with the tools on the engine,
+                          its runs and reports (src/css/ratings.css). Every choice in the query
                           string (?proto=mysql&view=forks&tool=psycopg&tool=pg_dump&db=<row id>), so
                           the Benchmarks menu links into it
 src/components/ratings/   fit.ts: a protocol's tools and engines, a tool's fit on an engine, the bands,

@@ -8,9 +8,9 @@
 .rp {
   width: 100%;
   min-width: 0;
-  max-width: 1120px;
+  max-width: calc(1240px + 4rem);
   margin: 0 auto;
-  padding: 2.5rem 1rem 5rem;
+  padding: 2.5rem 2rem 5rem;
 }
 
 /* ---------- The question ---------- */
@@ -312,312 +312,333 @@
 
 /* ---------- The engines ---------- */
 
-/* The table scrolls in its own box, both ways, its header held in view;
+/* Over the table: the search and how many rows it shows (tables guide §5). */
+.rp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: 1.5rem;
+}
+
+.rp-search {
+  width: min(18rem, 100%);
+  height: 2rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--st-line-strong);
+  border-radius: var(--st-radius-md);
+  background: var(--st-canvas);
+  color: var(--st-text);
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.rp-search:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 1px;
+}
+
+.rp-count {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  color: var(--st-muted);
+}
+
+.rp-empty {
+  margin: 1.5rem 0 0;
+  color: var(--st-muted);
+}
+
+/* The table scrolls in its own box, both ways, under a held header;
    positioned for the .sr texts. */
 .rp-table-box {
   position: relative;
   max-height: min(78vh, 52rem);
-  margin-top: 1.5rem;
+  margin-top: 0.5rem;
   overflow: auto;
-  border: 1px solid var(--st-line);
-  border-radius: var(--st-radius-lg);
   overscroll-behavior: contain;
 }
 
-.rp-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  padding-top: 0.75rem;
-  background: var(--st-canvas);
-  box-shadow: 0 1px 0 var(--st-line);
-}
-
-.rp-table thead .rp-table__engine {
-  z-index: 3;
-}
-
-/* Infima styles every table (a block, borders, striped rows): none of it here. */
+/* The ratings' look: compact rows, a rule under each, no stripes; a colour
+   per thing measured (compatibility, TPC-C, analytics), quality in a tone. */
 .rp-table {
+  --rp-compat: var(--st-series-3);
+  --rp-speed: var(--st-series-1);
+  --rp-analytics: var(--st-series-4);
   display: table;
   width: 100%;
   margin: 0;
   border-collapse: separate;
-  border-spacing: 3px;
-  font-size: 0.875rem;
-  font-variant-numeric: tabular-nums;
+  border-spacing: 0;
+  font-size: 14px;
 }
 
-.rp-table thead,
-.rp-table tr,
-.rp-table th,
+.rp-table :is(thead, tr, th, td) {
+  border: 0;
+  background: none;
+}
+
 .rp-table td {
-  padding: 0;
-  border: 0;
-  background: none;
-}
-
-.rp-table thead th {
-  padding: 0 0.4rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: var(--st-font-weight-regular);
-  color: var(--st-muted);
-  text-align: center;
-  vertical-align: bottom;
-}
-
-.rp-table thead .rp-table__engine,
-.rp-table thead .rp-table__score,
-.rp-table thead .rp-table__speed {
-  text-align: left;
-}
-
-.rp-table__col {
-  min-width: 5.5rem;
-  max-width: 8rem;
-}
-
-/* The engine names stay in view while the table scrolls sideways. */
-.rp-table__engine {
-  position: sticky;
-  left: 0;
-  z-index: 1;
-  width: 15rem;
-  min-width: 11rem;
-  background: var(--st-canvas);
-  text-align: left;
-}
-
-.rp-table tbody .rp-table__engine button {
-  display: grid;
-  width: 100%;
   padding: 0.45rem 0.5rem;
-  border: 0;
-  border-radius: var(--st-radius-sm);
-  background: none;
-  color: var(--st-text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.rp-row__name {
-  font-size: 0.9375rem;
-  font-weight: var(--st-font-weight-medium);
-}
-
-.rp-row__ver {
-  display: block;
-  overflow: hidden;
-  font-size: 0.75rem;
-  color: var(--st-muted);
-  text-overflow: ellipsis;
+  border-bottom: 1px solid var(--st-line);
+  vertical-align: middle;
   white-space: nowrap;
 }
 
-.rp-row.is-open .rp-table__engine button,
-.rp-table tbody .rp-table__engine button:focus-visible {
-  background: var(--st-raised);
+.rp-table tbody tr {
+  cursor: pointer;
 }
 
-.rp-table tbody .rp-table__engine button:focus-visible {
+.rp-table tbody tr.is-open td {
+  background: var(--st-panel);
+}
+
+.rp-table tbody tr.is-open td:first-child {
+  box-shadow: inset 2px 0 0 var(--st-mark);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rp-table tbody tr:hover td {
+    background: color-mix(in srgb, var(--st-panel) 70%, transparent);
+  }
+}
+
+/* The header: held at the top, a sort button per column. */
+.rp-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 0;
+  background: var(--st-canvas);
+  border-bottom: 1px solid var(--st-line-strong);
+  font-size: 12px;
+  font-weight: var(--st-font-weight-medium);
+  white-space: nowrap;
+}
+
+.rp-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.5rem;
+  border: 0;
+  background: none;
+  color: var(--st-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.rp-sort__icon {
+  font-size: 11px;
+  opacity: 0.4;
+}
+
+.rp-sort.is-on {
+  color: var(--st-text);
+}
+
+.rp-sort.is-on .rp-sort__icon {
+  color: var(--st-primary);
+  opacity: 1;
+}
+
+.rp-sort:focus-visible {
   outline: 2px solid var(--st-primary);
   outline-offset: -2px;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .rp-table tbody .rp-table__engine button:hover {
-    background: var(--st-raised);
+  .rp-sort:hover {
+    color: var(--st-text);
   }
 }
 
-/* A tool on an engine: the state's glyph in its colour and how many features answered alike; no fill. */
-.rp-tool {
-  padding: 0 0.4rem;
-  font-size: 0.875rem;
-  text-align: center;
-  white-space: nowrap;
+.rp-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rp-cat);
 }
 
-.rp-tool .c__glyph {
-  margin-right: 0.35rem;
+.rp-dot--compat {
+  --rp-cat: var(--rp-compat);
+}
+
+.rp-dot--speed,
+.rp-num--speed {
+  --rp-cat: var(--rp-speed);
+}
+
+.rp-dot--analytics,
+.rp-num--analytics {
+  --rp-cat: var(--rp-analytics);
+}
+
+/* The place: muted, monospaced. */
+.rp-c-rank {
+  width: 2.25rem;
+  color: var(--st-muted);
+  font-family: var(--st-font-mono);
+  font-size: 13px;
+}
+
+.rp-name {
+  display: block;
+  max-width: 20rem;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--st-text);
+  font: inherit;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.rp-name b {
+  font-weight: var(--st-font-weight-medium);
+}
+
+.rp-name span {
+  margin-left: 0.25rem;
+  font-size: 12px;
+  color: var(--st-muted);
+}
+
+.rp-name:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 2px;
+}
+
+.rp-c-tool {
+  font-family: var(--st-font-mono);
+  font-size: 13px;
+}
+
+.rp-c-tool .c__glyph {
   color: var(--tone);
   font-weight: var(--st-font-weight-bold);
 }
 
-.rp-tool.c--none {
-  color: var(--st-muted);
+.rp-c-tool .rp-sort {
+  font-family: var(--st-font-sans);
 }
 
-.rp-table__fail {
-  width: 4.5rem;
-  padding: 0 0.4rem;
-  color: var(--st-muted);
-  text-align: center;
+.rp-c-crash {
+  font-family: var(--st-font-mono);
+  font-size: 13px;
+  text-align: right;
 }
 
-.rp-table__fail.is-bad {
-  color: var(--st-error);
-  font-weight: var(--st-font-weight-medium);
+.rp-c-crash .rp-sort {
+  justify-content: flex-end;
+  font-family: var(--st-font-sans);
 }
 
-.rp-table__score,
-.rp-table__speed {
-  padding: 0 0.75rem;
-  white-space: nowrap;
-}
-
-/* The engine's runs, a line each: the workload, a bar against the best
-   run of it in the table, the number. */
-.rp-runs {
-  display: grid;
-  gap: 0.3rem;
-  font-size: 0.8125rem;
-}
-
-.rp-run {
-  display: grid;
-  grid-template-columns: 4.5rem 6rem auto;
+/* A number, then its bar in the colour of what it measures. */
+.rp-num {
+  display: inline-grid;
+  grid-template-columns: 4.75rem 5rem;
   align-items: center;
   gap: 0.5rem;
 }
 
-.rp-run__what,
-.rp-run__unit {
-  color: var(--st-muted);
+.rp-num__v {
+  font-family: var(--st-font-mono);
+  font-size: 13px;
+  text-align: right;
 }
 
-.rp-run__track {
+.rp-bar {
   position: relative;
   height: 6px;
-  border-radius: var(--st-radius-pill);
+  border-radius: 3px;
   background: var(--st-raised);
+  overflow: hidden;
 }
 
-.rp-run__track::after {
+.rp-bar::after {
   content: '';
   position: absolute;
   inset: 0 auto 0 0;
-  width: calc(var(--v) * 1%);
+  width: var(--value, 0%);
   border-radius: inherit;
-  background: var(--st-success);
+  background: var(--rp-cat, var(--rp-compat));
 }
 
-.rp-run__value {
-  white-space: nowrap;
-}
-
-.rp-none {
-  font-size: 0.75rem;
-  color: var(--st-muted);
-}
-
-/* The score: its number and a bar as long, a tick where we call an engine compatible. */
+/* The score: a chip in its tone, a compatibility bar after it. */
 .rp-score {
   display: inline-grid;
-  grid-template-columns: 2.6rem 9rem;
+  grid-template-columns: 3.4rem 5rem;
   align-items: center;
   gap: 0.5rem;
 }
 
 .rp-score b {
-  font-weight: var(--st-font-weight-medium);
-  text-align: right;
+  padding: 1px 6px;
+  text-align: center;
+  border-radius: var(--st-radius-sm);
+  font-family: var(--st-font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--rp-tone);
+  background: color-mix(in srgb, var(--rp-tone) 18%, transparent);
 }
 
-.rp-score__track {
-  position: relative;
-  height: 6px;
-  border-radius: var(--st-radius-pill);
-  background: var(--st-raised);
+.rp-tone--good {
+  --rp-tone: var(--st-success);
 }
 
-.rp-score__track::after {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: calc(var(--v) * 1%);
-  border-radius: inherit;
-  background: var(--st-primary);
+.rp-tone--fair {
+  --rp-tone: var(--st-warning);
 }
 
-.rp-score__track::before {
-  content: '';
-  position: absolute;
-  z-index: 1;
-  top: -3px;
-  bottom: -3px;
-  left: 80%;
-  width: 1px;
-  background: var(--st-text);
-  opacity: 0.55;
+.rp-tone--poor {
+  --rp-tone: var(--st-error);
 }
 
-/* A band: what the engines under it mean for the reader, its count after. */
-.rp-band__head th {
-  padding: 1.75rem 0.5rem 0.45rem;
-  font-size: 1rem;
-  font-weight: var(--st-font-weight-medium);
-  text-align: left;
+.rp-dash {
+  color: var(--st-disabled);
+  font-size: 12px;
 }
 
-.rp-band:first-of-type .rp-band__head th {
-  padding-top: 0.75rem;
+.rp-bad {
+  color: var(--st-error);
 }
 
-.rp-band__head th::before {
-  content: '';
-  display: inline-block;
-  width: 0.6rem;
-  height: 0.6rem;
-  margin-right: 0.55rem;
-  border-radius: 50%;
-  background: var(--band);
+/* ---------- An engine, in the side panel ---------- */
+
+.rp-detail h3 {
+  margin: 1.5rem 0 0.6rem;
 }
 
-.rp-band__n {
-  margin-left: 0.35rem;
-  font-weight: var(--st-font-weight-regular);
+.rp-detail__note {
+  margin: 1rem 0 0;
+  font-size: 0.875rem;
   color: var(--st-muted);
 }
 
-.rp-band--same {
-  --band: var(--st-success);
-}
-
-.rp-band--differs {
-  --band: var(--st-warning);
-}
-
-.rp-band--breaks {
-  --band: var(--st-error);
-}
-
-.rp-band--unknown {
-  --band: var(--st-muted);
-}
-
-/* ---------- An engine, opened ---------- */
-
-.rp-detail-row > td {
-  padding: 0;
-}
-
-.rp-detail {
+.rp-detail__runs {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 0.8fr);
-  gap: 1.5rem 2rem;
-  margin: 0.25rem 0 1rem;
-  padding: 1.25rem 1.4rem;
-  background: var(--st-panel);
-  border: 1px solid var(--st-line);
-  border-radius: var(--st-radius-lg);
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
 }
 
-.rp-detail h3 {
-  margin: 0 0 0.75rem;
-  font-size: 0.9375rem;
-  font-weight: var(--st-font-weight-medium);
+.rp-detail__runs li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.rp-detail__runs span {
+  color: var(--st-muted);
 }
 
 .rp-pills {
@@ -643,6 +664,10 @@
   cursor: pointer;
 }
 
+.rp-pill .c__glyph {
+  color: var(--tone);
+}
+
 .rp-pill.is-on {
   border-color: var(--st-primary);
 }
@@ -659,60 +684,14 @@
 }
 
 @media (pointer: coarse) {
-  .rp-pill {
+  .rp-pill,
+  .rp-search {
     min-height: 2.5rem;
   }
-}
 
-.rp-parts {
-  display: grid;
-  gap: 0.6rem;
-  margin: 0;
-}
-
-.rp-parts dt {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  font-size: 0.875rem;
-}
-
-.rp-parts dt b {
-  font-weight: var(--st-font-weight-medium);
-}
-
-.rp-parts dd {
-  margin: 0.1rem 0 0;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: var(--st-muted);
-}
-
-.rp-findings {
-  display: grid;
-  gap: 0.45rem;
-  margin: 1rem 0 0;
-  padding: 0;
-  list-style: none;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-}
-
-.rp-findings li {
-  display: grid;
-  grid-template-columns: 1.1rem minmax(0, 1fr);
-}
-
-.rp-detail__facts p {
-  margin: 0 0 0.75rem;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--st-muted);
-}
-
-.rp-detail__links {
-  display: grid;
-  gap: 0.35rem;
+  .rp-search {
+    font-size: 16px;
+  }
 }
 
 /* ---------- Under the table ---------- */
@@ -776,10 +755,6 @@
     padding-top: 2.25rem;
   }
 
-  .rp-detail {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .rp-list li {
     grid-template-columns: minmax(0, 1fr);
     gap: 0.5rem;
@@ -791,12 +766,7 @@
     font-size: 1.0625rem;
   }
 
-  .rp-table__engine {
-    width: 9.5rem;
-    min-width: 9.5rem;
-  }
-
-  .rp-score {
-    grid-template-columns: 2.4rem 4.5rem;
+  .rp-c-name {
+    min-width: 9rem;
   }
 }

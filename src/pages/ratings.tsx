@@ -9,15 +9,16 @@ import type {Compat, Errata as ErrataFile} from '@site/src/components/conformity
 import {day, protocolShort, protocolsOf} from '@site/src/components/conformity/data';
 import useRatings from '@site/src/components/landing/useRatings';
 import {TopBoard} from '@site/src/components/landing/Leaderboard';
-import {CLOUD} from '@site/src/components/landing/rating';
+import {CLOUD, SCENARIOS} from '@site/src/components/landing/rating';
 import {COMPATIBLE} from '@site/src/components/landing/CompatSpread';
 import {Protocols, Tools, toolsInWords, type ProtocolCard} from '@site/src/components/ratings/Ask';
-import FitTable, {type Fit} from '@site/src/components/ratings/FitTable';
+import FitTable, {type Fit, type Workload} from '@site/src/components/ratings/FitTable';
+import Drawer from '@site/src/components/conformity/Drawer';
 import EngineDetail from '@site/src/components/ratings/EngineDetail';
 import {Families, StorageEngines} from '@site/src/components/ratings/Sections';
 import Unpublished from '@site/src/components/conformity/Unpublished';
 import Errata from '@site/src/components/conformity/Errata';
-import {bandOf, fitShare, originalTpcc, partsOf, runsOf, subjectsOf, toolFit, toolsOf, type Band} from '@site/src/components/ratings/fit';
+import {BANDS, bandOf, fitShare, originalTpcc, runsOf, subjectsOf, toolFit, toolsOf, type Band} from '@site/src/components/ratings/fit';
 import {parse, serialize, type State, type View} from '@site/src/components/ratings/state';
 import '../css/landing.css';
 import '../css/ratings.css';
@@ -35,7 +36,6 @@ import '../css/ratings.css';
 const compat = compatJson as unknown as Compat;
 const errata = errataJson as unknown as ErrataFile;
 const PROTOCOLS = protocolsOf(compat);
-const PARTS = partsOf(compat);
 
 const unpublishedOf = (proto: string) => [...compat.not_measured, ...compat.withheld].filter((u) => u.protocol === proto);
 
@@ -86,22 +86,19 @@ export default function RatingsPage() {
       share: tx && base?.value && ratings.tx?.data.includes(tx) ? tx.value / base.value : undefined,
     };
   });
-  // Within a band, the engine closest to the original for the reader's tools first; the export's order breaks a tie.
-  if (pickedTools.length) fits.sort((a, b) => fitShare(b.cells) - fitShare(a.cells));
+  // The table's own order: what the engine means for the reader (its band), then the closest to the original for
+  // the reader's tools; the export's order (the score) breaks a tie.
+  fits.sort((a, b) => BANDS.indexOf(a.band) - BANDS.indexOf(b.band) || (pickedTools.length ? fitShare(b.cells) - fitShare(a.cells) : 0));
   const count = (b: Band) => fits.filter((f) => f.band === b).length;
   const words = toolsInWords(picked);
-  const bands: {band: Band; title: string}[] = pickedTools.length
-    ? [
-        {band: 'same', title: `Run ${words} like ${original}`},
-        {band: 'differs', title: 'Answer some of it differently'},
-        {band: 'breaks', title: 'Break on some of it'},
-        {band: 'unknown', title: 'Not measured for these tools'},
-      ]
-    : [
-        {band: 'same', title: `Compatible: ${COMPATIBLE} or more`},
-        {band: 'differs', title: `Partly compatible: under ${COMPATIBLE}`},
-        {band: 'unknown', title: 'No score'},
-      ];
+  const q = st.q.trim().toLowerCase();
+  const shown = q ? fits.filter((f) => f.row.target.toLowerCase().includes(q)) : fits;
+  // The workloads some engine of the protocol ran, in the board's order, each with its unit and direction.
+  const workloads: Workload[] = SCENARIOS.flatMap((s) => {
+    const run = fits.flatMap((f) => f.runs).find((r) => r.label === s.label);
+    return run ? [{label: s.label, unit: run.run.unit, higher: run.higher}] : [];
+  });
+  const opened = fits.find((f) => f.row.id === st.db);
 
   const families = compat.families.rows.filter((f) => f.protocol === st.proto);
   const storage = compat.access_methods.rows.filter((r) => r.protocol === st.proto && r.role === 'subject');
@@ -152,6 +149,7 @@ export default function RatingsPage() {
       : []),
   ];
   const view = views.some((v) => v.id === st.view) ? st.view : 'engines';
+  const close = useCallback(() => set({db: null}), [set]);
 
   return (
     <Layout
@@ -159,7 +157,11 @@ export default function RatingsPage() {
       description="Every engine that claims to speak PostgreSQL, MySQL, MongoDB, Elasticsearch, Redis or S3, checked against the original: what works for your tools, what breaks, and how fast.">
       <main className="rp">
         <h1 className="rp-title">Replace {original} without breaking your tools</h1>
-        <Protocols cards={CARDS} value={st.proto} onPick={(p) => set({proto: p, tools: [], db: null, view: 'engines'})} />
+        <Protocols
+          cards={CARDS}
+          value={st.proto}
+          onPick={(p) => set({proto: p, tools: [], db: null, q: '', sort: null, view: 'engines'})}
+        />
 
         <nav className="rp-views" aria-label={`About ${original}`}>
           {views.map((v) => (
@@ -180,7 +182,7 @@ export default function RatingsPage() {
             <Tools proto={st.proto} tools={tools} picked={picked} onTools={(t) => set({tools: t})} />
             <p className="rp-answer">
               {fits.length === 0 ? (
-                <>No engine that claims {original} is published yet. What was measured, and why it is held back, is under Not published.</>
+                <>No engine that claims {original} is published yet. What was measured, and why it is held back, is under Held back.</>
               ) : pickedTools.length ? (
                 <>
                   <b>
@@ -202,26 +204,55 @@ export default function RatingsPage() {
               <Link to="/tools/conformity">How the checks work</Link>
             </p>
             {fits.length > 0 && (
-              <FitTable
-                original={original}
-                tools={picked}
-                fits={fits}
-                bands={bands}
-                open={st.db}
-                onOpen={(id) => set({db: id})}
-                detail={(f) => (
-                  <EngineDetail
-                    fit={f}
-                    legend={compat.legend}
-                    original={original}
-                    tools={tools}
-                    picked={picked}
-                    parts={PARTS}
-                    fork={compat.forks.rows.find((k) => k.row === f.row.id)}
-                    onTool={(name) => set({tools: picked.includes(name) ? picked.filter((t) => t !== name) : [...picked, name]})}
+              <>
+                <div className="rp-toolbar">
+                  <input
+                    type="search"
+                    className="rp-search"
+                    placeholder="Find an engine"
+                    aria-label="Find an engine"
+                    value={st.q}
+                    onChange={(e) => set({q: e.target.value})}
                   />
+                  <span className="rp-count">
+                    {shown.length === fits.length ? `${fits.length} engines` : `Showing ${shown.length} of ${fits.length}`}
+                  </span>
+                </div>
+                {shown.length > 0 ? (
+                  <FitTable
+                    original={original}
+                    tools={picked}
+                    workloads={workloads}
+                    fits={shown}
+                    sort={st.sort}
+                    dir={st.dir}
+                    onSort={(sort, dir) => set({sort, dir})}
+                    open={st.db}
+                    onOpen={(id) => set({db: id})}
+                  />
+                ) : (
+                  <p className="rp-empty">
+                    No engine matches “{st.q}”.{' '}
+                    <button type="button" className="rp-link" onClick={() => set({q: ''})}>
+                      Clear the search
+                    </button>
+                  </p>
                 )}
-              />
+              </>
+            )}
+            {opened && (
+              <Drawer data={compat} row={opened.row} onClose={close}>
+                <EngineDetail
+                  row={opened.row}
+                  legend={compat.legend}
+                  original={original}
+                  tools={tools}
+                  picked={picked}
+                  runs={opened.runs}
+                  fork={compat.forks.rows.find((k) => k.row === opened.row.id)}
+                  onTool={(name) => set({tools: picked.includes(name) ? picked.filter((t) => t !== name) : [...picked, name]})}
+                />
+              </Drawer>
             )}
           </section>
         )}

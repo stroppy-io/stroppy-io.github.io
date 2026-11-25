@@ -1,13 +1,16 @@
-import {useEffect, useRef, useState, type CSSProperties} from 'react';
+import {useEffect, useRef, useState, type CSSProperties, type ReactNode} from 'react';
 import clsx from 'clsx';
 import {DATA_BASE, SCORED_ROLES, percent, protocolShort, stateInfo, stateOfOutcome} from './data';
 import type {Compat, Details, RootCause, Row} from './types';
+import '../../css/conformity.css';
 
 // One engine, on demand: a side drawer with its score by role and what
 // differs from the original, worst first. The row's top findings show at
 // once from compat.json; its root causes (with the diff and the command
 // that re-runs each) are fetched from details/<id>.json only now. Escape,
-// the backdrop or ✕ closes it; the map keeps the URL's query in step.
+// the backdrop or ✕ closes it; the page that opens it keeps the URL's query
+// in step. A page adds what it knows beside the export as children, shown
+// under the scores (/ratings: the reader's tools on the engine, its runs).
 
 const cache = new Map<string, Promise<Details>>();
 
@@ -80,7 +83,7 @@ function Finding({c}: {c: RootCause}) {
   );
 }
 
-export default function Drawer({data, row, onClose}: {data: Compat; row: Row; onClose: () => void}) {
+export default function Drawer({data, row, onClose, children}: {data: Compat; row: Row; onClose: () => void; children?: ReactNode}) {
   const [details, setDetails] = useState<Details | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [all, setAll] = useState(false);
@@ -129,8 +132,7 @@ export default function Drawer({data, row, onClose}: {data: Compat; row: Row; on
           <div>
             <h2 id="drawer-title">{row.target}</h2>
             <p>
-              {protocolShort(row.protocol)} protocol, compared with <b>{row.baseline.reference}</b>. Reports version{' '}
-              {row.claims}.
+              {protocolShort(row.protocol)} protocol, compared with <b>{row.baseline.reference}</b>. Reports version {row.claims}.
             </p>
           </div>
           <button ref={close} type="button" className="drawer__close" onClick={onClose} aria-label="Close">
@@ -162,6 +164,7 @@ export default function Drawer({data, row, onClose}: {data: Compat; row: Row; on
             ))}
           </dl>
           {row.note && <p className="drawer__note">{row.note}</p>}
+          {children}
 
           <h3>What differs from the original</h3>
           {error && (

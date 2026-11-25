@@ -79,31 +79,6 @@ export function subjectsOf(c: Compat, protocol: string): Row[] {
     .sort((a, b) => score(b) - score(a) || a.target.localeCompare(b.target));
 }
 
-/** The parts of a score that count (the export's weights above zero), in the order of their weight. */
-export function partsOf(c: Compat): string[] {
-  return Object.entries(c.defaults.weights)
-    .filter(([, w]) => w > 0)
-    .sort((a, b) => b[1] - a[1])
-    .map(([k]) => k);
-}
-
-/** Plain names for the export's score roles. */
-export const PART_NAMES: Record<string, string> = {
-  frames: 'Protocol messages',
-  bulk: 'Bulk load',
-  types: 'Data types',
-  upstream: 'The original’s own tests',
-  catalog: 'System catalog',
-  conversions: 'Type conversions',
-  corpus: 'Query corpus',
-  tools: 'Tools',
-  other: 'Other',
-  access_method: 'Storage engine',
-  dialect: 'SQL dialect',
-};
-
-export const partName = (k: string) => PART_NAMES[k] ?? k;
-
 /** Crashes, hangs, unresponsive sessions and broken protocol messages during the checks. */
 export const breaksOf = (r: Row) => r.severe.crash + r.severe.hang + r.severe.unresponsive + r.severe.protocol_violation;
 
