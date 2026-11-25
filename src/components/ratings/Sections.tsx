@@ -31,7 +31,11 @@ export function Families({rows}: {rows: FamilyRow[]}) {
               {f.family} · {f.cells.toLocaleString('en-US')} checks, {f.differ.toLocaleString('en-US')} answered differently
             </span>
           </span>
-          <Share value={f.same_share} label={pct(f.same_share)} />
+          {f.same_share === null ? (
+            <span className="rp-list__note">On a different base of the original: not compared as a share</span>
+          ) : (
+            <Share value={f.same_share} label={pct(f.same_share)} />
+          )}
         </li>
       ))}
     </ul>

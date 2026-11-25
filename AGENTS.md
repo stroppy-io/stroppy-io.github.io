@@ -161,28 +161,29 @@ src/components/conformity/ Explorer: which databases really speak the protocol t
 static/data/conformity/   the audited dataset as exported, put there by scripts/import-conformity.mjs:
                           compat.json (rows, legend, clients, forks, families, storage engines, what is
                           held back), errata.json and details/<row id>.json; committed, so the build has it
-src/pages/ratings.tsx     which database can replace the one your clients speak to: "Replace PostgreSQL
-                          without breaking your tools", a card per protocol (engines, how many
-                          compatible), then views of that protocol as tabs, each with a line saying
-                          what it answers: Compatibility, Benchmarks (TopBoard), Forks, Storage engines,
-                          Held back, Corrections. Compatibility: the reader's tools as chips (the
-                          export's clients), a search, and every engine in a table laid out by Stroppy
-                          Cloud's tables guide (stroppy-cloud web/docs/tables-guide.md) in the old
-                          ratings' look: place, name and version, a column per tool (features answered
-                          like the original, the worst state's glyph), the score as a chip in its tone
-                          with a bar, TPC-C, TPC-H and TPC-DS as numbers with bars against the best in
-                          the table, crashes and hangs; every column sorts (off, ascending,
-                          descending); it scrolls in its own box under a held header; a row opens the
-                          conformity side panel (conformity/Drawer.tsx) with the tools on the engine,
-                          its runs and reports (src/css/ratings.css). Every choice in the query
-                          string (?proto=mysql&view=forks&tool=psycopg&tool=pg_dump&db=<row id>), so
-                          the Benchmarks menu links into it
+src/pages/ratings.tsx     database ratings: two segmented switches, the protocol your clients speak (with
+                          its engine count) and what the engines are measured by. Compatibility: a
+                          search and the reader's tools as chips (the export's clients) over a table
+                          laid out by Stroppy Cloud's tables guide (stroppy-cloud
+                          web/docs/tables-guide.md) in the ratings' look: place, name and version, a
+                          column per tool (features answered like the original, the worst state's
+                          glyph), the score as a chip in its tone with a bar, TPC-C, TPC-H and TPC-DS
+                          as numbers with bars against the best in the table, crashes and hangs; every
+                          column sorts (off, ascending, descending); it scrolls in its own box under a
+                          held header; a row opens the conformity side panel (conformity/Drawer.tsx)
+                          with the tools on the engine and its runs. Under it, folded: forks against
+                          their product, storage engines, what is held back, corrections (#rp-forks,
+                          #rp-storage, #rp-held, #rp-errata open them). Benchmarks: Stroppy Cloud's
+                          rating of the protocol's engines, the board's variant picker over a table of
+                          place, database, value, median, runs, latest run (BenchTable). Every choice
+                          in the query string (?proto=mysql&view=speed&tool=psycopg&q=&sort=&dir=&db=),
+                          so the Benchmarks menu links into it (src/css/ratings.css)
 src/components/ratings/   fit.ts: a protocol's tools and engines, a tool's fit on an engine, the bands,
                           an engine's runs from Stroppy Cloud (DB_KINDS maps its db_kind to conformity's
                           engine; a run matches by the version the server reports or the product's
                           own, builds.sut.claimed); state.ts: the query string, also used by the
-                          Benchmarks menu (src/components/nav/menu.ts); Ask (protocol cards, tools),
-                          FitTable, EngineDetail, Sections (forks, storage engines)
+                          Benchmarks menu (src/components/nav/menu.ts); Ask (protocols, tools),
+                          FitTable, BenchTable, EngineDetail, Sections (forks, storage engines)
 src/pages/tools/          a page per tool: stroppy, conformity, graphene, cloud (src/css/tools.css); the
                           Tools menu links into their sections by id, and to the manual where one
                           covers it (/docs for Stroppy, graphene-ci.github.io/docs for Graphene CI)
@@ -196,7 +197,7 @@ src/pages/vendors.tsx     for database vendors, a SectionPage: add your database
                           talk to us; the Vendors menu links to its sections
 src/components/vendors/   vendors.ts: the two issue forms opened in stroppy-io/stroppy (add a database,
                           report an error); the corrections section lists the dataset's errata.json
-src/components/landing/   published-data pieces: the rating board (TopBoard: a variant picker, the
+src/components/landing/   published-data pieces: the rating board (TopBoard: a variant picker (variant.tsx, shared with /ratings' benchmarks), the
                           workload across the top, then topology, CPU, disk and scale two a line, each
                           "Name: value" over a segmented control of every option the workload has, the
                           ones the choices above rule out struck out; a line with the rest of the machine

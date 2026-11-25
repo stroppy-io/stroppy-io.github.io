@@ -1,10 +1,10 @@
 // What /ratings shows, all of it in the query string so any view is a link:
-// ?proto=mysql&view=forks&tool=Debezium&tool=mysqldump&q=maria&sort=tpcc&dir=asc&db=<row id>.
+// ?proto=mysql&view=speed&tool=Debezium&tool=mysqldump&q=maria&sort=tpcc&dir=asc&db=<row id>.
 // A tool is named as the export names it and repeated per tool, since tool
 // names carry commas and slashes. Defaults are left out of the URL.
 
-/** The page's views: compatibility, then what sits beside it. */
-export const VIEWS = ['engines', 'speed', 'forks', 'storage', 'held', 'errata'] as const;
+/** What the engines are measured by: compatibility or benchmarks. */
+export const VIEWS = ['engines', 'speed'] as const;
 export type View = (typeof VIEWS)[number];
 
 export type State = {

@@ -78,7 +78,9 @@ export type FamilyRow = {
   cells: number;
   same: number;
   differ: number;
-  same_share: number;
+  /** Null when the two rows stand on different bases of the original (different_reference): no share is given then. */
+  same_share: number | null;
+  different_reference?: boolean;
   stated: {claims?: {text: string; quote?: string; source: string}[]};
 };
 

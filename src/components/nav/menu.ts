@@ -68,10 +68,10 @@ export const MENU: MenuSection[] = [
           {
             title: 'PostgreSQL, beside the engines',
             items: [
-              item('Forks', 'Each against the product it forked', ratings({view: 'forks'})),
-              item('Storage engines', 'Columnar, append-only, vector indexes', ratings({view: 'storage'})),
+              item('Forks', 'Each against the product it forked', `${ratings()}#rp-forks`),
+              item('Storage engines', 'Columnar, append-only, vector indexes', `${ratings()}#rp-storage`),
               item('Benchmarks', 'TPC-C, TPC-H and TPC-DS by where they ran', ratings({view: 'speed'})),
-              item('Held back', 'Measured, not published, and why', ratings({view: 'held'})),
+              item('Held back', 'Measured, not published, and why', `${ratings()}#rp-held`),
             ],
           },
         ],
@@ -82,7 +82,7 @@ export const MENU: MenuSection[] = [
       links: [
         {label: 'Methodology', href: `${VENDORS}#fairness`},
         {label: 'Conformity map', href: mapUrl()},
-        {label: 'Corrections', href: ratings({view: 'errata'})},
+        {label: 'Corrections', href: `${ratings()}#rp-errata`},
       ],
     },
     promo: {

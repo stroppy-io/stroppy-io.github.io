@@ -3,34 +3,26 @@ import clsx from 'clsx';
 import {protocolShort} from '../conformity/data';
 import type {Tool} from './fit';
 
-// The top of /ratings: what the reader's clients speak, each protocol a card
-// with what is known about it, then the reader's own tools as chips, and the
-// whole list of tools the checks cover, searchable.
+// The top of /ratings: what the reader's clients speak, a segment each with
+// its engine count, and the reader's own tools as chips with the whole list
+// of tools the checks cover, searchable.
 
-export type ProtocolCard = {proto: string; engines: number; compatible: number; held: number};
+export type ProtocolCard = {proto: string; engines: number};
 
-/** The protocols as cards: how many engines claim each, how many are compatible, how many are held back. */
+/** A segmented control of the protocols, each with how many engines claim it. */
 export function Protocols({cards, value, onPick}: {cards: ProtocolCard[]; value: string; onPick: (p: string) => void}) {
   return (
-    <div className="rp-protos" role="tablist" aria-label="What your clients speak">
+    <div className="rp-seg" role="tablist" aria-label="What your clients speak">
       {cards.map((c) => (
         <button
           key={c.proto}
           type="button"
           role="tab"
           aria-selected={c.proto === value}
-          className={clsx('rp-proto', c.proto === value && 'is-on')}
+          className={clsx(c.proto === value && 'is-on')}
           onClick={() => onPick(c.proto)}>
-          <span className="rp-proto__name">{protocolShort(c.proto)}</span>
-          <span className="rp-proto__facts">
-            {c.engines > 0 ? (
-              <>
-                {c.engines} {c.engines === 1 ? 'engine' : 'engines'} · <b>{c.compatible}</b> compatible
-              </>
-            ) : (
-              `${c.held} measured, not published`
-            )}
-          </span>
+          {protocolShort(c.proto)}
+          <span>{c.engines}</span>
         </button>
       ))}
     </div>
@@ -74,7 +66,7 @@ export function Tools({proto, tools, picked, onTools}: ToolsProps) {
 
   return (
     <div className="rp-mytools" ref={box}>
-      <span className="rp-mytools__label">Your tools</span>
+      <span className="rp-mytools__label">Your tools:</span>
       {picked.map((name) => (
         <button key={name} type="button" className="rp-chip" onClick={() => toggle(name)} aria-label={`Remove ${name}`}>
           {name}
@@ -82,7 +74,7 @@ export function Tools({proto, tools, picked, onTools}: ToolsProps) {
         </button>
       ))}
       <button type="button" className="rp-add" aria-expanded={open} aria-controls={panel} onClick={() => setOpen((v) => !v)}>
-        {picked.length ? 'Add a tool' : `Pick from ${tools.length} ${protocolShort(proto)} tools`}
+        {picked.length ? 'Add a tool' : `Pick from ${tools.length}`}
       </button>
       {picked.length > 0 && (
         <button type="button" className="rp-link" onClick={() => onTools([])}>

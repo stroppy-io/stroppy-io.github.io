@@ -102,6 +102,9 @@ const DB_KINDS: Record<string, string> = {
   cloudberry: 'cloudberry',
 };
 
+/** The conformity engine a Stroppy Cloud run is of, if the site knows it. */
+export const engineOfRun = (run: RatingRow) => DB_KINDS[run.db_kind];
+
 /** "18" matches "18.6 (Debian …)", "11.8" matches "11.8.9-MariaDB"; "8.4" does not match "8.0.46". */
 const sameVersion = (claims: string, version: string) =>
   claims === version || claims.startsWith(`${version}.`) || claims.startsWith(`${version} `) || claims.startsWith(`${version}-`);
