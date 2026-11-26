@@ -37,8 +37,9 @@ type ToolsProps = {proto: string; tools: Tool[]; picked: string[]; onTools: (t: 
 
 /**
  * A field beside the search: "Your tools", the picked ones as chips, each
- * removed by its × without opening anything, a × that clears them all; the
- * rest of the field opens the list of every tool.
+ * removed by its × without opening anything; the rest of the field opens
+ * the list of every tool. The field grows to the right with its chips, up to
+ * the table's width, then wraps.
  */
 export function Tools({proto, tools, picked, onTools}: ToolsProps) {
   const [open, setOpen] = useState(false);
@@ -88,11 +89,6 @@ export function Tools({proto, tools, picked, onTools}: ToolsProps) {
           {picked.length === 0 && <span className="rp-field__hint">Pick from {tools.length}</span>}
           <span className="rp-field__chevron" aria-hidden="true" />
         </button>
-        {picked.length > 0 && (
-          <button type="button" className="rp-field__clear" onClick={() => onTools([])} aria-label="Clear your tools">
-            ×
-          </button>
-        )}
       </div>
       {open && (
         <div id={panel} className="rp-tools" role="group" aria-label={`Tools that speak ${protocolShort(proto)}`}>
@@ -117,7 +113,7 @@ export function Tools({proto, tools, picked, onTools}: ToolsProps) {
                       <li key={t.name}>
                         <label>
                           <input type="checkbox" checked={picked.includes(t.name)} onChange={() => toggle(t.name)} />
-                          {t.name}
+                          <span>{t.name}</span>
                         </label>
                       </li>
                     ))}

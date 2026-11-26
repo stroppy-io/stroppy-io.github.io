@@ -91,8 +91,12 @@
 
 /* The reader's tools: a field as wide as the search, the label inside it,
    the picked tools as chips in it; it grows down when they do not fit. */
+/* Beside the search, as wide as its chips need, from the search's width up
+   to what the toolbar (the table's width) leaves; past that the chips wrap. */
 .rp-mytools {
-  width: min(24rem, 100%);
+  flex: 1 1 24rem;
+  min-width: min(24rem, 100%);
+  max-width: max-content;
 }
 
 .rp-field {
@@ -126,7 +130,7 @@
   justify-content: space-between;
   gap: 0.5rem;
   align-self: stretch;
-  min-width: 2rem;
+  min-width: 2.5rem;
   padding: 0 0.35rem;
   border: 0;
   background: none;
@@ -135,8 +139,7 @@
   cursor: pointer;
 }
 
-.rp-field__open:focus-visible,
-.rp-field__clear:focus-visible {
+.rp-field__open:focus-visible {
   outline: 2px solid var(--st-primary);
   outline-offset: 1px;
 }
@@ -156,27 +159,9 @@
   transform: translateY(25%) rotate(-135deg);
 }
 
-.rp-field__clear {
-  flex: none;
-  width: 1.6rem;
-  height: 1.6rem;
-  border: 0;
-  border-radius: var(--st-radius-sm);
-  background: none;
-  color: var(--st-muted);
-  font: inherit;
-  font-size: 1.1rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
 @media (hover: hover) and (pointer: fine) {
   .rp-field:hover {
     border-color: var(--st-primary);
-  }
-
-  .rp-field__clear:hover {
-    color: var(--st-error);
   }
 }
 
@@ -277,16 +262,19 @@
 
 .rp-tools__list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+  gap: 0.1rem 0.75rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* The box on the name's first line; a long name wraps inside its own cell. */
 .rp-tools__list label {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
+  min-width: 0;
   padding: 0.3rem 0.25rem;
   border-radius: var(--st-radius-sm);
   font-size: 0.875rem;
@@ -294,7 +282,15 @@
 }
 
 .rp-tools__list input {
+  flex: none;
+  margin: 0.2rem 0 0;
   accent-color: var(--st-primary);
+}
+
+.rp-tools__list label span {
+  min-width: 0;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .rp-tools__none {
