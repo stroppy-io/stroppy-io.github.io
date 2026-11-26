@@ -163,7 +163,8 @@ static/data/conformity/   the audited dataset as exported, put there by scripts/
                           held back), errata.json and details/<row id>.json; committed, so the build has it
 src/pages/ratings.tsx     database ratings: two segmented switches, the protocol your clients speak (with
                           its engine count) and what the engines are measured by. Compatibility: a
-                          search and the reader's tools as chips (the export's clients) over a table
+                          search and the reader's tools as chips (the export's clients, listed by what
+                          each leans on: the feature group most of its features are in) over a table
                           laid out by Stroppy Cloud's tables guide (stroppy-cloud
                           web/docs/tables-guide.md) in the ratings' look: place, name and version, a
                           column per tool (features answered like the original, the worst state's
@@ -237,6 +238,8 @@ scripts/                  changelog and UI kit synchronization, changelog slicin
 - Fields are 16px under `(pointer: coarse)`, or iOS zooms into them.
 - The tap highlight, `touch-action` and `user-select` baseline is in
   `src/css/custom.css`.
+- Scrollbars are thin, on the kit's colours, everywhere (`src/css/custom.css`);
+  a box that scrolls never scrolls sideways where it can wrap instead.
 - Nothing scrolls the page sideways at any width: a wide thing (a table, a
   terminal) scrolls in its own box. Such a box is positioned when it holds
   absolutely placed children (the `.sr` screen-reader text): otherwise they

@@ -11,24 +11,59 @@ import type {Compat, Legend, Row} from '../conformity/types';
 // here weighs anything by hand: a verdict is the worst state, a score is the
 // export's own.
 
-/** A client or tool of a protocol, with the positions of its features in a row's feature_cells. */
-export type Tool = {name: string; ks: number[]};
+/** A client or tool of a protocol, with the positions of its features in a row's feature_cells and what it leans on. */
+export type Tool = {name: string; ks: number[]; lean: Lean};
+
+/**
+ * What a tool leans on, read from the export: the feature group most of its
+ * features are in, beyond connecting and querying, which every tool does.
+ * The site's grouping for the tools list; the export groups features, not tools.
+ */
+export const LEANS = ['types', 'catalog', 'bulk', 'cdc', 'kv', 'tests', 'basics'] as const;
+export type Lean = (typeof LEANS)[number];
+
+export const LEAN_NAMES: Record<Lean, string> = {
+  types: 'Drivers and ORMs: types and conversions',
+  catalog: 'GUIs, dumps and schema tools: the catalog',
+  bulk: 'Loaders: bulk load',
+  cdc: 'Replication and change capture',
+  kv: 'Clients: key-value commands',
+  tests: 'Test suites',
+  basics: 'Connect and query',
+};
+
+/** A feature group as what a tool leans on; undefined for the groups every tool uses. */
+function leanOfGroup(group: string): Lean | undefined {
+  if (group.startsWith('Type')) return 'types';
+  if (group === 'Catalog and introspection') return 'catalog';
+  if (group === 'Bulk load') return 'bulk';
+  if (group === 'Change data capture') return 'cdc';
+  if (group === 'Key-value commands') return 'kv';
+  if (group === 'Upstream regression' || /test/i.test(group)) return 'tests';
+  return undefined;
+}
 
 /** The tools of a protocol by name, A to Z; a tool listed twice keeps the union of its features. */
 export function toolsOf(c: Compat, protocol: string): Tool[] {
   const set = c.feature_sets[protocol] ?? [];
   const byName = new Map<string, Set<number>>();
   for (const need of c.clients[protocol] ?? []) {
-    const ks = byName.get(need.client) ?? new Set<number>();
-    for (const f of need.features) {
-      const k = set.indexOf(f);
-      if (k >= 0) ks.add(k);
-    }
-    byName.set(need.client, ks);
+    const fs = byName.get(need.client) ?? new Set<number>();
+    for (const f of need.features) if (set.includes(f)) fs.add(f);
+    byName.set(need.client, fs);
   }
   return [...byName]
-    .map(([name, ks]) => ({name, ks: [...ks].sort((a, b) => a - b)}))
-    .filter((t) => t.ks.length > 0)
+    .filter(([, fs]) => fs.size > 0)
+    .map(([name, fs]): Tool => {
+      const counts = new Map<Lean, number>();
+      for (const f of fs) {
+        const lean = leanOfGroup(c.features[f]?.group ?? '');
+        if (lean) counts.set(lean, (counts.get(lean) ?? 0) + 1);
+      }
+      // The most features wins; LEANS' order breaks a tie.
+      const lean = LEANS.reduce<Lean>((best, l) => ((counts.get(l) ?? 0) > (counts.get(best) ?? 0) ? l : best), 'basics');
+      return {name, ks: [...fs].map((f) => set.indexOf(f)).sort((x, y) => x - y), lean};
+    })
     .sort((a, b) => a.name.localeCompare(b.name, 'en', {sensitivity: 'base'}));
 }
 

@@ -1,11 +1,11 @@
 import {useEffect, useId, useRef, useState} from 'react';
 import clsx from 'clsx';
 import {protocolShort} from '../conformity/data';
-import type {Tool} from './fit';
+import {LEAN_NAMES, LEANS, type Tool} from './fit';
 
 // The top of /ratings: what the reader's clients speak, a segment each with
 // its engine count, and the reader's own tools as chips with the whole list
-// of tools the checks cover, searchable.
+// of tools the checks cover, searchable, grouped by what each leans on.
 
 export type ProtocolCard = {proto: string; engines: number};
 
@@ -92,17 +92,28 @@ export function Tools({proto, tools, picked, onTools}: ToolsProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <ul className="rp-tools__list">
-            {shown.map((t) => (
-              <li key={t.name}>
-                <label>
-                  <input type="checkbox" checked={picked.includes(t.name)} onChange={() => toggle(t.name)} />
-                  {t.name}
-                </label>
-              </li>
-            ))}
-            {shown.length === 0 && <li className="rp-tools__none">No tool matches “{query}”.</li>}
-          </ul>
+          <div className="rp-tools__body">
+            {LEANS.map((lean) => {
+              const group = shown.filter((t) => t.lean === lean);
+              if (group.length === 0) return null;
+              return (
+                <fieldset key={lean} className="rp-tools__group">
+                  <legend>{LEAN_NAMES[lean]}</legend>
+                  <ul className="rp-tools__list">
+                    {group.map((t) => (
+                      <li key={t.name}>
+                        <label>
+                          <input type="checkbox" checked={picked.includes(t.name)} onChange={() => toggle(t.name)} />
+                          {t.name}
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </fieldset>
+              );
+            })}
+            {shown.length === 0 && <p className="rp-tools__none">No tool matches “{query}”.</p>}
+          </div>
         </div>
       )}
     </div>
