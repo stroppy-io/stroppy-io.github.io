@@ -344,49 +344,40 @@
   visibility: hidden;
 }
 
-/* An attribute per block: "Topology: 1 node" over its options. Every option
+/* A line per attribute: its name in a column of one width, the segmented
+   control after it, so every control starts at the same place. Every option
    of the workload is always there, so the picker keeps one shape. */
 .picker {
   display: grid;
-  gap: 0.55rem;
-}
-
-.picker__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem 1rem;
-}
-
-@media (max-width: 480px) {
-  .picker__grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  gap: 0.45rem;
 }
 
 .picker__attr {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
   min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
 }
 
-.picker__attr legend {
-  margin-bottom: 0.25rem;
-  padding: 0;
+.picker__label {
   font-size: 0.75rem;
   color: var(--st-muted);
 }
 
-.picker__attr legend b {
-  font-weight: var(--st-font-weight-medium);
-  color: var(--st-text);
+@media (max-width: 480px) {
+  .picker__attr {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
 }
 
 /* Options as a segmented control, the workload tabs' look: a frame, the
-   chosen option raised. It wraps inside the frame on a narrow board. */
+   chosen option raised, sized to its options. */
 .picker__options {
   display: inline-flex;
   flex-wrap: wrap;
+  justify-self: start;
   max-width: 100%;
   padding: 2px;
   border: 1px solid var(--st-line);

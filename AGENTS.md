@@ -200,9 +200,9 @@ src/pages/vendors.tsx     for database vendors, a SectionPage: add your database
 src/components/vendors/   vendors.ts: the two issue forms opened in stroppy-io/stroppy (add a database,
                           report an error); the corrections section lists the dataset's errata.json
 src/components/landing/   published-data pieces: the rating board (TopBoard: a variant picker (variant.tsx, shared with /ratings' benchmarks), the
-                          workload across the top, then topology, CPU, disk and scale two a line, each
-                          "Name: value" over a segmented control of every option the workload has, the
-                          ones the choices above rule out struck out; a line with the rest of the machine
+                          workload, topology, CPU, disk and scale a line each, the name in a column of
+                          one width and a segmented control of every option the workload has after it,
+                          the ones the choices above rule out struck out; a line with the rest of the machine
                           and the metric; each table one topology, hardware and scale, never mixed,
                           defaulting to the choice with the most runs; places in gold, silver and
                           bronze; one height whatever is chosen, down to a 360px phone; data through

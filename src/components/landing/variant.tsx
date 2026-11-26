@@ -1,3 +1,4 @@
+import {useId} from 'react';
 import {machineTags, metricLabel, SCENARIOS, type Group, type Metric} from './rating';
 
 // The variant picker of the published rating: a workload, then where it ran
@@ -9,13 +10,14 @@ import {machineTags, metricLabel, SCENARIOS, type Group, type Metric} from './ra
 export type Option = {id: string; name: string; available: boolean};
 export type Attribute = {label: string; options: Option[]; value: string; onPick: (id: string) => void};
 
-/** An attribute: its name and the chosen value over its options, a segmented control. */
+/** An attribute: its name, then its options as a segmented control. */
 function Choice({attribute: a}: {attribute: Attribute}) {
+  const id = useId();
   return (
-    <fieldset className="picker__attr">
-      <legend>
-        {a.label}: <b>{a.options.find((o) => o.id === a.value)?.name}</b>
-      </legend>
+    <div className="picker__attr" role="group" aria-labelledby={id}>
+      <span id={id} className="picker__label">
+        {a.label}
+      </span>
       <div className="picker__options">
         {a.options.map((o) => (
           <button
@@ -29,25 +31,23 @@ function Choice({attribute: a}: {attribute: Attribute}) {
           </button>
         ))}
       </div>
-    </fieldset>
+    </div>
   );
 }
 
 /**
- * The variant picker: the workload across the top, then where it ran, two
- * attributes a line (one on a phone). Every option of the workload stays in
- * place; the ones the choices above rule out are struck out and inactive, so
- * the picker never changes shape.
+ * The variant picker: a line per attribute, its name in one column and its
+ * options as a segmented control after it, so every control starts at the
+ * same place (the name over it on a phone). Every option of the workload
+ * stays in place; the ones the choices above rule out are struck out and
+ * inactive, so the picker never changes shape.
  */
 export function Picker({workload, attributes}: {workload: Attribute; attributes: Attribute[]}) {
   return (
     <div className="picker">
-      <Choice attribute={workload} />
-      <div className="picker__grid">
-        {attributes.map((a) => (
-          <Choice key={a.label} attribute={a} />
-        ))}
-      </div>
+      {[workload, ...attributes].map((a) => (
+        <Choice key={a.label} attribute={a} />
+      ))}
     </div>
   );
 }
