@@ -163,8 +163,9 @@ static/data/conformity/   the audited dataset as exported, put there by scripts/
                           held back), errata.json and details/<row id>.json; committed, so the build has it
 src/pages/ratings.tsx     database ratings: two segmented switches, the protocol your clients speak (with
                           its engine count) and what the engines are measured by. Compatibility: a
-                          search and the reader's tools as chips (the export's clients, listed by what
-                          each leans on: the feature group most of its features are in) over a table
+                          search and a field of the reader's tools (the export's clients, listed by what
+                          each leans on: the feature group most of its features are in; the picked ones
+                          as chips in the field, each removed by its × in place) over a table
                           laid out by Stroppy Cloud's tables guide (stroppy-cloud
                           web/docs/tables-guide.md) in the ratings' look: place, name and version, a
                           column per tool (features answered like the original, the worst state's

@@ -89,29 +89,105 @@
   }
 }
 
-/* The reader's tools: chips, a button that opens the list of them all. */
+/* The reader's tools: a field as wide as the search, the label inside it,
+   the picked tools as chips in it; it grows down when they do not fit. */
 .rp-mytools {
+  width: min(24rem, 100%);
+}
+
+.rp-field {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.15rem 0.3rem 0.15rem 0.75rem;
+  border: 1px solid var(--st-line-strong);
+  border-radius: var(--st-radius-md);
+  background: var(--st-canvas);
+  font-size: 0.9375rem;
 }
 
-.rp-mytools__label {
-  margin-right: 0.25rem;
-  font-size: 0.875rem;
+.rp-field.is-open {
+  border-color: var(--st-primary);
+}
+
+.rp-field__label {
+  margin-right: 0.15rem;
   color: var(--st-muted);
 }
 
-.rp-chip,
-.rp-add {
+/* The rest of the field: it opens the list. */
+.rp-field__open {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-self: stretch;
+  min-width: 2rem;
+  padding: 0 0.35rem;
+  border: 0;
+  background: none;
+  color: var(--st-primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.rp-field__open:focus-visible,
+.rp-field__clear:focus-visible {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 1px;
+}
+
+/* A drawn chevron, turned up while the list is open. */
+.rp-field__chevron {
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-left: auto;
+  border-right: 1.5px solid var(--st-muted);
+  border-bottom: 1.5px solid var(--st-muted);
+  transform: translateY(-25%) rotate(45deg);
+}
+
+.rp-field__open[aria-expanded='true'] .rp-field__chevron {
+  transform: translateY(25%) rotate(-135deg);
+}
+
+.rp-field__clear {
+  flex: none;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 0;
+  border-radius: var(--st-radius-sm);
+  background: none;
+  color: var(--st-muted);
+  font: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rp-field:hover {
+    border-color: var(--st-primary);
+  }
+
+  .rp-field__clear:hover {
+    color: var(--st-error);
+  }
+}
+
+.rp-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.3rem 0.8rem;
+  padding: 0.15rem 0.6rem;
   border: 1px solid var(--st-line-strong);
   border-radius: var(--st-radius-pill);
-  background: var(--st-panel);
+  background: var(--st-raised);
   color: var(--st-text);
   font: inherit;
   font-size: 0.875rem;
@@ -122,20 +198,7 @@
   color: var(--st-muted);
 }
 
-.rp-add {
-  border-style: dashed;
-  border-color: var(--st-primary);
-  background: none;
-  color: var(--st-primary);
-}
-
-.rp-add[aria-expanded='true'] {
-  border-style: solid;
-  background: color-mix(in srgb, var(--st-primary) 14%, transparent);
-}
-
-.rp-chip:focus-visible,
-.rp-add:focus-visible {
+.rp-chip:focus-visible {
   outline: 2px solid var(--st-primary);
   outline-offset: 2px;
 }
@@ -148,15 +211,10 @@
   .rp-chip:hover span {
     color: var(--st-error);
   }
-
-  .rp-add:hover {
-    border-style: solid;
-  }
 }
 
 @media (pointer: coarse) {
-  .rp-chip,
-  .rp-add {
+  .rp-chip {
     min-height: 2.5rem;
   }
 }
@@ -304,15 +362,15 @@
 }
 
 .rp-search {
-  width: min(18rem, 100%);
-  height: 2rem;
+  width: min(24rem, 100%);
+  height: 2.5rem;
   padding: 0 0.75rem;
   border: 1px solid var(--st-line-strong);
   border-radius: var(--st-radius-md);
   background: var(--st-canvas);
   color: var(--st-text);
   font: inherit;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
 }
 
 .rp-search:focus-visible {

@@ -35,7 +35,11 @@ export const toolsInWords = (names: string[]) =>
 
 type ToolsProps = {proto: string; tools: Tool[]; picked: string[]; onTools: (t: string[]) => void};
 
-/** "Your tools: psycopg × pg_dump × Add a tool", the list opening under it. */
+/**
+ * A field beside the search: "Your tools", the picked ones as chips, each
+ * removed by its × without opening anything, a × that clears them all; the
+ * rest of the field opens the list of every tool.
+ */
 export function Tools({proto, tools, picked, onTools}: ToolsProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -66,21 +70,30 @@ export function Tools({proto, tools, picked, onTools}: ToolsProps) {
 
   return (
     <div className="rp-mytools" ref={box}>
-      <span className="rp-mytools__label">Your tools:</span>
-      {picked.map((name) => (
-        <button key={name} type="button" className="rp-chip" onClick={() => toggle(name)} aria-label={`Remove ${name}`}>
-          {name}
-          <span aria-hidden="true">×</span>
+      <div className={clsx('rp-field', open && 'is-open')}>
+        <span className="rp-field__label">Your tools</span>
+        {picked.map((name) => (
+          <button key={name} type="button" className="rp-chip" onClick={() => toggle(name)} aria-label={`Remove ${name}`}>
+            {name}
+            <span aria-hidden="true">×</span>
+          </button>
+        ))}
+        <button
+          type="button"
+          className="rp-field__open"
+          aria-expanded={open}
+          aria-controls={panel}
+          aria-label={`Pick from ${tools.length} tools`}
+          onClick={() => setOpen((v) => !v)}>
+          {picked.length === 0 && <span className="rp-field__hint">Pick from {tools.length}</span>}
+          <span className="rp-field__chevron" aria-hidden="true" />
         </button>
-      ))}
-      <button type="button" className="rp-add" aria-expanded={open} aria-controls={panel} onClick={() => setOpen((v) => !v)}>
-        {picked.length ? 'Add a tool' : `Pick from ${tools.length}`}
-      </button>
-      {picked.length > 0 && (
-        <button type="button" className="rp-link" onClick={() => onTools([])}>
-          Clear
-        </button>
-      )}
+        {picked.length > 0 && (
+          <button type="button" className="rp-field__clear" onClick={() => onTools([])} aria-label="Clear your tools">
+            ×
+          </button>
+        )}
+      </div>
       {open && (
         <div id={panel} className="rp-tools" role="group" aria-label={`Tools that speak ${protocolShort(proto)}`}>
           <input
